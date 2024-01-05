@@ -57,5 +57,34 @@ class ManagerServiceTest {
         jpaManagerService.deleteManager(9L);
         verify(managerRepository).deleteById(9L);
     }
+
+    @Test
+    void updateManager() {
+        Manager newManager = new Manager();
+        newManager.setId(8L);
+        newManager.setManagerName("Wendy Testaburger");
+        when(managerRepository.save(newManager)).thenReturn(newManager);
+        jpaManagerService.addManager(newManager);
+        Manager updatedManager = new Manager();
+        updatedManager.setId(8L);
+        updatedManager.setManagerName("Wendy Marsh");
+        jpaManagerService.updateManager(8L, updatedManager);
+        verify(managerRepository).save(updatedManager);
+    }
+
+    @Test
+    void getManagerProperties() {
+
+    }
+
+    @Test
+    void addPropertyToManager() {
+
+    }
+
+    @Test
+    void removePropertyFromManager() {
+
+    }
 }
 

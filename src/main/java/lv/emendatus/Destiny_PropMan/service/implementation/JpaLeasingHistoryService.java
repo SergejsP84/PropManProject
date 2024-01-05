@@ -7,6 +7,7 @@ import lv.emendatus.Destiny_PropMan.repository.interfaces.LeasingHistoryReposito
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.LeasingHistoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -18,6 +19,7 @@ public class JpaLeasingHistoryService implements LeasingHistoryService {
     private final LeasingHistoryRepository leasingHistoryRepository;
     private final PropertyRepository propertyRepository;
     private final TenantRepository tenantRepository;
+    @Autowired
     public JpaLeasingHistoryService(LeasingHistoryRepository leasingHistoryRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository) {
         this.leasingHistoryRepository = leasingHistoryRepository;
         this.propertyRepository = propertyRepository;

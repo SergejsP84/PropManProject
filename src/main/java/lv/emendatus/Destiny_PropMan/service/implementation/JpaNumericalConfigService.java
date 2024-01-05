@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,14 +30,19 @@ public class JpaNumericalConfigService implements NumericalConfigService {
         return repository.findById(id);
     }
     @Override
-    public void addNumericalConfig(NumericalConfig numericalConfig) {
-        repository.save(numericalConfig);
+    @Transactional
+    public void addNumericalConfig(NumericalConfig numericalConfig)
+    {
+        System.out.println("addNumericalConfig method invoked");
+        NumericalConfig savedConfig = repository.save(numericalConfig);
+        System.out.println("ID of the saved entity: " + savedConfig.getId());
     }
     @Override
     public void deleteNumericalConfig(Long id) {
         repository.deleteById(id);
     }
     @Override
+    @Transactional
     public void updateNumericalConfig(Long id, NumericalConfig updatedNumericalConfig) {
         Optional<NumericalConfig> optionalNumericalConfig = repository.findById(id);
         if (optionalNumericalConfig.isPresent()) {
@@ -51,6 +57,7 @@ public class JpaNumericalConfigService implements NumericalConfigService {
         }
     }
     @Override
+    @Transactional
     public List<NumericalConfig> getNumericalConfigsByCurrency(Currency currency) {
         List<NumericalConfig> allConfigs = getAllNumericalConfigs();
         return allConfigs.stream().filter(numericalConfig -> numericalConfig.getCurrency().equals(currency)).toList();

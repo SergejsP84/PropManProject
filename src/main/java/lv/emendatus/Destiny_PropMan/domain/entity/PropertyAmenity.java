@@ -13,18 +13,11 @@ public class PropertyAmenity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToMany
-    @JoinTable(
-            name = "property_amenities",
-            joinColumns = @JoinColumn(name = "amenity_id"),
-            inverseJoinColumns = @JoinColumn(name = "property_id")
-    )
+    @Column(name = "property_id")
     private Long property_id;
 
-    @ManyToOne
-    @JoinColumn(name = "amenity_id")
+    @Column(name = "amenity_id")
     private Long amenity_id;
-
 
     public Long getId() {
         return id;

@@ -16,9 +16,7 @@ public class JpaTenantService implements TenantService {
     }
     @Override
     public List<Tenant> getAllTenants() {
-        List<Tenant> allTenants = tenantRepository.findAll();
-//        System.out.println("Number of tenants retrieved: " + allTenants.size());
-        return allTenants;
+        return tenantRepository.findAll();
     }
     @Override
     public Optional<Tenant> getTenantById(Long id) {
