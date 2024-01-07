@@ -60,6 +60,11 @@ public class JpaNumericalConfigService implements NumericalConfigService {
     @Transactional
     public List<NumericalConfig> getNumericalConfigsByCurrency(Currency currency) {
         List<NumericalConfig> allConfigs = getAllNumericalConfigs();
-        return allConfigs.stream().filter(numericalConfig -> numericalConfig.getCurrency().equals(currency)).toList();
+        return allConfigs.stream()
+                .filter(numericalConfig -> {
+                    Currency configCurrency = numericalConfig.getCurrency();
+                    return configCurrency != null && configCurrency.equals(currency);
+                })
+                .toList();
     }
 }

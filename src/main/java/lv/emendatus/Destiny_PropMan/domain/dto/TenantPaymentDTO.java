@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 public class TenantPaymentDTO {
     private Long id;
     private Double amount;
-    private Tenant tenant;
+    private TenantDTO tenant;
     private Long managerId;
     private Long associatedPropertyId;
     private boolean receivedFromTenant;
@@ -17,7 +17,7 @@ public class TenantPaymentDTO {
     public TenantPaymentDTO() {
     }
 
-    public TenantPaymentDTO(Long id, Double amount, Tenant tenant, Long managerId, Long associatedPropertyId, boolean receivedFromTenant, boolean feePaidToManager, Timestamp receiptDue) {
+    public TenantPaymentDTO(Long id, Double amount, TenantDTO tenant, Long managerId, Long associatedPropertyId, boolean receivedFromTenant, boolean feePaidToManager, Timestamp receiptDue) {
         this.id = id;
         this.amount = amount;
         this.tenant = tenant;
@@ -44,11 +44,11 @@ public class TenantPaymentDTO {
         this.amount = amount;
     }
 
-    public Tenant getTenant() {
+    public TenantDTO getTenant() {
         return tenant;
     }
 
-    public void setTenant(Tenant tenant) {
+    public void setTenant(TenantDTO tenant) {
         this.tenant = tenant;
     }
 

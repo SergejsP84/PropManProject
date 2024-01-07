@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class PropertyDTO {
     private Long id;
-    private Manager manager;
+    private ManagerDTO manager;
     @Enumerated(EnumType.STRING)
     private PropertyStatus status;
     private java.sql.Timestamp createdAt;
@@ -28,14 +28,14 @@ public class PropertyDTO {
     private Double pricePerDay;
     private Double pricePerWeek;
     private Double pricePerMonth;
-    private Set<Booking> bookings;
-    private Set<Bill> bills;
-    private Tenant tenant;
+    private Set<BookingDTO> bookings;
+    private Set<BillDTO> bills;
+    private TenantDTO tenant;
 
     public PropertyDTO() {
     }
 
-    public PropertyDTO(Long id, Manager manager, PropertyStatus status, Timestamp createdAt, PropertyType type, String address, String country, String settlement, Float sizeM2, String description, Float rating, Double pricePerDay, Double pricePerWeek, Double pricePerMonth, Set<Booking> bookings, Set<Bill> bills, Tenant tenant) {
+    public PropertyDTO(Long id, ManagerDTO manager, PropertyStatus status, Timestamp createdAt, PropertyType type, String address, String country, String settlement, Float sizeM2, String description, Float rating, Double pricePerDay, Double pricePerWeek, Double pricePerMonth, Set<BookingDTO> bookings, Set<BillDTO> bills, TenantDTO tenant) {
         this.id = id;
         this.manager = manager;
         this.status = status;
@@ -61,10 +61,10 @@ public class PropertyDTO {
     public void setId(Long id) {
         this.id = id;
     }
-    public Manager getManager() {
+    public ManagerDTO getManager() {
         return manager;
     }
-    public void setManager(Manager manager) {
+    public void setManager(ManagerDTO manager) {
         this.manager = manager;
     }
     public PropertyStatus getStatus() {
@@ -139,22 +139,22 @@ public class PropertyDTO {
     public void setPricePerMonth(Double pricePerMonth) {
         this.pricePerMonth = pricePerMonth;
     }
-    public Set<Booking> getBookings() {
+    public Set<BookingDTO> getBookings() {
         return bookings;
     }
-    public void setBookings(Set<Booking> bookings) {
+    public void setBookings(Set<BookingDTO> bookings) {
         this.bookings = bookings;
     }
-    public Set<Bill> getBills() {
+    public Set<BillDTO> getBills() {
         return bills;
     }
-    public void setBills(Set<Bill> bills) {
+    public void setBills(Set<BillDTO> bills) {
         this.bills = bills;
     }
-    public Tenant getTenant() {
+    public TenantDTO getTenant() {
         return tenant;
     }
-    public void setTenant(Tenant tenant) {
+    public void setTenant(TenantDTO tenant) {
         this.tenant = tenant;
     }
 }

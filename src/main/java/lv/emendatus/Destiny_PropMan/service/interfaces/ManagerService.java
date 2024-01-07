@@ -16,4 +16,5 @@ public interface ManagerService {
     Set<Property> getManagerProperties(Long managerId);
     void addPropertyToManager(Long managerId, Property property);
     void removePropertyFromManager(Long managerId, Long propertyId);
+    void purgeProperties(Long managerId);
 }

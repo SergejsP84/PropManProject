@@ -8,13 +8,13 @@ import java.util.Set;
 public class CurrencyDTO {
     private Long id;
     private String designation;
-    private Set<Bill> bills;
-    private Set<NumericalConfig> numericalConfigs;
+    private Set<BillDTO> bills;
+    private Set<NumericalConfigDTO> numericalConfigs;
 
     public CurrencyDTO() {
     }
 
-    public CurrencyDTO(Long id, String designation, Set<Bill> bills, Set<NumericalConfig> numericalConfigs) {
+    public CurrencyDTO(Long id, String designation, Set<BillDTO> bills, Set<NumericalConfigDTO> numericalConfigs) {
         this.id = id;
         this.designation = designation;
         this.bills = bills;
@@ -37,19 +37,19 @@ public class CurrencyDTO {
         this.designation = designation;
     }
 
-    public Set<Bill> getBills() {
+    public Set<BillDTO> getBills() {
         return bills;
     }
 
-    public void setBills(Set<Bill> bills) {
+    public void setBills(Set<BillDTO> bills) {
         this.bills = bills;
     }
 
-    public Set<NumericalConfig> getNumericalConfigs() {
+    public Set<NumericalConfigDTO> getNumericalConfigs() {
         return numericalConfigs;
     }
 
-    public void setNumericalConfigs(Set<NumericalConfig> numericalConfigs) {
+    public void setNumericalConfigs(Set<NumericalConfigDTO> numericalConfigs) {
         this.numericalConfigs = numericalConfigs;
     }
 }

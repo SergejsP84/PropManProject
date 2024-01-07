@@ -19,12 +19,12 @@ public class ManagerDTO {
     private Timestamp joinDate;
     private String login;
     private String password;
-    private Set<Property> properties;
+    private Set<PropertyDTO> properties;
 
     public ManagerDTO() {
     }
 
-    public ManagerDTO(Long id, ManagerType type, String managerName, String description, boolean isActive, Timestamp joinDate, String login, String password, Set<Property> properties) {
+    public ManagerDTO(Long id, ManagerType type, String managerName, String description, boolean isActive, Timestamp joinDate, String login, String password, Set<PropertyDTO> properties) {
         this.id = id;
         this.type = type;
         this.managerName = managerName;
@@ -100,11 +100,11 @@ public class ManagerDTO {
         this.password = password;
     }
 
-    public Set<Property> getProperties() {
+    public Set<PropertyDTO> getProperties() {
         return properties;
     }
 
-    public void setProperties(Set<Property> properties) {
+    public void setProperties(Set<PropertyDTO> properties) {
         this.properties = properties;
     }
 }

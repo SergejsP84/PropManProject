@@ -11,7 +11,7 @@ public class TenantDTO {
     private Long id;
     private String firstName;
     private String lastName;
-    private Property currentProperty;
+    private PropertyDTO currentProperty;
     private boolean isActive;
     private String phone;
     private String email;
@@ -20,13 +20,13 @@ public class TenantDTO {
     private float rating;
     private String login;
     private String password;
-    private List<LeasingHistory> leasingHistories;
-    private Set<TenantPayment> tenantPayments;
+    private List<LeasingHistoryDTO> leasingHistories;
+    private Set<TenantPaymentDTO> tenantPayments;
 
     public TenantDTO() {
     }
 
-    public TenantDTO(Long id, String firstName, String lastName, Property currentProperty, boolean isActive, String phone, String email, String iban, String paymentCardNo, float rating, String login, String password, List<LeasingHistory> leasingHistories, Set<TenantPayment> tenantPayments) {
+    public TenantDTO(Long id, String firstName, String lastName, PropertyDTO currentProperty, boolean isActive, String phone, String email, String iban, String paymentCardNo, float rating, String login, String password, List<LeasingHistoryDTO> leasingHistories, Set<TenantPaymentDTO> tenantPayments) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -67,11 +67,11 @@ public class TenantDTO {
         this.lastName = lastName;
     }
 
-    public Property getCurrentProperty() {
+    public PropertyDTO getCurrentProperty() {
         return currentProperty;
     }
 
-    public void setCurrentProperty(Property currentProperty) {
+    public void setCurrentProperty(PropertyDTO currentProperty) {
         this.currentProperty = currentProperty;
     }
 
@@ -139,19 +139,19 @@ public class TenantDTO {
         this.password = password;
     }
 
-    public List<LeasingHistory> getLeasingHistories() {
+    public List<LeasingHistoryDTO> getLeasingHistories() {
         return leasingHistories;
     }
 
-    public void setLeasingHistories(List<LeasingHistory> leasingHistories) {
+    public void setLeasingHistories(List<LeasingHistoryDTO> leasingHistories) {
         this.leasingHistories = leasingHistories;
     }
 
-    public Set<TenantPayment> getTenantPayments() {
+    public Set<TenantPaymentDTO> getTenantPayments() {
         return tenantPayments;
     }
 
-    public void setTenantPayments(Set<TenantPayment> tenantPayments) {
+    public void setTenantPayments(Set<TenantPaymentDTO> tenantPayments) {
         this.tenantPayments = tenantPayments;
     }
 }

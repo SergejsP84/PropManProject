@@ -11,10 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class JpaManagerService implements ManagerService {
@@ -78,6 +75,28 @@ public class JpaManagerService implements ManagerService {
             existingProperties.add(property);
             optionalManager.get().setProperties(existingProperties);
             managerRepository.save(optionalManager.get());
+            property.setManager(optionalManager.get());
+            propertyRepository.save(property);
+        } else {
+            LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
+            // TODO: Handle the case where the manager with the given ID is not found
+        }
+    }
+
+    @Override
+    public void purgeProperties(Long managerId) {
+        Optional<Manager> optionalManager = getManagerById(managerId);
+        if (optionalManager.isPresent()) {
+            System.out.println("Set of properties before purging:");
+            for (Property property : optionalManager.get().getProperties()) {
+                System.out.println(property.getId());
+            }
+            Set<Property> empty = new HashSet<>();
+            optionalManager.get().setProperties(empty);
+            System.out.println("Properties purged! Current list of properties:");
+            for (Property property : optionalManager.get().getProperties()) {
+                System.out.println(property.getId());
+            }
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
             // TODO: Handle the case where the manager with the given ID is not found
@@ -87,18 +106,18 @@ public class JpaManagerService implements ManagerService {
     public void removePropertyFromManager(Long managerId, Long propertyId) {
         Optional<Manager> optionalManager = getManagerById(managerId);
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
-        if (optionalManager.isPresent()) {
-            if (optionalProperty.isPresent()) {
-                Set<Property> existingProperties = getManagerProperties(managerId);
-                existingProperties.removeIf(property -> property.getId().equals(propertyId));
-                managerRepository.save(optionalManager.get());
-            } else {
-                LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-                // TODO: Handle the case where the property with the given ID is not found
-            }
+        if (optionalManager.isPresent() && optionalProperty.isPresent()) {
+            Manager manager = optionalManager.get();
+            Property property = optionalProperty.get();
+            Set<Property> existingProperties = manager.getProperties();
+            existingProperties.removeIf(p -> p.getId().equals(propertyId));
+            manager.setProperties(existingProperties);
+            property.setManager(null);
+            propertyRepository.save(property);
+            managerRepository.save(manager);
         } else {
-            LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
-            // TODO: Handle the case where the manager with the given ID is not found
+            LOGGER.log(Level.ERROR, "No manager or property with the given IDs exist in the database.");
+            // TODO: Handle the case where the manager or property with the given IDs are not found
         }
     }
 }

@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
 
@@ -28,7 +29,8 @@ public class Manager {
     private String login;
     @Column(name = "password")
     private String password;
-    @OneToMany(mappedBy = "manager") // the variable name from the Property class
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Property> properties;
 
     public Manager() {

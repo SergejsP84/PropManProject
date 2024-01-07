@@ -7,12 +7,12 @@ public class NumericalConfigDTO {
     private Long id;
     private String name;
     private Double value;
-    private Currency currency;
+    private CurrencyDTO currency;
 
     public NumericalConfigDTO() {
     }
 
-    public NumericalConfigDTO(Long id, String name, Double value, Currency currency) {
+    public NumericalConfigDTO(Long id, String name, Double value, CurrencyDTO currency) {
         this.id = id;
         this.name = name;
         this.value = value;
@@ -43,11 +43,11 @@ public class NumericalConfigDTO {
         this.value = value;
     }
 
-    public Currency getCurrency() {
+    public CurrencyDTO getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(CurrencyDTO currency) {
         this.currency = currency;
     }
 }

@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 
 public class LeasingHistoryDTO {
     private Long id;
-    private Tenant tenant;
+    private TenantDTO tenant;
     private Long propertyId;
     private Timestamp startDate;
     private Timestamp endDate;
@@ -15,7 +15,7 @@ public class LeasingHistoryDTO {
     public LeasingHistoryDTO() {
     }
 
-    public LeasingHistoryDTO(Long id, Tenant tenant, Long propertyId, Timestamp startDate, Timestamp endDate) {
+    public LeasingHistoryDTO(Long id, TenantDTO tenant, Long propertyId, Timestamp startDate, Timestamp endDate) {
         this.id = id;
         this.tenant = tenant;
         this.propertyId = propertyId;
@@ -31,11 +31,11 @@ public class LeasingHistoryDTO {
         this.id = id;
     }
 
-    public Tenant getTenant() {
+    public TenantDTO getTenant() {
         return tenant;
     }
 
-    public void setTenant(Tenant tenant) {
+    public void setTenant(TenantDTO tenant) {
         this.tenant = tenant;
     }
 
