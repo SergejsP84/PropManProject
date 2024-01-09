@@ -6,6 +6,8 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +17,6 @@ public interface LeasingHistoryService {
     void addLeasingHistory(LeasingHistory leasingHistory);
     void deleteLeasingHistory(Long id);
     List<LeasingHistory> getLeasingHistoryByProperty(Property property);
-    List<LeasingHistory> getLeasingHistoryByTimePeriod(Timestamp startDate, Timestamp endDate);
+    List<LeasingHistory> getLeasingHistoryByTimePeriod(LocalDateTime startDate, LocalDateTime endDate);
     List<LeasingHistory> getLeasingHistoryByTenant(Tenant tenant);
 }

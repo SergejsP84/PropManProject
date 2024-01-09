@@ -5,6 +5,9 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BillRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.BillService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -17,6 +20,8 @@ import java.util.stream.Collectors;
 public class JpaBillService implements BillService {
     private final BillRepository billRepository;
     private final PropertyRepository propertyRepository;
+
+    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
     public JpaBillService(BillRepository billRepository, PropertyRepository propertyRepository) {
         this.billRepository = billRepository;
         this.propertyRepository = propertyRepository;
@@ -71,5 +76,19 @@ public class JpaBillService implements BillService {
     public List<Bill> getBillsByExpenseCategory(Property property, String expenseCategory) {
         List<Bill> forGivenProperty = getBillsByProperty(property);
         return forGivenProperty.stream().filter(bill -> bill.getExpenseCategory().equals(expenseCategory)).toList();
+    }
+
+    @Override
+    public void togglePaidStatus(Long id) {
+        Optional<Bill> optionalBill = billRepository.findById(id);
+        if (optionalBill.isPresent()) {
+            Bill bill = optionalBill.get();
+            bill.setPaid(!bill.isPaid());
+            billRepository.save(bill);
+        } else {
+//            throw new BillNotFoundException("No Bill with ID " + billId + " found.");
+            LOGGER.log(Level.ERROR, "No bill with the {} ID exists in the database.", id);
+            // TODO: Handle the case where the property with the given ID is not found
+        }
     }
 }

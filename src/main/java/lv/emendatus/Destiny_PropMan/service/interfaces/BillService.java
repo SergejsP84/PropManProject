@@ -17,4 +17,5 @@ public interface BillService {
     List<Bill> getUnpaidBills(Property property);
     List<Bill> getPaidBills(Property property);
     List<Bill> getBillsByExpenseCategory(Property property, String expenseCategory);
+    void togglePaidStatus(Long id);
 }

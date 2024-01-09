@@ -62,29 +62,32 @@ public class JpaBookingService implements BookingService {
             return Collections.emptySet();
         }
     }
-
     @Override
     public Set<Booking> getBookingsByTenant(Tenant tenant) {
         return getAllBookings().stream()
                 .filter(booking -> {
-                    Optional<Tenant> optionalTenant = tenantRepository.findById(booking.getTenantId());
-                    return optionalTenant.isPresent() && optionalTenant.get().equals(tenant);
+                    Long bookingTenantId = booking.getTenantId();
+                    return bookingTenantId != null && bookingTenantId.equals(tenant.getId());
                 })
                 .collect(Collectors.toSet());
     }
 
     @Override
     public List<Booking> getBookingsByDateRange(LocalDate startDate, LocalDate endDate) {
-        List<Property> allProperties = propertyRepository.findAll();
-        return allProperties.stream()
-                .flatMap(property -> property.getBookings().stream())
+        List<Booking> allBookings = bookingRepository.findAll();
+        return allBookings.stream()
                 .filter(booking -> {
                     Timestamp bookingStartTimestamp = booking.getStartDate();
                     Timestamp bookingEndTimestamp = booking.getEndDate();
                     LocalDate bookingStartDate = bookingStartTimestamp.toLocalDateTime().toLocalDate();
                     LocalDate bookingEndDate = bookingEndTimestamp.toLocalDateTime().toLocalDate();
-                    return (bookingStartDate.isBefore(endDate) || bookingStartDate.isEqual(endDate))
-                            && (bookingEndDate.isAfter(startDate) || bookingEndDate.isEqual(startDate));
+
+//                    System.out.println("Booking: " + booking);
+//                    System.out.println("Booking Start Date: " + bookingStartDate);
+//                    System.out.println("Booking End Date: " + bookingEndDate);
+
+                    return (bookingStartDate.isEqual(startDate) || bookingStartDate.isAfter(startDate))
+                            && (bookingEndDate.isEqual(endDate) || bookingEndDate.isBefore(endDate));
                 })
                 .collect(Collectors.toList());
     }

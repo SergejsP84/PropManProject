@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,11 +52,11 @@ public class JpaLeasingHistoryService implements LeasingHistoryService {
                 .toList();
     }
     @Override
-    public List<LeasingHistory> getLeasingHistoryByTimePeriod(Timestamp startDate, Timestamp endDate) {
+    public List<LeasingHistory> getLeasingHistoryByTimePeriod(LocalDateTime startDate, LocalDateTime endDate) {
         return getAllLeasingHistories().stream()
                 .filter(leasingHistory ->
-                        (leasingHistory.getEndDate().before(endDate) || leasingHistory.getEndDate().equals(endDate))
-                                && (leasingHistory.getStartDate().after(startDate) || leasingHistory.getStartDate().equals(startDate))
+                        (leasingHistory.getEndDate().before(Timestamp.valueOf(endDate)) || leasingHistory.getEndDate().equals(Timestamp.valueOf(endDate)))
+                                && (leasingHistory.getStartDate().after(Timestamp.valueOf(startDate)) || leasingHistory.getStartDate().equals(Timestamp.valueOf(startDate)))
                 )
                 .toList();
     }

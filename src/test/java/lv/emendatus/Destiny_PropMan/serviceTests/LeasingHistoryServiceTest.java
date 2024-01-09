@@ -20,6 +20,9 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -152,12 +155,12 @@ class LeasingHistoryServiceTest {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        Timestamp start = new Timestamp(startDate.getTime());
-        Timestamp end = new Timestamp(endDate.getTime());
+        LocalDateTime startDateTime = convertToLocalDateTimeViaInstant(startDate);
+        LocalDateTime endDateTime = convertToLocalDateTimeViaInstant(endDate);
         List<LeasingHistory> control = new ArrayList<>();
         control.add(history2);
         control.add(history3);
-        List<LeasingHistory> found = jpaLeasingHistoryService.getLeasingHistoryByTimePeriod(start, end);
+        List<LeasingHistory> found = jpaLeasingHistoryService.getLeasingHistoryByTimePeriod(startDateTime, endDateTime);
         assertEquals(control, found);
     }
 
@@ -185,6 +188,11 @@ class LeasingHistoryServiceTest {
         assertEquals(control, found);
     }
 
+    public LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
 
 }
 
