@@ -21,14 +21,22 @@ public class JpaPropertyService implements PropertyService {
     private final PropertyAmenityRepository propertyAmenityRepository;
     private final BookingRepository bookingRepository;
     private final BillRepository billRepository;
+    private final JpaBookingService bookingService;
+    private final JpaManagerService managerService;
+    private final JpaTenantService tenantService;
+    private final JpaBillService billService;
 
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
-    public JpaPropertyService(PropertyRepository propertyRepository, AmenityRepository amenityRepository, PropertyAmenityRepository propertyAmenityRepository, BookingRepository bookingRepository, BillRepository billRepository) {
+    public JpaPropertyService(PropertyRepository propertyRepository, AmenityRepository amenityRepository, PropertyAmenityRepository propertyAmenityRepository, BookingRepository bookingRepository, BillRepository billRepository, JpaBookingService bookingService, JpaManagerService managerService, JpaTenantService tenantService, JpaBillService billService) {
         this.propertyRepository = propertyRepository;
         this.amenityRepository = amenityRepository;
         this.propertyAmenityRepository = propertyAmenityRepository;
         this.bookingRepository = bookingRepository;
         this.billRepository = billRepository;
+        this.bookingService = bookingService;
+        this.managerService = managerService;
+        this.tenantService = tenantService;
+        this.billService = billService;
     }
     @Override
     public List<Property> getAllProperties() {
@@ -90,20 +98,28 @@ public class JpaPropertyService implements PropertyService {
     @Override
     public List<Property> getAvailableProperties(LocalDate startDate, LocalDate endDate) {
         List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> (property.getStatus().equals(PropertyStatus.AVAILABLE)))
-                .collect(Collectors.toList());
+        List<Booking> bookingsWithinTime = bookingService.getBookingsByDateRangeWithOverlaps(startDate, endDate);
+        List<Property> occupiedProperties = new ArrayList<>();
+        for (Booking booking : bookingsWithinTime) {
+            LocalDate bookingStartDate = booking.getStartDate().toLocalDateTime().toLocalDate();
+            LocalDate bookingEndDate = booking.getEndDate().toLocalDateTime().toLocalDate();
+            if (!(endDate.isBefore(bookingStartDate) || startDate.isAfter(bookingEndDate))) {
+                occupiedProperties.add(booking.getProperty());
+            }
+        }
+        properties.removeAll(occupiedProperties);
+        return properties;
     }
 
     @Override
     public Set<Property> getPropertiesWithAmenities(List<Long> amenityIds) {
         List<PropertyAmenity> allAmenityRecords = propertyAmenityRepository.findAll();
-        return allAmenityRecords.stream()
-                .filter(propertyAmenity -> amenityIds.contains(propertyAmenity.getAmenity_id()))
+        Map<Long, List<Long>> propertyAmenitiesMap = allAmenityRecords.stream()
                 .collect(Collectors.groupingBy(PropertyAmenity::getProperty_id,
-                        Collectors.mapping(PropertyAmenity::getAmenity_id, Collectors.toList())))
-                .entrySet().stream()
-                .filter(entry -> amenityIds.containsAll(entry.getValue()))
+                        Collectors.mapping(PropertyAmenity::getAmenity_id, Collectors.toList())));
+
+        return propertyAmenitiesMap.entrySet().stream()
+                .filter(entry -> entry.getValue().containsAll(amenityIds))
                 .map(entry -> propertyRepository.findById(entry.getKey()).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
@@ -219,12 +235,19 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void updateManager(Long propertyId, Manager manager) {
+    public void updateManager(Long propertyId, Long managerId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
+        Optional<Manager> optionalManager = managerService.getManagerById(managerId);
         if (optionalProperty.isPresent()) {
-            Property property = optionalProperty.get();
-            property.setManager(manager);
-            addProperty(property);
+            if (optionalManager.isPresent()) {
+                Property property = optionalProperty.get();
+                Manager manager = optionalManager.get();
+                property.setManager(manager);
+                addProperty(property);
+            } else {
+                LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", propertyId);
+                // TODO: Handle the case where the manager with the given ID is not found
+            }
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             // TODO: Handle the case where the property with the given ID is not found
@@ -284,14 +307,47 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void assignTenantToProperty(Long propertyId, Tenant tenant) {
+    public void assignTenantToProperty(Long propertyId, Long tenantId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
+        Optional<Tenant> optionalTenant = tenantService.getTenantById(tenantId);
         if (optionalProperty.isPresent()) {
-            Property property = optionalProperty.get();
-            property.setTenant(tenant);
-            addProperty(property);
+            if (optionalTenant.isPresent()) {
+                Property property = optionalProperty.get();
+                Tenant tenant = optionalTenant.get();
+                property.setTenant(tenant);
+                System.out.println("Tenant " + tenant.getFirstName() + " moved into Property " + property.getDescription());
+                System.out.println("The property is now occupied by " + property.getTenant().getFirstName() + " " + property.getTenant().getLastName());
+                tenant.setCurrentProperty(property);
+                tenantService.addTenant(tenant);
+                property.setTenant(tenant);
+                addProperty(property);
+            } else {
+                LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", propertyId);
+                // TODO: Handle the case where the tenant with the given ID is not found
+            }
+
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
+            // TODO: Handle the case where the property with the given ID is not found
+        }
+    }
+
+    @Override
+    public Tenant getCurrentTenant(Long propertyId) {
+        Optional<Property> optionalProperty = getPropertyById(propertyId);
+        if (optionalProperty.isPresent()) {
+            Tenant tenant = optionalProperty.get().getTenant();
+            if (!tenant.equals(null)) {
+                System.out.println("Current tenant: " + tenant.getFirstName() + " " + tenant.getLastName());
+                return tenant;
+            }
+            else {
+                System.out.println("These premises are unoccupied");
+                return null;
+            }
+        } else {
+            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
+            return null;
             // TODO: Handle the case where the property with the given ID is not found
         }
     }
@@ -301,6 +357,13 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
             Property property = optionalProperty.get();
+            if (!property.getTenant().equals(null)) {
+                Optional<Tenant> tenant = tenantService.getTenantById(property.getTenant().getId());
+                if (tenant.isPresent()) {
+                    tenant.get().setCurrentProperty(null);
+                    tenantService.addTenant(tenant.get());
+                }
+            }
             property.setTenant(null);
             addProperty(property);
         } else {
@@ -313,7 +376,12 @@ public class JpaPropertyService implements PropertyService {
     public Set<Booking> getPropertyBookings(Long propertyId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
-            return optionalProperty.get().getBookings();
+            Set<Booking> bookings = bookingService.getBookingsByProperty(optionalProperty.get());
+            System.out.println("The resulting Set size is: " + bookings.size());
+            for (Booking booking : bookings) {
+                System.out.println(booking.getStatus());
+            }
+            return bookings;
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             // TODO: Handle the case where the property with the given ID is not found
@@ -322,35 +390,30 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void addBookingToProperty(Long propertyId, Booking booking) {
+    public void addBookingToProperty(Long propertyId, Long bookingIdd) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
-        if (optionalProperty.isPresent()) {
-            Set<Booking> existingBookings = getPropertyBookings(propertyId);
-            existingBookings.add(booking);
-            optionalProperty.get().setBookings(existingBookings);
-            propertyRepository.save(optionalProperty.get());
+        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingIdd);
+        if (optionalProperty.isPresent() && optionalBooking.isPresent()) {
+            Property property = optionalProperty.get();
+            Booking booking = optionalBooking.get();
+            booking.setProperty(property);
+            bookingService.addBooking(booking);
         } else {
-            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            LOGGER.log(Level.ERROR, "Missing property or bill");
+            // TODO: Handle the case where the property or bill with the given ID is not found
         }
     }
 
     @Override
     public void removeBookingFromProperty(Long propertyId, Long bookingId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
-        Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
-        if (optionalProperty.isPresent()) {
-            if (optionalBooking.isPresent()) {
-                Set<Booking> existingBookings = getPropertyBookings(propertyId);
-                existingBookings.removeIf(booking -> booking.getId().equals(bookingId));
-                propertyRepository.save(optionalProperty.get());
-            } else {
-                LOGGER.log(Level.ERROR, "No booking with the {} ID exists in the database.", bookingId);
-                // TODO: Handle the case where the booking with the given ID is not found
-            }
+        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
+        if (optionalProperty.isPresent() && optionalBooking.isPresent()) {
+            optionalBooking.get().setProperty(null);
+            bookingService.addBooking(optionalBooking.get());
         } else {
-            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            LOGGER.log(Level.ERROR, "Missing property or bill");
+            // TODO: Handle the case where the property or bill with the given ID is not found
         }
     }
 
@@ -358,7 +421,11 @@ public class JpaPropertyService implements PropertyService {
     public Set<Bill> getPropertyBills(Long propertyId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
-            return optionalProperty.get().getBills();
+            Set<Bill> crutch = new HashSet<>();
+            for (Bill bill : billService.getBillsByProperty(optionalProperty.get())) {
+                crutch.add(bill);
+            }
+            return crutch;
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             // TODO: Handle the case where the property with the given ID is not found
@@ -367,35 +434,30 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void addBillToProperty(Long propertyId, Bill bill) {
+    public void addBillToProperty(Long propertyId, Long billId) { //F**KING CIRCULAR REFERENCE ERRORS!!!
         Optional<Property> optionalProperty = getPropertyById(propertyId);
-        if (optionalProperty.isPresent()) {
-            Set<Bill> existingBills = getPropertyBills(propertyId);
-            existingBills.add(bill);
-            optionalProperty.get().setBills(existingBills);
-            propertyRepository.save(optionalProperty.get());
+        Optional<Bill> optionalBill = billService.getBillById(billId);
+        if (optionalProperty.isPresent() && optionalBill.isPresent()) {
+            Property property = optionalProperty.get();
+            Bill bill = optionalBill.get();
+            bill.setProperty(property);
+            billService.addBill(bill);
         } else {
-            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            LOGGER.log(Level.ERROR, "Missing property or bill");
+            // TODO: Handle the case where the property or bill with the given ID is not found
         }
     }
 
     @Override
     public void removeBillFromProperty(Long propertyId, Long billId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
-        Optional<Bill> optionalBill = billRepository.findById(billId);
-        if (optionalProperty.isPresent()) {
-            if (optionalBill.isPresent()) {
-                Set<Bill> existingBills = getPropertyBills(propertyId);
-                existingBills.removeIf(bill -> bill.getId().equals(billId));
-                propertyRepository.save(optionalProperty.get());
-            } else {
-                LOGGER.log(Level.ERROR, "No bill with the {} ID exists in the database.", billId);
-                // TODO: Handle the case where the bill with the given ID is not found
-            }
+        Optional<Bill> optionalBill = billService.getBillById(billId);
+        if (optionalProperty.isPresent() && optionalBill.isPresent()) {
+            optionalBill.get().setProperty(null);
+            billService.addBill(optionalBill.get());
         } else {
-            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            LOGGER.log(Level.ERROR, "Missing property or bill");
+            // TODO: Handle the case where the property or bill with the given ID is not found
         }
     }
 }

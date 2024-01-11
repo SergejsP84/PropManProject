@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -70,12 +71,12 @@ public class JpaTenantPaymentService implements TenantPaymentService {
         });
     }
     @Override
-    public List<TenantPayment> getPaymentsByDateRange(Timestamp startDate, Timestamp endDate) {
+    public List<TenantPayment> getPaymentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return getAllTenantPayments().stream()
                 .filter(payment -> {
                     Timestamp receiptDue = payment.getReceiptDue();
-                    return ((receiptDue.after(startDate) || receiptDue.equals(startDate))
-                            && (receiptDue.before(endDate) || receiptDue.equals(endDate)));
+                    return ((receiptDue.after(Timestamp.valueOf(startDate)) || receiptDue.equals(Timestamp.valueOf(startDate)))
+                            && (receiptDue.before(Timestamp.valueOf(endDate)) || receiptDue.equals(Timestamp.valueOf(endDate))));
                 })
                 .collect(Collectors.toList());
     }

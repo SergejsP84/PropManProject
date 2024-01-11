@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;

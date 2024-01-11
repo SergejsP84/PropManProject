@@ -53,14 +53,12 @@ public class JpaBookingService implements BookingService {
 
     @Override
     public Set<Booking> getBookingsByProperty(Property property) {
-        Optional<Property> optionalProperty = propertyRepository.findById(property.getId());
-        if (optionalProperty.isPresent()) {
-            return optionalProperty.get().getBookings();
-        } else {
-            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", property.getId());
-            // TODO: Handle the case where the property with the given ID is not found
-            return Collections.emptySet();
-        }
+        return getAllBookings().stream()
+                .filter(booking -> {
+                    Property bookingProperty = booking.getProperty();
+                    return bookingProperty != null && bookingProperty.getId() != null && bookingProperty.getId().equals(property.getId());
+                })
+                .collect(Collectors.toSet());
     }
     @Override
     public Set<Booking> getBookingsByTenant(Tenant tenant) {
@@ -81,15 +79,27 @@ public class JpaBookingService implements BookingService {
                     Timestamp bookingEndTimestamp = booking.getEndDate();
                     LocalDate bookingStartDate = bookingStartTimestamp.toLocalDateTime().toLocalDate();
                     LocalDate bookingEndDate = bookingEndTimestamp.toLocalDateTime().toLocalDate();
-
-//                    System.out.println("Booking: " + booking);
-//                    System.out.println("Booking Start Date: " + bookingStartDate);
-//                    System.out.println("Booking End Date: " + bookingEndDate);
-
                     return (bookingStartDate.isEqual(startDate) || bookingStartDate.isAfter(startDate))
                             && (bookingEndDate.isEqual(endDate) || bookingEndDate.isBefore(endDate));
                 })
                 .collect(Collectors.toList());
+    }
+
+    public List<Booking> getBookingsByDateRangeWithOverlaps(LocalDate startDate, LocalDate endDate) {
+        List<Booking> allBookings = bookingRepository.findAll();
+        return allBookings.stream()
+                .filter(booking -> {
+                    Timestamp bookingStartTimestamp = booking.getStartDate();
+                    Timestamp bookingEndTimestamp = booking.getEndDate();
+                    LocalDate bookingStartDate = bookingStartTimestamp.toLocalDateTime().toLocalDate();
+                    LocalDate bookingEndDate = bookingEndTimestamp.toLocalDateTime().toLocalDate();
+                    return isDateRangeOverlap(startDate, endDate, bookingStartDate, bookingEndDate);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private boolean isDateRangeOverlap(LocalDate start1, LocalDate end1, LocalDate start2, LocalDate end2) {
+        return !(end1.isBefore(start2) || start1.isAfter(end2));
     }
 
     @Override
@@ -111,19 +121,26 @@ public class JpaBookingService implements BookingService {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isPresent()) {
             Booking booking = optionalBooking.get();
-            long numberOfDays = ChronoUnit.DAYS.between(booking.getStartDate().toLocalDateTime(), booking.getEndDate().toLocalDateTime());
-            double totalPrice;
-            if (numberOfDays < 7) {
-                totalPrice = numberOfDays * booking.getProperty().getPricePerDay();
-            } else if (numberOfDays < 30) {
-                totalPrice = numberOfDays / 7 * booking.getProperty().getPricePerWeek();
-            } else {
-                totalPrice = numberOfDays / 30 * booking.getProperty().getPricePerMonth();
+            long numberOfDays = 1 + ChronoUnit.DAYS.between(booking.getStartDate().toLocalDateTime(), booking.getEndDate().toLocalDateTime());
+            double totalPrice = 0.0;
+            // months
+            if (numberOfDays >= 30) {
+                long fullMonths = numberOfDays / 30;
+                totalPrice += fullMonths * booking.getProperty().getPricePerMonth();
+                numberOfDays %= 30;
             }
+            //weeks
+            if (numberOfDays >= 7) {
+                long fullWeeks = numberOfDays / 7;
+                totalPrice += fullWeeks * booking.getProperty().getPricePerWeek();
+                numberOfDays %= 7;
+            }
+            //remaining days
+            totalPrice += numberOfDays * booking.getProperty().getPricePerDay();
             return totalPrice;
         } else {
-            LOGGER.log(Level.ERROR, "No property with the specified ID exists in the database.");
-            // TODO: Handle the case where the property with the given ID is not found
+            LOGGER.log(Level.ERROR, "No booking with the specified ID exists in the database.");
+            // TODO: Handle the case where the booking with the given ID is not found
             return null;
         }
     }

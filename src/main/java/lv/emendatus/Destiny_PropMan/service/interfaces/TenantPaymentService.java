@@ -4,6 +4,7 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,5 +18,5 @@ public interface TenantPaymentService {
     List<TenantPayment> getPaymentsByProperty(Long propertyId);
     List<TenantPayment> getUnsettledPayments();
     void settlePayment(Long paymentId);
-    List<TenantPayment> getPaymentsByDateRange(Timestamp startDate, Timestamp endDate);
+    List<TenantPayment> getPaymentsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
 }

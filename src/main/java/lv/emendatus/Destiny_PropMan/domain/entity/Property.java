@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
@@ -58,12 +59,14 @@ public class Property {
     private Double pricePerMonth;
 
     @OneToMany(mappedBy = "property")
+    @JsonIgnore
     private Set<Booking> bookings;
 
     @OneToMany(mappedBy = "property")
     private Set<Bill> bills;
 
     @OneToOne(mappedBy = "currentProperty")
+    @JsonIgnore
     private Tenant tenant;
 
     public Long getId() {

@@ -35,19 +35,20 @@ public interface PropertyService {
     void updatePropertyPricePerMonth(Long id, double newPrice);
     void addAmenityToProperty(Long propertyId, Long amenityId);
     void removeAmenityFromProperty(Long propertyId, Long amenityId);
-    void updateManager(Long propertyId, Manager manager);
+    void updateManager(Long propertyId, Long managerId);
     void setStatus(Long propertyId, PropertyStatus status);
     void updateSize(Long propertyId, Float newSizeM2);
     void updateRating(Long propertyId, Float updatedRating);
     void updateDescription(Long id, String newDescription);
 
     // business logic management
-    void assignTenantToProperty(Long propertyId, Tenant tenant);
+    void assignTenantToProperty(Long propertyId, Long tenantId);
+    Tenant getCurrentTenant(Long propertyId);
     void removeTenantFromProperty(Long propertyId);
     Set<Booking> getPropertyBookings(Long propertyId);
-    void addBookingToProperty(Long propertyId, Booking booking);
+    void addBookingToProperty(Long propertyId, Long bookingId);
     void removeBookingFromProperty(Long propertyId, Long bookingId);
     Set<Bill> getPropertyBills(Long propertyId);
-    void addBillToProperty(Long propertyId, Bill bill);
+    void addBillToProperty(Long propertyId, Long billId);
     void removeBillFromProperty(Long propertyId, Long billId);
 }
