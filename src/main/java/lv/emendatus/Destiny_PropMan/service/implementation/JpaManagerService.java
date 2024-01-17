@@ -72,6 +72,10 @@ public class JpaManagerService implements ManagerService {
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
             Set<Property> existingProperties = getManagerProperties(managerId);
+            // Initialize the set if it is null
+            if (existingProperties == null) {
+                existingProperties = new HashSet<>();
+            }
             existingProperties.add(property);
             optionalManager.get().setProperties(existingProperties);
             managerRepository.save(optionalManager.get());
@@ -84,19 +88,24 @@ public class JpaManagerService implements ManagerService {
     }
 
     @Override
-    public void purgeProperties(Long managerId) {
+    public void purgeProperties(Long managerId) {  // Internal-use method, better not use in logics
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
-            System.out.println("Set of properties before purging:");
-            for (Property property : optionalManager.get().getProperties()) {
-                System.out.println(property.getId());
+            Set<Property> existingProperties = optionalManager.get().getProperties();
+            if (existingProperties == null) {
+                existingProperties = new HashSet<>();
             }
-            Set<Property> empty = new HashSet<>();
-            optionalManager.get().setProperties(empty);
-            System.out.println("Properties purged! Current list of properties:");
-            for (Property property : optionalManager.get().getProperties()) {
-                System.out.println(property.getId());
-            }
+//            System.out.println("Set of properties before purging:");
+//            for (Property property : existingProperties) {
+//                System.out.println(property.getId());
+//            }
+            existingProperties.clear();
+            System.out.println("Properties purged!");
+//            for (Property property : existingProperties) {
+//                System.out.println(property.getId());
+//            }
+            optionalManager.get().setProperties(existingProperties);
+            managerRepository.save(optionalManager.get());
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
             // TODO: Handle the case where the manager with the given ID is not found

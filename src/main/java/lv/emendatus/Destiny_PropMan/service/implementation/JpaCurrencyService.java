@@ -21,11 +21,17 @@ public class JpaCurrencyService implements lv.emendatus.Destiny_PropMan.service.
         return currencyRepository.findAll();
     }
 
+//    @Override
+//    public Optional<Currency> getCurrencyById(Long id) {
+//        return currencyRepository.findById(id);
+//    }
     @Override
     public Optional<Currency> getCurrencyById(Long id) {
-        return currencyRepository.findById(id);
-    }
-
+    System.out.println("Fetching currency with ID: " + id);
+    Optional<Currency> currency = currencyRepository.findById(id);
+    System.out.println("Currency found: " + currency.orElse(null));
+    return currency;
+}
     @Override
     public void addCurrency(Currency currency) {
         currencyRepository.save(currency);

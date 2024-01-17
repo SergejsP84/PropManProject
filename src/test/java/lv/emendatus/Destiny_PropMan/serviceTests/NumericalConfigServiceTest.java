@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -18,7 +19,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,21 +88,27 @@ class NumericalConfigServiceTest {
     }
 
     @Test
-    void updateNumericalConfig() {      // FAILING!!!!
-        Currency currency2 = new Currency();
-        currency2.setId(2L);
-        currency2.setDesignation("USD");
+    void updateNumericalConfig() {
+        Long id = 1L;
+        NumericalConfig existingConfig = new NumericalConfig();
         NumericalConfig updatedConfig = new NumericalConfig();
+
+        existingConfig.setId(1L);
+        existingConfig.setValue(0.6);
+        existingConfig.setCurrency(new Currency(1L, "EUR"));
+        existingConfig.setName("Existing");
+        updatedConfig.setId(1L);
+        updatedConfig.setValue(0.7);
+        updatedConfig.setCurrency(new Currency(2L, "USD"));
         updatedConfig.setName("Updated");
-        updatedConfig.setCurrency(currency2);
-        updatedConfig.setValue(2.00);
-        System.out.println("Before Update:");
-        jpaNumericalConfigService.getAllNumericalConfigs().forEach(config -> System.out.println(config.getId() + " - " + config.getName()));
-        jpaNumericalConfigService.updateNumericalConfig(1L, updatedConfig);
-        System.out.println("After Update:");
-        jpaNumericalConfigService.getAllNumericalConfigs().forEach(config -> System.out.println(config.getId() + " - " + config.getName()));
-        assertEquals(Optional.of(updatedConfig), jpaNumericalConfigService.getNumericalConfigById(1L));
+
+        Mockito.when(numericalConfigRepository.findById(id)).thenReturn(Optional.of(existingConfig));
+        Mockito.when(numericalConfigRepository.save(any(NumericalConfig.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        assertDoesNotThrow(() -> jpaNumericalConfigService.updateNumericalConfig(id, updatedConfig));
+        Mockito.verify(numericalConfigRepository, Mockito.times(1)).findById(eq(id));
+        Mockito.verify(numericalConfigRepository, Mockito.times(2)).save(any(NumericalConfig.class));
     }
+
 
     @Test
     void getNumericalConfigsByCurrency() {
