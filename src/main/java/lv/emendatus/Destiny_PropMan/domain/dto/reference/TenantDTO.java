@@ -1,8 +1,4 @@
-package lv.emendatus.Destiny_PropMan.domain.dto;
-
-import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
-import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
+package lv.emendatus.Destiny_PropMan.domain.dto.reference;
 
 import java.util.List;
 import java.util.Set;

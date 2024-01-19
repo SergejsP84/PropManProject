@@ -1,4 +1,4 @@
-package lv.emendatus.Destiny_PropMan.domain.dto;
+package lv.emendatus.Destiny_PropMan.domain.dto.reference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;

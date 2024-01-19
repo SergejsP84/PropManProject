@@ -1,10 +1,6 @@
-package lv.emendatus.Destiny_PropMan.domain.dto;
+package lv.emendatus.Destiny_PropMan.domain.dto.reference;
 
 import jakarta.persistence.*;
-import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
-import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
-import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
-import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
 

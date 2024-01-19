@@ -1,6 +1,4 @@
-package lv.emendatus.Destiny_PropMan.domain.dto;
-
-import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
+package lv.emendatus.Destiny_PropMan.domain.dto.reference;
 
 import java.sql.Timestamp;
 

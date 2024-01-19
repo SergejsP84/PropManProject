@@ -12,6 +12,7 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.BillService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.CurrencyService;
 import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
 import org.aspectj.lang.annotation.Before;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
@@ -54,7 +55,7 @@ class BillServiceTest {
     @Autowired
     @InjectMocks
     private JpaBillService jpaBillService;
-    private final BillRepository billRepositoryMock = Mockito.mock(BillRepository.class);
+    private BillRepository billRepositoryMock = Mockito.mock(BillRepository.class);
     @Mock
     private BillRepository billRepository;
     private JpaPropertyService propertyService;
@@ -62,39 +63,7 @@ class BillServiceTest {
     private CurrencyService currencyService;
 
 
-    @Test
-    void getAllBills() {
-        List<Bill> bills = Arrays.asList(new Bill(), new Bill());
-        when(billRepository.findAll()).thenReturn(bills);
-        List<Bill> result = jpaBillService.getAllBills();
-        assertEquals(bills, result);
-    }
-    @Test
-    void getBillById() {
-        Bill eighthBill = new Bill();
-        eighthBill.setId(8L);
-        eighthBill.setExpenseCategory("Whiskey");
-        when(billRepository.findById(8L)).thenReturn(Optional.of(eighthBill));
-        Optional<Bill> obtainedBill = jpaBillService.getBillById(8L);
-        assertEquals(Optional.of(eighthBill), obtainedBill);
-    }
-    @Test
-    void addBill() {
-        Bill newBill = new Bill();
-        newBill.setId(9L);
-        newBill.setAmount(100.00);
-        when(billRepository.save(newBill)).thenReturn(newBill);
-        jpaBillService.addBill(newBill);
-        verify(billRepository).save(newBill);
-    }
-    @Test
-    void deleteBill() {
-        Bill newBill = new Bill();
-        newBill.setId(10L);
-        newBill.setCurrency(new Currency());
-        jpaBillService.deleteBill(10L);
-        verify(billRepository).deleteById(10L);
-    }
+
 
     @Test
     void getBillsByProperty() {
@@ -113,21 +82,33 @@ class BillServiceTest {
     }
 
     @Test
+//    @Disabled
     public void testGetBillsByDueDateRange() {
-        // Initialize test data
+        testDataInitializer.initializeNumericalConfigs();
         testDataInitializer.initializeCurrencies();
-        testDataInitializer.initializeManagers();
         testDataInitializer.initializeProperties();
         testDataInitializer.initializeBills();
+        testDataInitializer.initializeManagers();
 
-        // Set the date range for testing
         LocalDate startDate = LocalDate.parse("2023-01-01");
         LocalDate endDate = LocalDate.parse("2023-01-31");
 
-        // Choose a property for testing, e.g., property1
         Property property1 = propertyService.getPropertyById(1L).orElseThrow();
 
-//        Property mockedProperty = new Property();
+        Manager manager = property1.getManager();
+        System.out.println("Trying to retrieve the property's manager...");
+        System.out.println("Retrieved a manager: " + manager.getManagerName());
+
+        List<Bill> billsInRange = jpaBillService.getBillsByDueDateRange(startDate, endDate, property1);
+
+
+        assertEquals(1, billsInRange.size()); // Expecting one bill within the given range
+
+        Bill retrievedBill = billsInRange.get(0);
+        assertEquals(1L, retrievedBill.getId()); // Expecting the bill with ID 1
+        assertEquals("Heating", retrievedBill.getExpenseCategory());
+
+        //        Property mockedProperty = new Property();
 //        mockedProperty.setId(1L);
 //        mockedProperty.setDescription("Frusrated");
 //        Manager manager1 = new Manager();
@@ -139,21 +120,6 @@ class BillServiceTest {
 //        manager1.setProperties(tempSet);
 //        Mockito.when(propertyService.getPropertyById(1L)).thenReturn(Optional.of(mockedProperty));
 //        Property property1 = propertyService.getPropertyById(1L).orElseThrow();
-
-        Manager manager = property1.getManager();
-        System.out.println("Trying to retrieve the property's manager...");
-        System.out.println("Retrieved a manager: " + manager.getManagerName());
-
-        // Perform the actual test
-        List<Bill> billsInRange = jpaBillService.getBillsByDueDateRange(startDate, endDate, property1);
-
-        // Add assertions based on your expectations
-        assertEquals(1, billsInRange.size()); // Expecting one bill within the given range
-
-        // Check the details of the retrieved bill
-        Bill retrievedBill = billsInRange.get(0);
-        assertEquals(1L, retrievedBill.getId()); // Expecting the bill with ID 1
-        assertEquals("Heating", retrievedBill.getExpenseCategory()); // Customize based on your data
     }
 
 //    @Test

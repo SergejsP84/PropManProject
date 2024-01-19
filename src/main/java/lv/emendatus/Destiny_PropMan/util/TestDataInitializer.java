@@ -49,6 +49,7 @@ public class TestDataInitializer {
         this.tenantService = tenantService;
     }
     public void initializeData() {
+        initializeManagers();
         initializeCurrencies();
         initializePropertyAmenities();
         initializeNumericalConfigs();
@@ -58,7 +59,6 @@ public class TestDataInitializer {
         initializeTenantPayments();
         initializeBookings();
         initializeLeasingHistories();
-        initializeManagers();
         initializeProperties();
     }
     public void initializeAmenities() {
@@ -234,7 +234,6 @@ public class TestDataInitializer {
         manager1.setPassword("CreditWhereDue");
 
 
-
         manager2.setId(2L);
         manager2.setManagerName("Delbert Grady");
         manager2.setDescription("Experienced in hotel management");
@@ -248,7 +247,7 @@ public class TestDataInitializer {
         manager2.setPassword("AllWorkAndNoPlay");
 
         manager3.setId(3L);
-        manager3.setManagerName("Charles Grady");
+        manager3.setManagerName("Robert Townley Watson");
         manager3.setDescription("Eager to contribute to the hotel's legacy");
         manager3.setType(ManagerType.PRIVATE);
         manager3.setActive(true);
@@ -256,7 +255,7 @@ public class TestDataInitializer {
         Set<Property> man3props = new HashSet<>();
         man3props.add(property3);
         manager3.setProperties(man3props);
-        manager3.setLogin("CGrady");
+        manager3.setLogin("RWatson");
         manager3.setPassword("RedRumIsFun");
 
         managerService.addManager(manager1);

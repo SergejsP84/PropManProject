@@ -1,7 +1,4 @@
-package lv.emendatus.Destiny_PropMan.domain.dto;
-
-import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
-import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
+package lv.emendatus.Destiny_PropMan.domain.dto.reference;
 
 import java.util.Set;
 

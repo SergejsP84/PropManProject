@@ -11,3 +11,12 @@ public class DestinyPropertyManagementProjectApplication {
 	}
 
 }
+
+//	// Lloyd's Virtual Martini
+
+//		Martini martini = new Martini();
+//		martini.setGin("Premium Dry Gin");
+//		martini.setVermouth("Extra Dry Vermouth");
+//		martini.setGarnish("Twist of Lemon Peel");
+//
+//	// Enjoy your virtual martini, sir. The pleasure is all mine!
