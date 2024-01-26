@@ -28,7 +28,8 @@ public class Manager {
     private ManagerType type;
     @Column(name = "manager_name")
     private String managerName;
-    @Column(name = "description", length = 1084)
+//    @Column(name = "description", length = 1084)
+    @Column(name = "description")
     private String description;
     @Column(name = "is_active")
     private boolean isActive;

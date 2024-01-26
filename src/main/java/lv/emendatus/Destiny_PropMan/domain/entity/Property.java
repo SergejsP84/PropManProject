@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
@@ -65,6 +66,7 @@ public class Property {
     @OneToMany(mappedBy = "property")
     private Set<Bill> bills;
 
+    @JsonBackReference
     @OneToOne(mappedBy = "currentProperty")
     @JsonIgnore
     private Tenant tenant;
@@ -203,6 +205,10 @@ public class Property {
 
     public void setSettlement(String settlement) {
         this.settlement = settlement;
+    }
+
+    public void removeTenantReference() {
+        this.tenant = null;
     }
 
     public Property() {

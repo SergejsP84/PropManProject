@@ -33,9 +33,9 @@ public class JpaNumericalConfigService implements NumericalConfigService {
     @Transactional
     public void addNumericalConfig(NumericalConfig numericalConfig)
     {
-        System.out.println("addNumericalConfig method invoked");
+//        System.out.println("addNumericalConfig method invoked");
         NumericalConfig savedConfig = repository.save(numericalConfig);
-        System.out.println("ID of the saved entity: " + savedConfig.getId());
+//        System.out.println("ID of the saved entity: " + savedConfig.getId());
     }
     @Override
     public void deleteNumericalConfig(Long id) {

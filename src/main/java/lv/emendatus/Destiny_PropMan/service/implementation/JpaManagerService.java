@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
+import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
@@ -31,8 +32,12 @@ public class JpaManagerService implements ManagerService {
         return managerRepository.findById(id);
     }
     @Override
-    public void addManager(Manager manager) {
-        managerRepository.save(manager);
+    public void addManager(Manager manager)
+    {
+        System.out.println("-- addManager method invoked");
+        Manager savedManager = managerRepository.save(manager);
+        System.out.println("-- ID of the saved Manager entity: " + savedManager.getId());
+
     }
     @Override
     public void deleteManager(Long id) {

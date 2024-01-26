@@ -1,26 +1,30 @@
 package lv.emendatus.Destiny_PropMan.serviceTests;
 
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
+import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PropertyServiceTest {
+class PropertyServiceBasicTest {
     @InjectMocks
     private JpaPropertyService jpaPropertyService;
     @Mock
@@ -56,5 +60,6 @@ class PropertyServiceTest {
         jpaPropertyService.deleteProperty(13L);
         verify(propertyRepository).deleteById(13L);
     }
+
 }
 

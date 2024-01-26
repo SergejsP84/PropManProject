@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class Tenant {
     @Column(name = "last_name")
     private String lastName;
 
+    @JsonManagedReference
     @OneToOne
     @JoinColumn(name = "current_property")
     private Property currentProperty;
@@ -48,12 +51,18 @@ public class Tenant {
     @Column(name = "password")
     private String password;
 
+
     @OneToMany
     @JoinColumn(name = "leasing_history")
     private List<LeasingHistory> leasingHistories;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "tenant")
     private Set<TenantPayment> tenantPayments;
+
+    public void removePropertyReference() {
+        this.currentProperty = null;
+    }
 
     public Tenant() {
     }

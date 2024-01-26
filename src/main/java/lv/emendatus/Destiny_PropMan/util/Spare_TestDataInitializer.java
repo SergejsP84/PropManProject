@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 @Component
-public class TestDataInitializer {
+public class Spare_TestDataInitializer {
     @Autowired
     private JpaBillService billService;
     @Autowired
@@ -34,32 +34,44 @@ public class TestDataInitializer {
     @Autowired
     private JpaTenantService tenantService;
 
-    @Autowired
-    public TestDataInitializer(JpaBillService billService, JpaPropertyService propertyService, JpaAmenityService amenityService, JpaBookingService bookingService, JpaCurrencyService currencyService, JpaLeasingHistoryService leasingHistoryService, JpaManagerService managerService, JpaNumericalConfigService numericalConfigService, JpaPropertyAmenityService propertyAmenityService, JpaTenantPaymentService tenantPaymentService, JpaTenantService tenantService) {
-        this.billService = billService;
-        this.propertyService = propertyService;
-        this.amenityService = amenityService;
-        this.bookingService = bookingService;
-        this.currencyService = currencyService;
-        this.leasingHistoryService = leasingHistoryService;
-        this.managerService = managerService;
-        this.numericalConfigService = numericalConfigService;
-        this.propertyAmenityService = propertyAmenityService;
-        this.tenantPaymentService = tenantPaymentService;
-        this.tenantService = tenantService;
-    }
+//    @Autowired
+//    public TestDataInitializer(JpaBillService billService, JpaPropertyService propertyService, JpaAmenityService amenityService, JpaBookingService bookingService, JpaCurrencyService currencyService, JpaLeasingHistoryService leasingHistoryService, JpaManagerService managerService, JpaNumericalConfigService numericalConfigService, JpaPropertyAmenityService propertyAmenityService, JpaTenantPaymentService tenantPaymentService, JpaTenantService tenantService) {
+//        this.billService = billService;
+//        this.propertyService = propertyService;
+//        this.amenityService = amenityService;
+//        this.bookingService = bookingService;
+//        this.currencyService = currencyService;
+//        this.leasingHistoryService = leasingHistoryService;
+//        this.managerService = managerService;
+//        this.numericalConfigService = numericalConfigService;
+//        this.propertyAmenityService = propertyAmenityService;
+//        this.tenantPaymentService = tenantPaymentService;
+//        this.tenantService = tenantService;
+//    }
     public void initializeData() {
-        initializeManagers();
+        System.out.println(" --- initializeData method invoked --- ");
         initializeCurrencies();
+        System.out.println(" --- initializeCurrencies method invoked --- ");
+        initializeManagers();
+        System.out.println(" --- initializeManagers method invoked --- ");
         initializePropertyAmenities();
+        System.out.println(" --- initializePropertyAmenities method invoked --- ");
         initializeNumericalConfigs();
+        System.out.println(" --- initializeNumericalConfig method invoked --- ");
         initializeAmenities();
+        System.out.println(" --- initializeAmenities method invoked --- ");
         initializeTenants();
+        System.out.println(" --- initializeTenants method invoked --- ");
         initializeBills();
+        System.out.println(" --- initializeBills method invoked --- ");
         initializeTenantPayments();
+        System.out.println(" --- initializeTenantPayments method invoked --- ");
         initializeBookings();
+        System.out.println(" --- initializeBookings method invoked --- ");
         initializeLeasingHistories();
+        System.out.println(" --- initializeLeasingHistories method invoked --- ");
         initializeProperties();
+        System.out.println(" --- initializeProperties method invoked --- ");
     }
     public void initializeAmenities() {
         Amenity amenity1 = new Amenity();
@@ -79,11 +91,15 @@ public class TestDataInitializer {
         amenityService.addAmenity(amenity2);
         amenityService.addAmenity(amenity3);
         amenityService.addAmenity(amenity4);
+        System.out.println("Amenity " + amenityService.getAmenityById(1L).get().getId() + " creation successful");
+        System.out.println("Amenity " + amenityService.getAmenityById(2L).get().getId() + " creation successful");
+        System.out.println("Amenity " + amenityService.getAmenityById(3L).get().getId() + " creation successful");
+        System.out.println("Amenity " + amenityService.getAmenityById(4L).get().getId() + " creation successful");
     }
 
     public void initializeBills() {
-        initializeCurrencies();
-        initializeProperties();
+//        initializeCurrencies();
+//        initializeProperties();
         Currency currency1 = currencyService.getCurrencyById(1L).orElseThrow();
         Currency currency2 = currencyService.getCurrencyById(2L).orElseThrow();
         Currency currency3 = currencyService.getCurrencyById(3L).orElseThrow(() -> new RuntimeException("Currency with ID 3 not found"));
@@ -129,7 +145,7 @@ public class TestDataInitializer {
     }
 
     public void initializeBookings() {
-        initializeProperties();
+//        initializeProperties();
         Property property1 = propertyService.getPropertyById(1L).orElseThrow();
         Property property2 = propertyService.getPropertyById(2L).orElseThrow();
         Property property3 = propertyService.getPropertyById(3L).orElseThrow();
@@ -173,10 +189,13 @@ public class TestDataInitializer {
         currencyService.addCurrency(currency1);
         currencyService.addCurrency(currency2);
         currencyService.addCurrency(currency3);
+        System.out.println("Currency " + currencyService.getCurrencyById(1L).get().getId() + " creation successful");
+        System.out.println("Currency " + currencyService.getCurrencyById(2L).get().getId() + " creation successful");
+        System.out.println("Currency " + currencyService.getCurrencyById(3L).get().getId() + " creation successful");
     }
 
     public void initializeLeasingHistories() {
-        initializeTenants();
+//        initializeTenants();
         LeasingHistory leasingHistory1 = new LeasingHistory();
         LeasingHistory leasingHistory2 = new LeasingHistory();
         LeasingHistory leasingHistory3 = new LeasingHistory();
@@ -210,7 +229,7 @@ public class TestDataInitializer {
         leasingHistoryService.addLeasingHistory(leasingHistory3);
     }
     public void initializeManagers() {
-        initializeProperties();
+
         Manager manager1 = new Manager();
         Manager manager2 = new Manager();
         Manager manager3 = new Manager();
@@ -293,7 +312,7 @@ public class TestDataInitializer {
         propertyAmenityService.addPropertyAmenity(propertyAmenity3);
     }
     public void initializeTenantPayments() {
-        initializeTenants();
+//        initializeTenants();
         TenantPayment tenantPayment1 = new TenantPayment();
         TenantPayment tenantPayment2 = new TenantPayment();
         TenantPayment tenantPayment3 = new TenantPayment();
@@ -337,7 +356,7 @@ public class TestDataInitializer {
         tenantPaymentService.addTenantPayment(tenantPayment3);
     }
     public void initializeTenants() {
-        initializeProperties();
+//        initializeProperties();
         Tenant tenant1 = new Tenant();
         Tenant tenant2 = new Tenant();
         Tenant tenant3 = new Tenant();

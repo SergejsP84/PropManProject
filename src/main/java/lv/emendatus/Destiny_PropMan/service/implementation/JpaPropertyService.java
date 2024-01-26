@@ -319,8 +319,10 @@ public class JpaPropertyService implements PropertyService {
                 System.out.println("The property is now occupied by " + property.getTenant().getFirstName() + " " + property.getTenant().getLastName());
                 tenant.setCurrentProperty(property);
                 tenantService.addTenant(tenant);
+                property.removeTenantReference();
                 property.setTenant(tenant);
                 addProperty(property);
+                tenant.removePropertyReference();
             } else {
                 LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", propertyId);
                 // TODO: Handle the case where the tenant with the given ID is not found
@@ -377,10 +379,10 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
             Set<Booking> bookings = bookingService.getBookingsByProperty(optionalProperty.get());
-            System.out.println("The resulting Set size is: " + bookings.size());
-            for (Booking booking : bookings) {
-                System.out.println(booking.getStatus());
-            }
+//            System.out.println("The resulting Set size is: " + bookings.size());
+//            for (Booking booking : bookings) {
+//                System.out.println(booking.getStatus());
+//            }
             return bookings;
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
@@ -453,8 +455,16 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         Optional<Bill> optionalBill = billService.getBillById(billId);
         if (optionalProperty.isPresent() && optionalBill.isPresent()) {
+            List<Bill> existing = billService.getBillsByProperty(optionalProperty.get());
+            Set<Bill> updated = new HashSet<>();
+            for (Bill bill : existing) {
+                updated.add(bill);
+            }
             optionalBill.get().setProperty(null);
-            billService.addBill(optionalBill.get());
+            updated.remove(optionalBill.get());
+            optionalProperty.get().setBills(updated);
+            propertyRepository.save(optionalProperty.get());
+            billRepository.save(optionalBill.get());
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
             // TODO: Handle the case where the property or bill with the given ID is not found
