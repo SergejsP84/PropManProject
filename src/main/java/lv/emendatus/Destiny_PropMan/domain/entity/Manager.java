@@ -42,30 +42,42 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<Property> properties;
+    @Column(name = "phone")
+    private String phone;
+    @Column(name = "email")
+    private String email;
+    @Column(name = "iban")
+    private String iban;
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Manager manager = (Manager) o;
-        return isActive == manager.isActive && Objects.equals(id, manager.id) && Objects.equals(type, manager.type) && Objects.equals(managerName, manager.managerName) && Objects.equals(description, manager.description) && Objects.equals(joinDate, manager.joinDate);
+        return isActive == manager.isActive && Objects.equals(id, manager.id) && type == manager.type && Objects.equals(managerName, manager.managerName) && Objects.equals(description, manager.description) && Objects.equals(joinDate, manager.joinDate) && Objects.equals(login, manager.login) && Objects.equals(password, manager.password) && Objects.equals(properties, manager.properties) && Objects.equals(phone, manager.phone) && Objects.equals(email, manager.email) && Objects.equals(iban, manager.iban);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type, managerName, description, isActive, joinDate);
+        return Objects.hash(id, type, managerName, description, isActive, joinDate, login, password, properties, phone, email, iban);
     }
 
     @Override
     public String toString() {
         return "Manager{" +
                 "id=" + id +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", managerName='" + managerName + '\'' +
                 ", description='" + description + '\'' +
                 ", isActive=" + isActive +
                 ", joinDate=" + joinDate +
-                ", login=" + login +
+                ", login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", properties=" + properties +
+                ", phone='" + phone + '\'' +
+                ", email='" + email + '\'' +
+                ", iban='" + iban + '\'' +
                 '}';
     }
 }

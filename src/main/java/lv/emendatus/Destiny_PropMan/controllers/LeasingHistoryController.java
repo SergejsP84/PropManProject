@@ -51,7 +51,7 @@ public class LeasingHistoryController {
             System.out.println("Deleting leasing history with the ID " + id);
             service.deleteLeasingHistory(id);
         } else {
-            System.out.println("No tenant with the ID " + id + "exists in the database!");
+            System.out.println("No history with the ID " + id + "exists in the database!");
         }
     }
     @GetMapping("/getByTime")

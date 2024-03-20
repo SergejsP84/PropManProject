@@ -68,7 +68,6 @@ public class Property {
 
     @JsonBackReference
     @OneToOne(mappedBy = "currentProperty")
-    @JsonIgnore
     private Tenant tenant;
 
     public Long getId() {

@@ -23,6 +23,7 @@ public class PropertiesForTenantsDTO {
     private Double pricePerWeek;
     private Double pricePerMonth;
     private Set<String> amenities;
-    private List<String> photos; // TODO: add functionality
+    private List<String> photos; // TODO: add functionality if needed
     private boolean available;
+    private List<ReviewDTO> reviews;
 }

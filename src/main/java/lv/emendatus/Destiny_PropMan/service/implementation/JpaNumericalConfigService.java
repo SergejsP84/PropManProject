@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.NumericalConfigRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.NumericalConfigService;
 import org.apache.logging.log4j.Level;
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +52,7 @@ public class JpaNumericalConfigService implements NumericalConfigService {
             existingNumericalConfig.setName(updatedNumericalConfig.getName());
             existingNumericalConfig.setValue(updatedNumericalConfig.getValue());
             existingNumericalConfig.setCurrency(updatedNumericalConfig.getCurrency());
+            existingNumericalConfig.setType(updatedNumericalConfig.getType());
             repository.save(existingNumericalConfig);
         } else {
             LOGGER.log(Level.ERROR, "No config with the {} ID exists in the database.", id);
@@ -67,4 +70,15 @@ public class JpaNumericalConfigService implements NumericalConfigService {
                 })
                 .toList();
     }
+
+    @Override
+    public List<NumericalConfig> getSystemSettings() {
+        List<NumericalConfig> result = new ArrayList<>();
+        for (NumericalConfig config : getAllNumericalConfigs()) {
+           if (config.getType().equals(NumConfigType.SYSTEM_SETTING)) result.add(config);
+        }
+        return result;
+    }
+
+
 }

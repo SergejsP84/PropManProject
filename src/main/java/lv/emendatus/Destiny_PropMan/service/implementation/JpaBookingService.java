@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
-import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
+import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
@@ -14,9 +12,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,10 +26,18 @@ public class JpaBookingService implements BookingService {
     private final BookingRepository bookingRepository;
     private final PropertyRepository propertyRepository;
     private final TenantRepository tenantRepository;
-    public JpaBookingService(BookingRepository bookingRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository) {
+    private final JpaTenantService tenantService;
+    private final JpaLeasingHistoryService leasingHistoryService;
+//    private final JpaClaimService claimService;
+    private final JpaNumericalConfigService configService;
+
+    public JpaBookingService(BookingRepository bookingRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaNumericalConfigService configService) {
         this.bookingRepository = bookingRepository;
         this.propertyRepository = propertyRepository;
         this.tenantRepository = tenantRepository;
+        this.tenantService = tenantService;
+        this.leasingHistoryService = leasingHistoryService;
+        this.configService = configService;
     }
     @Override
     public List<Booking> getAllBookings() {
@@ -45,7 +51,6 @@ public class JpaBookingService implements BookingService {
     public void addBooking(Booking booking) {
         bookingRepository.save(booking);
     }
-
     @Override
     public void deleteBooking(Long id) {
         bookingRepository.deleteById(id);
@@ -66,6 +71,16 @@ public class JpaBookingService implements BookingService {
                 .filter(booking -> {
                     Long bookingTenantId = booking.getTenantId();
                     return bookingTenantId != null && bookingTenantId.equals(tenant.getId());
+                })
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Booking> getBookingsByManager(Manager manager) {
+        return getAllBookings().stream()
+                .filter(booking -> {
+                    Long bookingManagerId = booking.getProperty().getManager().getId();
+                    return bookingManagerId != null && bookingManagerId.equals(manager.getId());
                 })
                 .collect(Collectors.toSet());
     }
@@ -144,4 +159,16 @@ public class JpaBookingService implements BookingService {
             return null;
         }
     }
+
+
+    // AUXILIARY METHOD
+    public int calculateDaysDifference(Timestamp endDate) {
+        Instant currentInstant = Instant.now();
+        LocalDate currentDate = currentInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        Instant endInstant = endDate.toInstant();
+        LocalDate endDateLocalDate = endInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        long difference = ChronoUnit.DAYS.between(endDateLocalDate, currentDate);
+        return (int) difference;
+    }
+
 }

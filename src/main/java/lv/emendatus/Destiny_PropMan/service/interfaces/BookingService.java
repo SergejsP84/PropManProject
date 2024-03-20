@@ -14,6 +14,7 @@ public interface BookingService {
     void deleteBooking(Long id);
     Set<Booking> getBookingsByProperty(Property property);
     Set<Booking> getBookingsByTenant(Tenant tenant);
+    Set<Booking> getBookingsByManager(Manager manager);
     List<Booking> getBookingsByDateRange(LocalDate startDate, LocalDate endDate);
     public List<Booking> getBookingsByDateRangeWithOverlaps(LocalDate startDate, LocalDate endDate);
     List<Booking> getBookingsByStatus(BookingStatus bookingStatus);

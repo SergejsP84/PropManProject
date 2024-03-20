@@ -51,4 +51,5 @@ public interface PropertyService {
     Set<Bill> getPropertyBills(Long propertyId);
     void addBillToProperty(Long propertyId, Long billId);
     void removeBillFromProperty(Long propertyId, Long billId);
+    List<Property> getPropertiesByManager(Long managerId);
 }

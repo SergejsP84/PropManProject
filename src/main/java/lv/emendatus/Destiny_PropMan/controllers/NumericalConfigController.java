@@ -49,7 +49,6 @@ public class NumericalConfigController {
         Optional<Currency> optionalCurrency = currencyService.getCurrencyById(cur_id);
         if (optionalCurrency.isPresent()) {
             Currency currency = optionalCurrency.get();
-//            System.out.println("Found the currency! ID: " + currency.getId() + ", designation: " + currency.getDesignation());
             Optional<List<NumericalConfig>> result = Optional.of(numericalConfigService.getNumericalConfigsByCurrency(currency));
             return result.map(config -> new ResponseEntity<>(config, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

@@ -1,9 +1,19 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
 
 import java.util.Objects;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "numerical_config")
 public class NumericalConfig {
@@ -16,52 +26,16 @@ public class NumericalConfig {
     private String name;
 
     @Column(name = "\"value\"") // supposed to be 1 by default, change to any value between 0 and 1 to set a discount
+    // the comment above only applies to discounts, other uses can be found.
     private Double value;
+
+    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    private NumConfigType type;
 
     @ManyToOne
     @JoinColumn(name = "currency_id")
     private Currency currency;
-
-    public NumericalConfig() {
-    }
-
-    public NumericalConfig(Long id, String name, Double value) {
-        this.id = id;
-        this.name = name;
-        this.value = value;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Double getValue() {
-        return value;
-    }
-
-    public void setValue(Double value) {
-        this.value = value;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
-    }
 
     @Override
     public boolean equals(Object o) {

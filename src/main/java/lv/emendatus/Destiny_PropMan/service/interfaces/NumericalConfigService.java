@@ -13,5 +13,5 @@ public interface NumericalConfigService {
     void updateNumericalConfig(Long id, NumericalConfig updatedNumericalConfig);
     void deleteNumericalConfig(Long id);
     List<NumericalConfig> getNumericalConfigsByCurrency(Currency currency);
-
+    List<NumericalConfig> getSystemSettings();
 }

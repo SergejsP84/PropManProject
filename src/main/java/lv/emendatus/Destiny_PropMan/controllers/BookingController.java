@@ -69,7 +69,7 @@ public class BookingController {
             System.out.println("No booking with the ID " + id + "exists in the database!");
         }
     }
-    @GetMapping("/getByProperty/{prop_id}") // TODO: Test when the Property controller is implemented
+    @GetMapping("/getByProperty/{prop_id}")
     public ResponseEntity<Set<Booking>> getBookingsByProperty(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -103,7 +103,7 @@ public class BookingController {
         }
     }
     @GetMapping("/getByDateRange/")
-    public ResponseEntity<List<Booking>> getBookingsByDueDateRange(
+    public ResponseEntity<List<Booking>> getBookingsByDateRange(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
         LocalDateTime startDateTime = start.atStartOfDay();
@@ -116,6 +116,21 @@ public class BookingController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         // http://localhost:8080/booking/getByDateRange/?start=2024-02-10&end=2024-02-18
+    }
+    @GetMapping("/getByDateRangeWithOverlaps/")
+    public ResponseEntity<List<Booking>> getBookingsByDateRangeWithOverlaps(
+            @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
+        List<Booking> bookings = bookingService.getBookingsByDateRangeWithOverlaps(startDateTime.toLocalDate(), endDateTime.toLocalDate());
+        if (!bookings.isEmpty()) {
+            return new ResponseEntity<>(bookings, HttpStatus.OK);
+        } else {
+            System.out.println("No bookings have been found within the specified time period!");
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        // http://localhost:8080/booking/getByDateRangeWithOverlaps/?start=2024-02-10&end=2024-02-18
     }
     @GetMapping("/getByStatus")
     public ResponseEntity<List<Booking>> getBookingsByStatus(@RequestParam BookingStatus status) {
@@ -133,7 +148,7 @@ public class BookingController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-    @GetMapping("/getPrice/{booking_id}") // TODO: Test when the Property controller is implemented
+    @GetMapping("/getPrice/{booking_id}")
     public ResponseEntity<Double> getBookingPrice(@PathVariable Long booking_id) {
         Optional<Booking> bookings = bookingService.getBookingById(booking_id);
         if (bookings.isPresent()) {

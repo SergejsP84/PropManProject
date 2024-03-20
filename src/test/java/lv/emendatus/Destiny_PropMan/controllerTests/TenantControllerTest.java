@@ -3,8 +3,10 @@ package lv.emendatus.Destiny_PropMan.controllerTests;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lv.emendatus.Destiny_PropMan.controllers.TenantController;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
+import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -38,6 +41,8 @@ public class TenantControllerTest {
     private JpaTenantService tenantService;
     @Autowired
     private ObjectMapper objectMapper;
+    @Mock
+    private TenantRepository tenantRepository;
 
     @Test
     public void testGetAllTenants() throws Exception {
@@ -60,14 +65,13 @@ public class TenantControllerTest {
         newTenant.setId(1L);
         newTenant.setFirstName("Wendy");
         newTenant.setLastName("Testaburger");
-
         mockMvc.perform(post("/tenants/add")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(newTenant)))
                 .andExpect(status().isCreated());
     }
     @Test
-    public void testDeleteCurrencyById() throws Exception {
+    public void testDeleteTenantById() throws Exception {
         Tenant tenantToDelete = new Tenant();
         tenantToDelete.setId(1L);
         tenantToDelete.setFirstName("Wendy");
@@ -81,23 +85,19 @@ public class TenantControllerTest {
     public void testGetTenantsByFirstNameOrLastName() throws Exception {
         Tenant tenant1 = new Tenant();
         tenant1.setId(1L);
-        tenant1.setFirstName("Stan");
-        tenant1.setLastName("Marsh");
+        tenant1.setFirstName("Wendy");
+        tenant1.setLastName("Testaburger");
         Tenant tenant2 = new Tenant();
         tenant2.setId(2L);
         tenant2.setFirstName("Randy");
         tenant2.setLastName("Marsh");
-        Tenant tenant3 = new Tenant();
-        tenant3.setId(3L);
-        tenant3.setFirstName("Eric");
-        tenant3.setLastName("Cartman");
-        List<Tenant> mockTenants = Arrays.asList(tenant1, tenant2, tenant3);
-        when(tenantService.getAllTenants()).thenReturn(mockTenants);
-        mockMvc.perform(get("/tenant/getTenantsByName/{name}", "Marsh"))
+        List<Tenant> mockTenants = Arrays.asList(tenant1);
+        when(tenantService.getTenantsByFirstNameOrLastName("Test")).thenReturn(mockTenants);
+        mockMvc.perform(get("/tenants/getTenantsByName/{name}", "Test"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].firstName", is("Stan")))
-                .andExpect(jsonPath("$[1].firstName", is("Randy")));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].firstName").value("Wendy"));
     }
 
     private String asJsonString(Object obj) throws Exception {

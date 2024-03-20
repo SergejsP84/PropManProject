@@ -1,18 +1,36 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.profile.LeasingHistoryDTO_Profile;
+import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
+import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
+import lv.emendatus.Destiny_PropMan.mapper.LeasingHistoryMapper;
+import lv.emendatus.Destiny_PropMan.mapper.TenantMapper;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class JpaTenantService implements TenantService {
     private final TenantRepository tenantRepository;
-    public JpaTenantService(TenantRepository tenantRepository) {
+    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+    private final TenantMapper tenantMapper;
+    private final LeasingHistoryMapper leasingHistoryMapper;
+    private final JpaLeasingHistoryService leasingHistoryService;
+
+    public JpaTenantService(TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService) {
         this.tenantRepository = tenantRepository;
+        this.tenantMapper = tenantMapper;
+        this.leasingHistoryMapper = leasingHistoryMapper;
+        this.leasingHistoryService = leasingHistoryService;
     }
     @Override
     public List<Tenant> getAllTenants() {
@@ -39,4 +57,6 @@ public class JpaTenantService implements TenantService {
                         tenant.getLastName().toLowerCase().contains(lowercaseName))
                 .toList();
     }
+
+
 }

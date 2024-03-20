@@ -22,7 +22,7 @@ public class Tenant {
     @Column(name = "last_name")
     private String lastName;
 
-    @JsonManagedReference
+    @JsonManagedReference // CAUSES ERRORS 415 unless paired with @JsonBackReference at the other end
     @OneToOne
     @JoinColumn(name = "current_property")
     private Property currentProperty;

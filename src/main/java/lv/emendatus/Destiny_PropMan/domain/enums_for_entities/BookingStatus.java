@@ -5,4 +5,5 @@ public enum BookingStatus {
     CONFIRMED, // and paid, that is
     CURRENT, // the guy's staying on premises right now
     CANCELLED, // says it all per se
+    OVER, // successfully completed
 }

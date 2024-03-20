@@ -16,10 +16,10 @@ public class Currency {
     @Column(name = "designation")
     private String designation;
 
-    @OneToMany(mappedBy = "currency")
+    @OneToMany(mappedBy = "currency") // not sure if needed
     private Set<Bill> bills;
 
-    @OneToMany(mappedBy = "currency")
+    @OneToMany(mappedBy = "currency") // not sure if needed
     private Set<NumericalConfig> numericalConfigs;
 
     public Currency() {

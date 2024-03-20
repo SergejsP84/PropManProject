@@ -65,7 +65,12 @@ public class JpaManagerService implements ManagerService {
     public Set<Property> getManagerProperties(Long managerId) {
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
-            return optionalManager.get().getProperties();
+            Set<Property> result = new HashSet<>();
+            List<Property> allProperties = propertyRepository.findAll();
+            for (Property property : allProperties) {
+                if (property.getManager().getId().equals(managerId)) result.add(property);
+            }
+            return result;
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
             // TODO: Handle the case where the manager with the given ID is not found

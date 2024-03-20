@@ -378,12 +378,7 @@ public class JpaPropertyService implements PropertyService {
     public Set<Booking> getPropertyBookings(Long propertyId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
-            Set<Booking> bookings = bookingService.getBookingsByProperty(optionalProperty.get());
-//            System.out.println("The resulting Set size is: " + bookings.size());
-//            for (Booking booking : bookings) {
-//                System.out.println(booking.getStatus());
-//            }
-            return bookings;
+            return bookingService.getBookingsByProperty(optionalProperty.get());
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             // TODO: Handle the case where the property with the given ID is not found
@@ -469,5 +464,10 @@ public class JpaPropertyService implements PropertyService {
             LOGGER.log(Level.ERROR, "Missing property or bill");
             // TODO: Handle the case where the property or bill with the given ID is not found
         }
+    }
+
+    @Override
+    public List<Property> getPropertiesByManager(Long managerId) {
+        return getAllProperties().stream().filter(property -> property.getManager().getId().equals(managerId)).toList();
     }
 }

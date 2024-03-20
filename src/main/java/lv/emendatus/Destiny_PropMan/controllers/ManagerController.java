@@ -52,16 +52,17 @@ public class ManagerController {
         managerService.updateManager(id, updatedManager);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
     @GetMapping("/getManagerProperties/{id}")
     public ResponseEntity<Set<Property>> getManagerProperties(@PathVariable Long id) {
-        if (managerService.getManagerById(id).isPresent()) {
-            Optional<Manager> manager = managerService.getManagerById(id);
-            return manager.map(managerInQuestion -> new ResponseEntity<>(managerInQuestion.getProperties(), HttpStatus.OK))
-                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-        } else {
-            System.out.println("No manager with the ID " + id + "exists in the database!");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    Optional<Manager> managerOptional = managerService.getManagerById(id);
+    if (managerOptional.isPresent()) {
+        Manager managerInQuestion = managerOptional.get();
+        return new ResponseEntity<>(managerInQuestion.getProperties(), HttpStatus.OK);
+    } else {
+        System.out.println("No manager with the ID " + id + " exists in the database!");
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
     }
     @PostMapping("/addProperty/{managerId}")
     public ResponseEntity<Void> addPropertyToManager(@PathVariable Long managerId, @RequestBody Property newProperty) {
