@@ -19,4 +19,5 @@ public interface TenantPaymentService {
     List<TenantPayment> getUnsettledPayments();
     void settlePayment(Long paymentId);
     List<TenantPayment> getPaymentsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    TenantPayment getPaymentByBooking(Long bookingId);
 }

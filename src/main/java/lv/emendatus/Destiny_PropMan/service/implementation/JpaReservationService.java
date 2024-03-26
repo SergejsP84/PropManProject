@@ -96,7 +96,7 @@ public class JpaReservationService implements ReservationService {
                 newBooking.setStartDate(startDate);
                 newBooking.setEndDate(endDate);
                 newBooking.setPaid(false);
-                newBooking.setStatus(BookingStatus.PENDING_PAYMENT);
+                newBooking.setStatus(BookingStatus.PENDING_APPROVAL);
                 bookingRepository.save(newBooking);
                 Long bookingId = newBooking.getId();
                 returnPropertyId = property.get().getId();
@@ -110,6 +110,7 @@ public class JpaReservationService implements ReservationService {
                 payment.setAmount(amount);
                 payment.setAssociatedPropertyId(propertyId);
                 payment.setManagerId(property.get().getManager().getId());
+                payment.setAssociatedBookingId(bookingId);
                 int paymentPeriodDaysSetOrDefault = 8;
                 for (NumericalConfig config : configService.getSystemSettings()) {
                     if (config.getName().equals("PaymentPeriodDays")) paymentPeriodDaysSetOrDefault = config.getValue().intValue();
@@ -122,7 +123,7 @@ public class JpaReservationService implements ReservationService {
                 payment.setReceiptDue(receiptDue);
                 int interestChargedByTheSystemSetOrDefault = 10;
                 for (NumericalConfig config : configService.getSystemSettings()) {
-                    if (config.getName().equals("SystemInterestRate")) paymentPeriodDaysSetOrDefault = config.getValue().intValue();
+                    if (config.getName().equals("SystemInterestRate")) interestChargedByTheSystemSetOrDefault = config.getValue().intValue();
                 }
                 payment.setManagerPayment(amount - (amount / 100 * interestChargedByTheSystemSetOrDefault));
                 paymentService.addTenantPayment(payment);

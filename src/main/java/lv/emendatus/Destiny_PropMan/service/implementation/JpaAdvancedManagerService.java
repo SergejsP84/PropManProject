@@ -1,17 +1,17 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.FinancialStatementDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerPropertyDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerReservationDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
 import lv.emendatus.Destiny_PropMan.mapper.BookingMapper;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerMapper;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerPropertyMapper;
+import lv.emendatus.Destiny_PropMan.mapper.PropertyCreationMapper;
+import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
 import org.apache.logging.log4j.Level;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     private final ManagerRepository managerRepository;
+    private final BookingRepository bookingRepository;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
 
     private final JpaManagerService managerService;
@@ -43,14 +44,20 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     private final JpaLeasingHistoryService leasingHistoryService;
     private final JpaTenantPaymentService tenantPaymentService;
     private final JpaBillService billService;
+    private final JpaPropertyDiscountService discountService;
+    private final JpaEarlyTerminationRequestService terminationService;
+    private final JpaRefundService refundService;
     @Autowired
     private final ManagerMapper managerMapper;
     @Autowired
     private final ManagerPropertyMapper managerPropertyMapper;
     @Autowired
+    private final PropertyCreationMapper propertyCreationMapper;
+    @Autowired
     private final BookingMapper bookingMapper;
-    public JpaAdvancedManagerService(ManagerRepository managerRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, BookingMapper bookingMapper) {
+    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, BookingMapper bookingMapper) {
         this.managerRepository = managerRepository;
+        this.bookingRepository = bookingRepository;
         this.managerService = managerService;
         this.bookingService = bookingService;
         this.propertyService = propertyService;
@@ -60,8 +67,12 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         this.leasingHistoryService = leasingHistoryService;
         this.tenantPaymentService = tenantPaymentService;
         this.billService = billService;
+        this.discountService = discountService;
+        this.terminationService = terminationService;
+        this.refundService = refundService;
         this.managerMapper = managerMapper;
         this.managerPropertyMapper = managerPropertyMapper;
+        this.propertyCreationMapper = propertyCreationMapper;
         this.bookingMapper = bookingMapper;
     }
 
@@ -310,6 +321,136 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             }
         }
         return unpaidBills;
+    }
+
+    public void addProperty(PropertyAdditionDTO propertyDTO) {
+        Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
+        property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        property.setBills(new HashSet<>());
+        property.setBookings(new HashSet<>());
+        propertyService.addProperty(property);
+    }
+
+    @Override
+    public PropertyDiscount setDiscountOrSurcharge(PropertyDiscountDTO propertyDiscountDTO) {
+        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyDiscountDTO.getPropertyId());
+        if (optionalProperty.isPresent()) {
+            Property property = optionalProperty.get();
+            if (!propertyDiscountDTO.getManagerId().equals(property.getManager().getId())) {
+                LOGGER.error("Cannot set discounts or surcharges for properties operated by a different manager!");
+                throw new IllegalArgumentException("Cannot set discounts or surcharges for properties operated by a different manager!");
+            }
+            PropertyDiscount propertyDiscount = new PropertyDiscount();
+            propertyDiscount.setProperty(property);
+            propertyDiscount.setPercentage(propertyDiscountDTO.getPercentage());
+            propertyDiscount.setPeriodStart(propertyDiscountDTO.getPeriodStart());
+            propertyDiscount.setPeriodEnd(propertyDiscountDTO.getPeriodEnd());
+            propertyDiscount.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            discountService.addPropertyDiscount(propertyDiscount);
+            return propertyDiscount;
+        } else {
+            LOGGER.error("No property with the specified ID exists in the database.");
+            throw new IllegalArgumentException("No property with the specified ID exists in the database.");
+        }
+    }
+
+    public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd) {
+        List<PropertyDiscount> propertyDiscounts = discountService.getDiscountsForPropertyWithinPeriod(propertyId, periodStart, periodEnd);
+        for (PropertyDiscount discount : propertyDiscounts) {
+            discountService.deletePropertyDiscount(discount.getId());
+        }
+        LOGGER.log(Level.INFO, "Deleted " + propertyDiscounts.size() + " discounts and surcharges for property with ID: " + propertyId + " within the period from " + periodStart + " to " + periodEnd);
+    }
+
+    @Override
+    public List<Booking> getBookingsPendingApproval(Long managerId) {
+        if (managerService.getManagerById(managerId).isPresent()) {
+            Set <Booking> managersBookings = bookingService.getBookingsByManager(managerService.getManagerById(managerId).get());
+            return managersBookings.stream().filter(booking -> booking.getStatus().equals(BookingStatus.PENDING_APPROVAL)).toList();
+        } else {
+            LOGGER.error("No manager with the specified ID exists in the database.");
+            throw new IllegalArgumentException("No manager with the specified ID exists in the database.");
+        }
+    }
+
+    @Override
+    public void approveBooking(Long bookingId) {
+        if (bookingService.getBookingById(bookingId).isPresent()) {
+            bookingService.updateBookingStatus(bookingId, BookingStatus.PENDING_PAYMENT);
+        } else {
+            LOGGER.error("No booking with the specified ID exists in the database.");
+            throw new IllegalArgumentException("No booking with the specified ID exists in the database.");
+        }
+    }
+
+    @Override
+    public void declineBooking(Long bookingId) {
+        if (bookingService.getBookingById(bookingId).isPresent()) {
+            bookingService.updateBookingStatus(bookingId, BookingStatus.CANCELLED);
+        } else {
+            LOGGER.error("No booking with the specified ID exists in the database.");
+            throw new IllegalArgumentException("No booking with the specified ID exists in the database.");
+        }
+    }
+
+    @Override
+    public void acceptEarlyTermination(Long requestId, String reply) {
+        Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
+        if (requestOptional.isPresent()) {
+            EarlyTerminationRequest request = requestOptional.get();
+            request.setStatus(ETRequestStatus.APPROVED);
+            request.setManagersResponse(reply);
+            Optional<Booking> bookingOptional = bookingService.getBookingById(request.getBookingId());
+            if (bookingOptional.isPresent()) {
+                Booking booking = bookingOptional.get();
+                booking.setEndDate(Timestamp.valueOf(request.getTerminationDate()));
+                bookingService.addBooking(booking);
+                TenantPayment payment = tenantPaymentService.getPaymentByBooking(booking.getId());
+                Double newAmount = bookingService.calculateTotalPrice(booking.getId());
+                Double refundForTenant = payment.getAmount() - newAmount;
+                int penaltyPercent = 0;
+                for (NumericalConfig config : configService.getSystemSettings()) {
+                    if (config.getName().equals("EarlyTerminationPenalty")) penaltyPercent = config.getValue().intValue();
+                }
+                refundForTenant = refundForTenant - ((refundForTenant / 100) * penaltyPercent);
+                payment.setAmount(newAmount);
+                int interestChargedByTheSystemSetOrDefault = 10;
+                for (NumericalConfig config : configService.getSystemSettings()) {
+                    if (config.getName().equals("SystemInterestRate")) interestChargedByTheSystemSetOrDefault = config.getValue().intValue();
+                }
+                payment.setManagerPayment(newAmount - (newAmount / 100 * interestChargedByTheSystemSetOrDefault));
+                tenantPaymentService.addTenantPayment(payment);
+                Refund refund = new Refund();
+                refund.setAmount(refundForTenant);
+                refund.setBookingId(booking.getId());
+                refund.setTenantId(booking.getTenantId());
+                refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+                refundService.addRefund(refund);
+                request.setProcessedOn(LocalDate.now());
+            } else {
+                LOGGER.error("Could not retrieve the appropriate booking for request with ID {}.", requestId);
+                throw new IllegalArgumentException("Associated booking not found");
+            }
+            terminationService.addETRequest(request);
+        } else {
+            LOGGER.error("Early termination request with ID {} not found.", requestId);
+            throw new IllegalArgumentException("Early termination request not found");
+        }
+    }
+
+    @Override
+    public void declineEarlyTermination(Long requestId, String reply) {
+        Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
+        if (requestOptional.isPresent()) {
+            EarlyTerminationRequest request = requestOptional.get();
+            request.setStatus(ETRequestStatus.DECLINED);
+            request.setManagersResponse(reply);
+            request.setProcessedOn(LocalDate.now());
+            terminationService.addETRequest(request);
+        } else {
+            LOGGER.error("Early termination request with ID {} not found.", requestId);
+            throw new IllegalArgumentException("Early termination request not found");
+        }
     }
 
 }

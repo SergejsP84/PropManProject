@@ -35,6 +35,9 @@ public class TenantPayment {
     @Column(name = "associated_property_id")
     private Long associatedPropertyId;
 
+    @Column(name = "associated_booking_id")
+    private Long associatedBookingId;
+
     @Column(name = "received_from_tenant")
     private boolean receivedFromTenant;
 

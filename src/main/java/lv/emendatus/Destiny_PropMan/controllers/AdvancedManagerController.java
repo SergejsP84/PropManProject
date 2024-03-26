@@ -1,11 +1,12 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.FinancialStatementDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerPropertyDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
+import lv.emendatus.Destiny_PropMan.domain.dto.reference.PropertyDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
+import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
+import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
@@ -76,5 +77,41 @@ public class AdvancedManagerController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodEnd) {
         FinancialStatementDTO financialStatement = service.generateFinancialStatement(periodStart, periodEnd, managerId);
         return ResponseEntity.ok(financialStatement);
+    }
+
+    @PostMapping("/addProperty")
+    public ResponseEntity<String> addProperty(@RequestBody PropertyAdditionDTO propertyDTO) {
+        service.addProperty(propertyDTO);
+        return ResponseEntity.ok("Property added successfully");
+    }
+
+    @PostMapping("/discount")
+    public ResponseEntity<PropertyDiscount> setDiscountOrSurcharge(@RequestBody PropertyDiscountDTO propertyDiscountDTO) {
+        PropertyDiscount propertyDiscount = service.setDiscountOrSurcharge(propertyDiscountDTO);
+        return ResponseEntity.ok(propertyDiscount);
+    }
+
+    @PostMapping("/discount/reset")
+    public ResponseEntity<Void> resetDiscountsAndSurcharges(@RequestParam Long propertyId, @RequestParam LocalDate periodStart, @RequestParam LocalDate periodEnd) {
+        service.resetDiscountsAndSurcharges(propertyId, periodStart, periodEnd);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/bookings/pending-approval")
+    public ResponseEntity<List<Booking>> getBookingsPendingApproval(@RequestParam Long managerId) {
+        List<Booking> pendingBookings = service.getBookingsPendingApproval(managerId);
+        return ResponseEntity.ok(pendingBookings);
+    }
+
+    @PostMapping("/bookings/approve")
+    public ResponseEntity<Void> approveBooking(@RequestParam Long bookingId) {
+        service.approveBooking(bookingId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bookings/decline")
+    public ResponseEntity<Void> declineBooking(@RequestParam Long bookingId) {
+        service.declineBooking(bookingId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -58,5 +58,19 @@ public class JpaTenantService implements TenantService {
                 .toList();
     }
 
+    @Override
+    public Tenant getTenantByLogin(String login) {
+        for (Tenant tenant : getAllTenants()) {
+            if (tenant.getLogin().equals(login)) return tenant;
+        }
+        return null;
+    }
+    @Override
+    public Tenant getTenantByEmail(String email) {
+        for (Tenant tenant : getAllTenants()) {
+            if (tenant.getEmail().equals(email)) return tenant;
+        }
+        return null;
+    }
 
 }

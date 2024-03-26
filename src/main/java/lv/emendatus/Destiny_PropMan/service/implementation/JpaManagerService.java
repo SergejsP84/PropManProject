@@ -1,9 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
-import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
-import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
-import lv.emendatus.Destiny_PropMan.domain.entity.Property;
+import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.ManagerService;
@@ -121,6 +118,23 @@ public class JpaManagerService implements ManagerService {
             // TODO: Handle the case where the manager with the given ID is not found
         }
     }
+
+    @Override
+    public Manager getManagerByLogin(String login) {
+            for (Manager manager : getAllManagers()) {
+                if (manager.getLogin().equals(login)) return manager;
+            }
+            return null;
+    }
+
+    @Override
+    public Manager getManagerByEmail(String email) {
+        for (Manager manager : getAllManagers()) {
+            if (manager.getEmail().equals(email)) return manager;
+        }
+        return null;
+    }
+
     @Override
     public void removePropertyFromManager(Long managerId, Long propertyId) {
         Optional<Manager> optionalManager = getManagerById(managerId);

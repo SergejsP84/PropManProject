@@ -1,15 +1,16 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.LeasingHistoryDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
-import lv.emendatus.Destiny_PropMan.mapper.LeasingHistoryMapper;
-import lv.emendatus.Destiny_PropMan.mapper.PropertyMapper;
-import lv.emendatus.Destiny_PropMan.mapper.TenantMapper;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
+import lv.emendatus.Destiny_PropMan.mapper.*;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
@@ -24,10 +25,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +37,12 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     @Autowired
     private PropertyMapper propertyMapper;
 
+    @Autowired
+    private PaymentsViewMapper paymentsViewMapper;
+
+    @Autowired
+    private BookingsViewMapper bookingsViewMapper;
+
     private final TenantRepository tenantRepository;
     private final TenantMapper tenantMapper;
     private final LeasingHistoryMapper leasingHistoryMapper;
@@ -48,10 +52,13 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     private final JpaBookingService bookingService;
     private final JpaTenantService tenantService;
     private final JpaNumericalConfigService configService;
-
+    private final JpaTenantPaymentService paymentService;
+    private final JpaPropertyService propertyService;
+    private final JpaEarlyTerminationRequestService terminationService;
+    private final JpaThirdPartyPaymentProviderService paymentProviderService;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
 
-    public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyMapper propertyMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService) {
+    public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyMapper propertyMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService, JpaTenantPaymentService paymentService, JpaPropertyService propertyService, JpaEarlyTerminationRequestService terminationService, JpaThirdPartyPaymentProviderService paymentProviderService) {
         this.propertyRepository = propertyRepository;
         this.propertyMapper = propertyMapper;
         this.tenantRepository = tenantRepository;
@@ -63,6 +70,10 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
         this.bookingService = bookingService;
         this.tenantService = tenantService;
         this.configService = configService;
+        this.paymentService = paymentService;
+        this.propertyService = propertyService;
+        this.terminationService = terminationService;
+        this.paymentProviderService = paymentProviderService;
     }
 
     @Override
@@ -206,6 +217,96 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
                 LOGGER.log(Level.INFO, "Your claim in regard to booking {} has been filed.", bookingId);
                 System.out.println("Claim lodged successfully");
             }
+        }
+    }
+
+    @Override
+    public List<PaymentsViewDTO> viewCompletedPayments(Long tenantId) {
+        List<TenantPayment> allPaidPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
+                .stream().filter(TenantPayment::isReceivedFromTenant).toList();
+        List<Property> paidProperties = new ArrayList<>();
+        for (TenantPayment payment : allPaidPaymentsOfTenant) {
+            if (propertyService.getPropertyById(payment.getAssociatedPropertyId()).isPresent()) {
+                paidProperties.add(propertyService.getPropertyById(payment.getAssociatedPropertyId()).get());
+            }
+        }
+        return paymentsViewMapper.toDTOList(allPaidPaymentsOfTenant, paidProperties);
+    }
+
+    @Override
+    public List<PaymentsViewDTO> viewOutstandingPayments(Long tenantId) {
+        List<TenantPayment> allOutstandingPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
+                .stream().filter(tenantPayment -> !tenantPayment.isReceivedFromTenant()).toList();
+        List<Property> bookedProperties = new ArrayList<>();
+        for (TenantPayment payment : allOutstandingPaymentsOfTenant) {
+            if (propertyService.getPropertyById(payment.getAssociatedPropertyId()).isPresent()) {
+                bookedProperties.add(propertyService.getPropertyById(payment.getAssociatedPropertyId()).get());
+            }
+        }
+        return paymentsViewMapper.toDTOList(allOutstandingPaymentsOfTenant, bookedProperties);
+    }
+
+    @Override
+    public List<BookingsViewDTO> viewTenantsBookings(Long tenantId) {
+        List<Booking> tenantBookings = new ArrayList<>();
+        if (tenantService.getTenantById(tenantId).isPresent()) {
+            tenantBookings = bookingService.getBookingsByTenant(tenantService.getTenantById(tenantId).get()).stream().toList();
+        } else {
+            LOGGER.log(Level.WARN, "No tenant with the {} ID exists in the database.", tenantId);
+            throw new IllegalArgumentException("Tenant not found");
+        }
+        return bookingsViewMapper.toDTOList(tenantBookings);
+    }
+
+    @Override
+    public void requestEarlyTermination(Long bookingId, LocalDateTime terminationDate, String comment) {
+        if (terminationDate.isBefore(LocalDateTime.now().plusDays(1))) {
+            LOGGER.log(Level.ERROR, "Termination date must be no earlier than the next day.");
+            throw new IllegalArgumentException("Termination must be no earlier than the next day.");
+        }
+        EarlyTerminationRequest request = new EarlyTerminationRequest();
+        if (bookingService.getBookingById(bookingId).isPresent()) {
+            if (terminationDate.isEqual(bookingService.getBookingById(bookingId).get().getEndDate().toLocalDateTime())
+                    || terminationDate.isAfter(bookingService.getBookingById(bookingId).get().getEndDate().toLocalDateTime())) {
+                LOGGER.log(Level.ERROR, "Early termination date must be before the final date of the initial booking.");
+                throw new IllegalArgumentException("Early termination date must be before the final date of the initial booking.");
+            }
+            request.setTenantId(bookingService.getBookingById(bookingId).get().getTenantId());
+        } else {
+            LOGGER.log(Level.ERROR, "Could not extract Tenant from the Booking - Booking record possibly corrupt.");
+            throw new IllegalArgumentException("Tenant not found");
+        }
+        request.setStatus(ETRequestStatus.PENDING);
+        request.setManagersResponse("");
+        request.setTerminationDate(terminationDate);
+        request.setBookingId(bookingId);
+        request.setComment(comment);
+        terminationService.addETRequest(request);
+    }
+
+    @Override
+    @Transactional
+    public void processPayment(TenantPayment tenantPayment) {
+        // Add third-party payment processing mechanism in the service
+        boolean paymentSuccessful = paymentProviderService.stub(tenantPayment);
+
+        if (paymentSuccessful) {
+            tenantPayment.setReceivedFromTenant(true);
+            Optional<Booking> bookingOptional = bookingService.getBookingById(tenantPayment.getAssociatedBookingId());
+            if (bookingOptional.isPresent()) {
+                Booking booking = bookingOptional.get();
+                booking.setPaid(true);
+                booking.setStatus(BookingStatus.CONFIRMED);
+                bookingService.addBooking(booking);
+                paymentService.addTenantPayment(tenantPayment);
+            } else {
+                LOGGER.error("Booking with ID {} not found.", tenantPayment.getAssociatedBookingId());
+                throw new IllegalArgumentException("Booking not found");
+            }
+            LOGGER.info("Payment processed successfully. TenantPayment marked as received, and Booking {} status set to CONFIRMED.", tenantPayment.getAssociatedBookingId());
+        } else {
+            LOGGER.error("Payment processing failed for TenantPayment with ID {}.", tenantPayment.getId());
+            // Handle payment failure as in line with the third-party payment service provider's data output
         }
     }
 

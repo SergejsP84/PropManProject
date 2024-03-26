@@ -80,4 +80,13 @@ public class JpaTenantPaymentService implements TenantPaymentService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public TenantPayment getPaymentByBooking(Long bookingId) {
+        for (TenantPayment payment : getAllTenantPayments()) {
+            if (payment.getAssociatedBookingId().equals(bookingId)) return payment;
+        }
+        LOGGER.error("Could not retrieve a payment for the associated booking");
+        throw new IllegalArgumentException("Could not retrieve a payment for the associated booking");
+    }
 }

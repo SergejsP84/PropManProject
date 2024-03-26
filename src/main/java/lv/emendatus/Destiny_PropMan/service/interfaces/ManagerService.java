@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
+import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +18,6 @@ public interface ManagerService {
     void addPropertyToManager(Long managerId, Property property);
     void removePropertyFromManager(Long managerId, Long propertyId);
     void purgeProperties(Long managerId);
+    Manager getManagerByLogin(String login);
+    Manager getManagerByEmail(String email);
 }

@@ -14,5 +14,7 @@ public interface TenantService {
     void addTenant(Tenant tenant);
     void deleteTenant(Long id);
     List<Tenant> getTenantsByFirstNameOrLastName(String name);
+    Tenant getTenantByLogin(String login);
+    Tenant getTenantByEmail(String email);
 
 }

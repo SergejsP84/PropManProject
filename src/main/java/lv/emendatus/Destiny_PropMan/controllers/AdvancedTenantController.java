@@ -2,9 +2,7 @@ package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.FavoritePropertyDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.FavoritePropertyDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.PropertiesForTenantsDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,5 +62,21 @@ public class AdvancedTenantController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/completed-payments")
+    public ResponseEntity<List<PaymentsViewDTO>> viewCompletedPayments(@RequestParam Long tenantId) {
+        List<PaymentsViewDTO> completedPayments = service.viewCompletedPayments(tenantId);
+        return ResponseEntity.ok(completedPayments);
+    }
 
+    @GetMapping("/outstanding-payments")
+    public ResponseEntity<List<PaymentsViewDTO>> viewOutstandingPayments(@RequestParam Long tenantId) {
+        List<PaymentsViewDTO> outstandingPayments = service.viewOutstandingPayments(tenantId);
+        return ResponseEntity.ok(outstandingPayments);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BookingsViewDTO>> viewTenantsBookings(@RequestParam Long tenantId) {
+        List<BookingsViewDTO> tenantBookings = service.viewTenantsBookings(tenantId);
+        return ResponseEntity.ok(tenantBookings);
+    }
 }

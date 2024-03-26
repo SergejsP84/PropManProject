@@ -5,12 +5,11 @@ import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationCancellationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationRequestDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.FavoritePropertyDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.FavoritePropertyDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.ManagersForTenantsDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.PropertiesForTenantsDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.ReviewDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
+import lv.emendatus.Destiny_PropMan.domain.entity.EarlyTerminationRequest;
+import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AdvancedTenantService {
@@ -39,4 +38,15 @@ public interface AdvancedTenantService {
 
     // Lob a claim with this one
     void submitClaimfromTenant(Long bookingId, String description);
+
+    // View payments and bookings
+    List<PaymentsViewDTO> viewCompletedPayments(Long tenantId);
+    List<PaymentsViewDTO> viewOutstandingPayments(Long tenantId);
+    List<BookingsViewDTO> viewTenantsBookings(Long tenantId);
+
+    // Request an early termination of a booking
+    void requestEarlyTermination(Long bookingId, LocalDateTime terminationDate, String comment);
+
+    // Pay the booking
+    public void processPayment(TenantPayment tenantPayment);
 }

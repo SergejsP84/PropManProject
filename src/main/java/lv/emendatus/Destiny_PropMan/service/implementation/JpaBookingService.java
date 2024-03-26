@@ -11,9 +11,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -30,14 +33,16 @@ public class JpaBookingService implements BookingService {
     private final JpaLeasingHistoryService leasingHistoryService;
 //    private final JpaClaimService claimService;
     private final JpaNumericalConfigService configService;
+    private final JpaPropertyDiscountService propertyDiscountService;
 
-    public JpaBookingService(BookingRepository bookingRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaNumericalConfigService configService) {
+    public JpaBookingService(BookingRepository bookingRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaNumericalConfigService configService, JpaPropertyDiscountService propertyDiscountService) {
         this.bookingRepository = bookingRepository;
         this.propertyRepository = propertyRepository;
         this.tenantRepository = tenantRepository;
         this.tenantService = tenantService;
         this.leasingHistoryService = leasingHistoryService;
         this.configService = configService;
+        this.propertyDiscountService = propertyDiscountService;
     }
     @Override
     public List<Booking> getAllBookings() {
@@ -136,6 +141,8 @@ public class JpaBookingService implements BookingService {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isPresent()) {
             Booking booking = optionalBooking.get();
+            LocalDateTime startDate = booking.getStartDate().toLocalDateTime();
+            LocalDateTime endDate = booking.getEndDate().toLocalDateTime();
             long numberOfDays = 1 + ChronoUnit.DAYS.between(booking.getStartDate().toLocalDateTime(), booking.getEndDate().toLocalDateTime());
             double totalPrice = 0.0;
             // months
@@ -152,7 +159,15 @@ public class JpaBookingService implements BookingService {
             }
             //remaining days
             totalPrice += numberOfDays * booking.getProperty().getPricePerDay();
-            return totalPrice;
+            double costPerDay = totalPrice / numberOfDays;
+            double finalPriceWithDiscountsAndSurcharges = 0.00;
+            for (LocalDate date = startDate.toLocalDate(); !date.isAfter(endDate.toLocalDate()); date = date.plusDays(1)) {
+                int discountOrSurcharge = propertyDiscountService.getDiscountOrSurchargeForCalculations(booking.getProperty().getId(), startDate.toLocalDate(), endDate.toLocalDate(), date);
+                finalPriceWithDiscountsAndSurcharges += (costPerDay + (costPerDay * discountOrSurcharge / 100));
+            }
+            BigDecimal finalPrice = BigDecimal.valueOf(finalPriceWithDiscountsAndSurcharges);
+            BigDecimal roundedPrice = finalPrice.setScale(2, RoundingMode.HALF_UP);
+            return roundedPrice.doubleValue();
         } else {
             LOGGER.log(Level.ERROR, "No booking with the specified ID exists in the database.");
             // TODO: Handle the case where the booking with the given ID is not found

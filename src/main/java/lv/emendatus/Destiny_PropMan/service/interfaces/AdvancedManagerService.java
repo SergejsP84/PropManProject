@@ -1,11 +1,11 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.FinancialStatementDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerPropertyDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerReservationDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
+import lv.emendatus.Destiny_PropMan.domain.dto.reference.PropertyDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
+import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
+import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,4 +33,20 @@ public interface AdvancedManagerService {
     public List<Bill> getUnpaidBillsForProperty(Long propertyId);
 
     public List<Bill> getUnpaidBillsForManager(Long managerId);
+
+    public void addProperty(PropertyAdditionDTO propertyDTO);
+
+    public PropertyDiscount setDiscountOrSurcharge (PropertyDiscountDTO propertyDiscountDTO);
+
+    public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
+
+    public List<Booking> getBookingsPendingApproval (Long managerId);
+
+    public void approveBooking (Long bookingId);
+
+    public void declineBooking (Long bookingId);
+
+    public void acceptEarlyTermination(Long requestId, String reply);
+
+    public void declineEarlyTermination(Long requestId, String reply);
 }

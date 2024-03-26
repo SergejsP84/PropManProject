@@ -48,7 +48,8 @@ public class Manager {
     private String email;
     @Column(name = "iban")
     private String iban;
-
+    @Column(name = "payment_card_no")
+    private String paymentCardNo;
 
     @Override
     public boolean equals(Object o) {
