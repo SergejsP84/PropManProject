@@ -17,16 +17,8 @@ public interface AdvancedTenantService {
     // View Property Details
     PropertiesForTenantsDTO getPropertyDetails(Long propertyId);
 
-    // Manage Profile
-    TenantDTO_Profile getTenantProfile(Long tenantId);
-
-    // Communicate with Hosts
-    List<ManagersForTenantsDTO> getManagersForProperty(Long propertyId);
-
 
     // Save Favorites
-
-
     void saveFavoriteProperty(FavoritePropertyDTO favoritePropertyDTO);
     List<FavoritePropertyDTO_Profile> getFavoriteProperties(Long tenantId);
     void removePropertyFromFavorites(Long tenantId, Long propertyId);

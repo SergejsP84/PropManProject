@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import lv.emendatus.Destiny_PropMan.exceptions.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.LeasingHistoryDTO_Profile;
@@ -21,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -57,6 +62,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     private final JpaEarlyTerminationRequestService terminationService;
     private final JpaThirdPartyPaymentProviderService paymentProviderService;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+    private static final String COMPLETED_PAYMENTS_FILE_PATH = "completedTenantPayments.txt";
 
     public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyMapper propertyMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService, JpaTenantPaymentService paymentService, JpaPropertyService propertyService, JpaEarlyTerminationRequestService terminationService, JpaThirdPartyPaymentProviderService paymentProviderService) {
         this.propertyRepository = propertyRepository;
@@ -83,35 +89,24 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             return propertyMapper.propertyToPropertiesForTenantsDTO(propertyOptional.get());
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the manager with the given ID is not found
-            return new PropertiesForTenantsDTO();
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
     @Override
-    public TenantDTO_Profile getTenantProfile(Long tenantId) {
-        return null;
-    }
-
-    @Override
-    public List<ManagersForTenantsDTO> getManagersForProperty(Long propertyId) {
-        return null;
-    }
-
-
-    @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public TenantDTO_Profile getTenantInformation(Long tenantId) {
         Optional<Tenant> tenantOptional = tenantRepository.findById(tenantId);
         if (tenantOptional.isPresent()) {
             Tenant tenant = tenantOptional.get();
             return TenantMapper.INSTANCE.toDTO(tenant);
         } else {
-            // TODO Handle exception
             LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
-            return new TenantDTO_Profile();
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) {
         Optional<Tenant> tenantOptional = tenantRepository.findById(tenantId);
         if (tenantOptional.isPresent()) {
@@ -119,11 +114,12 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             tenantMapper.updateTenantFromDTO(existingTenant, updatedTenantInfo);
             tenantRepository.save(existingTenant);
         } else {
-            // TODO: Handle exception
             LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public BookingHistoryDTO viewBookingHistory(Long tenantId) {
         Optional<Tenant> tenantOptional = tenantRepository.findById(tenantId);
         if (tenantOptional.isPresent()) {
@@ -136,18 +132,19 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             }
             return new BookingHistoryDTO(tenantId, leasingHistoryDTOs);
         } else {
-            // TODO Handle exception
             LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
-            return null;
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
 
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void saveFavoriteProperty(FavoritePropertyDTO favoriteDTO) {
         Tenant tenant = tenantRepository.findById(favoriteDTO.getTenantId()).orElse(null);
         Property property = propertyRepository.findById(favoriteDTO.getPropertyId()).orElse(null);
         if (tenant != null && property != null) {
+            Long tenantId = favoriteDTO.getTenantId();
             Optional<TenantFavorites> current = favoritesService.getTenantFavoritesByTenant(favoriteDTO.getTenantId());
             if (current.isPresent()) {
                 favoritesService.addPropertyToFavorites(favoriteDTO.getTenantId(), favoriteDTO.getPropertyId());
@@ -161,11 +158,12 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             }
         } else {
             LOGGER.log(Level.ERROR, "Either the Tenant or the Property could not be found!");
-            // TODO: Exception - entity not found
+            throw new EntityNotFoundException("Either the Tenant or the Property could not be found!");
         }
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public List<FavoritePropertyDTO_Profile> getFavoriteProperties(Long tenantId) {
         Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
         if (tenant != null) {
@@ -180,21 +178,24 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             }
         } else {
             LOGGER.log(Level.WARN, "No tenant with the {} ID exists in the database.", tenantId);
-            return Collections.emptyList();
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void removePropertyFromFavorites(Long tenantId, Long propertyId) {
         favoritesService.removePropertyFromFavorites(tenantId, propertyId);
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void submitClaimfromTenant(Long bookingId, String description) {
         Optional<Booking> booking = bookingService.getBookingById(bookingId);
         if (booking.isEmpty()) {
             LOGGER.log(Level.WARN, "No booking with the {} ID exists in the database.", bookingId);
             System.out.println("Booking not found");
         } else {
+            Long tenantId = booking.get().getTenantId();
             int delaySetOrDefault = 7;
             for (NumericalConfig config : configService.getSystemSettings()) {
                 if (config.getName().equals("ClaimPeriodDays")) delaySetOrDefault = config.getValue().intValue();
@@ -202,6 +203,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             if (bookingService.calculateDaysDifference(booking.get().getEndDate()) > delaySetOrDefault) {
                 LOGGER.log(Level.WARN, "Sorry, the claiming period for booking {} has expired.", bookingId);
                 System.out.println("Cannot create claim, claiming period expired for this booking");
+                throw new BookingNotFoundException("No booking found with ID: " + bookingId);
             } else {
                 Claim claim = new Claim();
                 claim.setBookingId(bookingId);
@@ -221,6 +223,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public List<PaymentsViewDTO> viewCompletedPayments(Long tenantId) {
         List<TenantPayment> allPaidPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
                 .stream().filter(TenantPayment::isReceivedFromTenant).toList();
@@ -234,6 +237,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public List<PaymentsViewDTO> viewOutstandingPayments(Long tenantId) {
         List<TenantPayment> allOutstandingPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
                 .stream().filter(tenantPayment -> !tenantPayment.isReceivedFromTenant()).toList();
@@ -247,34 +251,37 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public List<BookingsViewDTO> viewTenantsBookings(Long tenantId) {
         List<Booking> tenantBookings = new ArrayList<>();
         if (tenantService.getTenantById(tenantId).isPresent()) {
             tenantBookings = bookingService.getBookingsByTenant(tenantService.getTenantById(tenantId).get()).stream().toList();
         } else {
             LOGGER.log(Level.WARN, "No tenant with the {} ID exists in the database.", tenantId);
-            throw new IllegalArgumentException("Tenant not found");
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
         return bookingsViewMapper.toDTOList(tenantBookings);
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void requestEarlyTermination(Long bookingId, LocalDateTime terminationDate, String comment) {
         if (terminationDate.isBefore(LocalDateTime.now().plusDays(1))) {
             LOGGER.log(Level.ERROR, "Termination date must be no earlier than the next day.");
-            throw new IllegalArgumentException("Termination must be no earlier than the next day.");
+            throw new BadEarlyTerminationRequestException("Termination must be no earlier than the next day.");
         }
         EarlyTerminationRequest request = new EarlyTerminationRequest();
         if (bookingService.getBookingById(bookingId).isPresent()) {
             if (terminationDate.isEqual(bookingService.getBookingById(bookingId).get().getEndDate().toLocalDateTime())
                     || terminationDate.isAfter(bookingService.getBookingById(bookingId).get().getEndDate().toLocalDateTime())) {
                 LOGGER.log(Level.ERROR, "Early termination date must be before the final date of the initial booking.");
-                throw new IllegalArgumentException("Early termination date must be before the final date of the initial booking.");
+                throw new BadEarlyTerminationRequestException("Early termination date must be before the final date of the initial booking.");
             }
+            Long tenantId = bookingService.getBookingById(bookingId).get().getTenantId();
             request.setTenantId(bookingService.getBookingById(bookingId).get().getTenantId());
         } else {
             LOGGER.log(Level.ERROR, "Could not extract Tenant from the Booking - Booking record possibly corrupt.");
-            throw new IllegalArgumentException("Tenant not found");
+            throw new TenantNotFoundException("Failed in extracting the Tenant from the Booking");
         }
         request.setStatus(ETRequestStatus.PENDING);
         request.setManagersResponse("");
@@ -286,11 +293,25 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ROLE_TENANT') and #tenantId == principal.id")
     public void processPayment(TenantPayment tenantPayment) {
+        Long tenantId = tenantPayment.getTenant().getId();
+
         // Add third-party payment processing mechanism in the service
         boolean paymentSuccessful = paymentProviderService.stub(tenantPayment);
 
         if (paymentSuccessful) {
+            try {
+                File file = new File(COMPLETED_PAYMENTS_FILE_PATH);
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                try (FileWriter writer = new FileWriter(file, true)) {
+                    writer.write(LocalDateTime.now().toString() + " Payment from Tenant " + tenantPayment.getTenant().getId() + " processed successfully. Amount: " + tenantPayment.getAmount() + ", booking ID: " + tenantPayment.getAssociatedBookingId() + "\n");
+                }
+            } catch (IOException e) {
+                LOGGER.error("Error occurred while writing completed payment record: " + e.getMessage());
+            }
             tenantPayment.setReceivedFromTenant(true);
             Optional<Booking> bookingOptional = bookingService.getBookingById(tenantPayment.getAssociatedBookingId());
             if (bookingOptional.isPresent()) {
@@ -301,7 +322,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
                 paymentService.addTenantPayment(tenantPayment);
             } else {
                 LOGGER.error("Booking with ID {} not found.", tenantPayment.getAssociatedBookingId());
-                throw new IllegalArgumentException("Booking not found");
+                throw new BookingNotFoundException("Booking not found");
             }
             LOGGER.info("Payment processed successfully. TenantPayment marked as received, and Booking {} status set to CONFIRMED.", tenantPayment.getAssociatedBookingId());
         } else {

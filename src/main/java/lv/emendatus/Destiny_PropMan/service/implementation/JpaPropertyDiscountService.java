@@ -64,8 +64,7 @@ public class JpaPropertyDiscountService implements PropertyDiscountService{
         if (discountsForSpecificDay.isEmpty()) return 0;
         PropertyDiscount latestDiscount = discountsForSpecificDay.stream()
                 .max(Comparator.comparing(PropertyDiscount::getCreatedAt))
-                .orElseThrow();
-        // TODO: Handle NoSuchElementException
+                .orElse(null);
         return latestDiscount.getPercentage().intValue();
     }
 

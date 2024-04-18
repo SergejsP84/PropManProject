@@ -18,7 +18,7 @@ public class Property {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "manager_id")
+    @JoinColumn(name = "manager")
     private Manager manager;
 
     @Column(name = "status")

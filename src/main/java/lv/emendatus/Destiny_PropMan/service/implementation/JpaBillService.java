@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
+import lv.emendatus.Destiny_PropMan.exceptions.BillNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BillRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.BillService;
@@ -87,9 +88,8 @@ public class JpaBillService implements BillService {
             bill.setPaid(!bill.isPaid());
             billRepository.save(bill);
         } else {
-//            throw new BillNotFoundException("No Bill with ID " + billId + " found.");
             LOGGER.log(Level.ERROR, "No bill with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new BillNotFoundException("Bill with the ID " + id + " could not be found");
         }
     }
 }

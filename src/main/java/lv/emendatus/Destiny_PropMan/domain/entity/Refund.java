@@ -26,4 +26,5 @@ public class Refund {
     private Double amount;
     @Column(name = "created_at")
     private Timestamp createdAt;
+
 }

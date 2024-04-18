@@ -1,6 +1,8 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 
+import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
+import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 
 public interface ThirdPartyPaymentProviderService {
@@ -9,5 +11,6 @@ public interface ThirdPartyPaymentProviderService {
     // Due alterations shall have to be made depending on the input data required by such service provider
 
     Boolean stub(TenantPayment tenantPayment);
-
+    Boolean stub2(Refund refund);
+    Boolean stub3(Payout payout);
 }

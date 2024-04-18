@@ -1,6 +1,9 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
+import lv.emendatus.Destiny_PropMan.exceptions.AuthenticationFailedException;
+import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.ManagerService;
@@ -55,7 +58,7 @@ public class JpaManagerService implements ManagerService {
             managerRepository.save(existingManager);
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the manager with the given ID is not found
+            throw new ManagerNotFoundException("No manager found with ID: " + id);
         }
     }
     @Override
@@ -70,8 +73,7 @@ public class JpaManagerService implements ManagerService {
             return result;
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
-            // TODO: Handle the case where the manager with the given ID is not found
-            return Collections.emptySet();
+            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
     @Override
@@ -90,7 +92,7 @@ public class JpaManagerService implements ManagerService {
             propertyRepository.save(property);
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
-            // TODO: Handle the case where the manager with the given ID is not found
+            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
 
@@ -115,7 +117,7 @@ public class JpaManagerService implements ManagerService {
             managerRepository.save(optionalManager.get());
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
-            // TODO: Handle the case where the manager with the given ID is not found
+            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
 
@@ -136,6 +138,19 @@ public class JpaManagerService implements ManagerService {
     }
 
     @Override
+    public Manager getManagerByConfirmationToken(String confirmationToken) {
+        for (Manager manager : getAllManagers()) {
+            if (manager.getConfirmationToken().equals(confirmationToken)) return manager;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isTokenValid(Manager manager, String token) {
+        return manager != null && token.equals(manager.getConfirmationToken());
+    }
+
+    @Override
     public void removePropertyFromManager(Long managerId, Long propertyId) {
         Optional<Manager> optionalManager = getManagerById(managerId);
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
@@ -150,7 +165,7 @@ public class JpaManagerService implements ManagerService {
             managerRepository.save(manager);
         } else {
             LOGGER.log(Level.ERROR, "No manager or property with the given IDs exist in the database.");
-            // TODO: Handle the case where the manager or property with the given IDs are not found
+            throw new EntityNotFoundException("Either the manager or the property could not be found");
         }
     }
 }

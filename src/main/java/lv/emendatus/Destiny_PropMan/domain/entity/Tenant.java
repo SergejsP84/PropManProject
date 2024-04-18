@@ -7,7 +7,12 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -68,14 +73,29 @@ public class Tenant {
     @OneToMany(mappedBy = "tenant")
     private Set<TenantPayment> tenantPayments;
 
+    @Column(name = "confirmation_token")
+    private String confirmationToken;
+
+    @Column(name = "token_expiration_time")
+    private LocalDateTime expirationTime;
+
+    @ElementCollection(targetClass = SimpleGrantedAuthority.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "tenant_authorities", joinColumns = @JoinColumn(name = "tenant_id"))
+    @Column(name = "authority")
+    private Collection<? extends GrantedAuthority> authorities;
+
+    @Column(name = "known_ips")
+    private List<String> knownIps;
+
     public void removePropertyReference() {
         this.currentProperty = null;
     }
 
+
     public Tenant() {
     }
 
-    public Tenant(Long id, String firstName, String lastName, Property currentProperty, boolean isActive, String phone, String email, String iban, String paymentCardNo, float rating, String login, String password, List<LeasingHistory> leasingHistories, Set<TenantPayment> tenantPayments) {
+    public Tenant(Long id, String firstName, String lastName, Property currentProperty, boolean isActive, String phone, String email, String iban, String paymentCardNo, float rating, String login, String password, List<LeasingHistory> leasingHistories, Set<TenantPayment> tenantPayments, String confirmationToken, LocalDateTime expirationTime) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -90,6 +110,8 @@ public class Tenant {
         this.password = password;
         this.leasingHistories = leasingHistories;
         this.tenantPayments = tenantPayments;
+        this.confirmationToken = confirmationToken;
+        this.expirationTime = expirationTime;
     }
 
     @Override
@@ -235,5 +257,37 @@ public class Tenant {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getConfirmationToken() {
+        return confirmationToken;
+    }
+
+    public void setConfirmationToken(String confirmationToken) {
+        this.confirmationToken = confirmationToken;
+    }
+
+    public LocalDateTime getExpirationTime() {
+        return expirationTime;
+    }
+
+    public void setExpirationTime(LocalDateTime expirationTime) {
+        this.expirationTime = expirationTime;
+    }
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    public List<String> getKnownIps() {
+        return knownIps;
+    }
+
+    public void setKnownIps(List<String> knownIps) {
+        this.knownIps = knownIps;
     }
 }

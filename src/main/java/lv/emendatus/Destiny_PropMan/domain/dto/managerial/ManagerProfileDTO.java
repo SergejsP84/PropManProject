@@ -13,8 +13,9 @@ public class ManagerProfileDTO {
     private Long id;
     private String managerName;
     private String description;
-    private boolean isActive;
+//    private boolean isActive;
     private String phone;
     private String email;
     private String iban;
+    private String paymentCardNo;
 }

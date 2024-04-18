@@ -24,7 +24,7 @@ public interface AdvancedManagerService {
 
     List<BookingDTO_Reservation> getBookingsForManager(Long managerId);
 
-    public void submitClaimfromManager(Long bookingId, String description);
+    void submitClaimfromManager(Long bookingId, String description);
 
     void closeBookingByManager(Long bookingId);
 
@@ -49,4 +49,6 @@ public interface AdvancedManagerService {
     public void acceptEarlyTermination(Long requestId, String reply);
 
     public void declineEarlyTermination(Long requestId, String reply);
+
+    void removeProperty (Long propertyId);
 }

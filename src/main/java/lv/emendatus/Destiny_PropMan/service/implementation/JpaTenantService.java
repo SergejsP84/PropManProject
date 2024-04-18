@@ -73,4 +73,17 @@ public class JpaTenantService implements TenantService {
         return null;
     }
 
+    @Override
+    public Tenant getTenantByConfirmationToken(String confirmationToken) {
+        for (Tenant tenant : getAllTenants()) {
+            if (tenant.getConfirmationToken().equals(confirmationToken)) return tenant;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isTokenValid(Tenant tenant, String token) {
+        return tenant != null && token.equals(tenant.getConfirmationToken());
+    }
+
 }

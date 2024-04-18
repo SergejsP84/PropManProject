@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
+import lv.emendatus.Destiny_PropMan.exceptions.BookingNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
@@ -170,8 +171,7 @@ public class JpaBookingService implements BookingService {
             return roundedPrice.doubleValue();
         } else {
             LOGGER.log(Level.ERROR, "No booking with the specified ID exists in the database.");
-            // TODO: Handle the case where the booking with the given ID is not found
-            return null;
+            throw new BookingNotFoundException("No booking found with ID: " + bookingId);
         }
     }
 

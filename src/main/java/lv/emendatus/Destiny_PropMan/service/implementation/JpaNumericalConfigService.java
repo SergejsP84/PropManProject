@@ -3,6 +3,8 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
+import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.NumericalConfigNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.NumericalConfigRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.NumericalConfigService;
 import org.apache.logging.log4j.Level;
@@ -35,9 +37,7 @@ public class JpaNumericalConfigService implements NumericalConfigService {
     @Transactional
     public void addNumericalConfig(NumericalConfig numericalConfig)
     {
-//        System.out.println("addNumericalConfig method invoked");
         NumericalConfig savedConfig = repository.save(numericalConfig);
-//        System.out.println("ID of the saved entity: " + savedConfig.getId());
     }
     @Override
     public void deleteNumericalConfig(Long id) {
@@ -56,7 +56,7 @@ public class JpaNumericalConfigService implements NumericalConfigService {
             repository.save(existingNumericalConfig);
         } else {
             LOGGER.log(Level.ERROR, "No config with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new NumericalConfigNotFoundException("No config found with ID: " + id);
         }
     }
     @Override

@@ -16,5 +16,6 @@ public interface TenantService {
     List<Tenant> getTenantsByFirstNameOrLastName(String name);
     Tenant getTenantByLogin(String login);
     Tenant getTenantByEmail(String email);
-
+    Tenant getTenantByConfirmationToken(String confirmationToken);
+    boolean isTokenValid(Tenant tenant, String token);
 }

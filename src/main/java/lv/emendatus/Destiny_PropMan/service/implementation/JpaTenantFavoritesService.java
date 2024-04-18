@@ -67,10 +67,10 @@ public class JpaTenantFavoritesService implements TenantFavoritesService {
                 currentFavorites.setFavoritePropertyIDs(favoritePropertyIDs);
                 repository.save(currentFavorites);
             } else {
-                LOGGER.warn("Property is already on the favorites list");
+                LOGGER.info("Property is already on the favorites list");
             }
         } else {
-            LOGGER.warn("No favorites found for the given tenant");
+            LOGGER.info("No favorites found for the given tenant");
         }
     }
 }

@@ -7,11 +7,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Getter
 @Setter
@@ -50,6 +51,19 @@ public class Manager {
     private String iban;
     @Column(name = "payment_card_no")
     private String paymentCardNo;
+    @Column(name = "confirmation_token")
+    private String confirmationToken;
+
+    @Column(name = "token_expiration_time")
+    private LocalDateTime expirationTime;
+
+    @ElementCollection(targetClass = SimpleGrantedAuthority.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "manager_authorities", joinColumns = @JoinColumn(name = "manager_id"))
+    @Column(name = "authority")
+    private Collection<? extends GrantedAuthority> authorities;
+
+    @Column(name = "known_ips")
+    private List<String> knownIps;
 
     @Override
     public boolean equals(Object o) {

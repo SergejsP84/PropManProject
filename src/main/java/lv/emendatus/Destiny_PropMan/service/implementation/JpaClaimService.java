@@ -4,6 +4,9 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
+import lv.emendatus.Destiny_PropMan.exceptions.BookingNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.TenantNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ClaimRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.ClaimService;
 import org.apache.logging.log4j.Level;
@@ -69,8 +72,7 @@ public class JpaClaimService implements ClaimService {
             return bookingRelatedClaims.stream().filter(claim -> claim.getClaimantType().equals(ClaimantType.TENANT)).toList();
         } else {
             LOGGER.log(Level.ERROR, "No tenant with the specified ID exists in the database.");
-            // TODO: Handle the case where the tenant with the given ID is not found
-            return null;
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
     @Override
@@ -85,8 +87,7 @@ public class JpaClaimService implements ClaimService {
             return bookingRelatedClaims.stream().filter(claim -> claim.getClaimantType().equals(ClaimantType.MANAGER)).toList();
         } else {
             LOGGER.log(Level.ERROR, "No manager with the specified ID exists in the database.");
-            // TODO: Handle the case where the manager with the given ID is not found
-            return null;
+            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
     @Override
@@ -101,8 +102,7 @@ public class JpaClaimService implements ClaimService {
             return bookingRelatedClaims.stream().filter(claim -> claim.getClaimantType().equals(ClaimantType.MANAGER)).toList();
         } else {
             LOGGER.log(Level.ERROR, "No tenant with the specified ID exists in the database.");
-            // TODO: Handle the case where the tenant with the given ID is not found
-            return null;
+            throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
     @Override
@@ -117,8 +117,7 @@ public class JpaClaimService implements ClaimService {
             return bookingRelatedClaims.stream().filter(claim -> claim.getClaimantType().equals(ClaimantType.TENANT)).toList();
         } else {
             LOGGER.log(Level.ERROR, "No manager with the specified ID exists in the database.");
-            // TODO: Handle the case where the manager with the given ID is not found
-            return null;
+            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
     @Override

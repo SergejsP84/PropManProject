@@ -3,6 +3,10 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
+import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.PropertyNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.TenantNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.*;
 import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyService;
 import org.apache.logging.log4j.Level;
@@ -133,7 +137,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -146,7 +150,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -159,7 +163,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -172,7 +176,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -185,7 +189,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -198,7 +202,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -212,7 +216,7 @@ public class JpaPropertyService implements PropertyService {
             propertyAmenityRepository.save(propertyAmenity);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -230,7 +234,7 @@ public class JpaPropertyService implements PropertyService {
             }
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -245,12 +249,12 @@ public class JpaPropertyService implements PropertyService {
                 property.setManager(manager);
                 addProperty(property);
             } else {
-                LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", propertyId);
-                // TODO: Handle the case where the manager with the given ID is not found
+                LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
+                throw new ManagerNotFoundException("No manager found with ID: " + managerId);
             }
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -263,7 +267,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -276,7 +280,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -289,7 +293,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -302,7 +306,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", id);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + id);
         }
     }
 
@@ -322,15 +326,15 @@ public class JpaPropertyService implements PropertyService {
                 property.removeTenantReference();
                 property.setTenant(tenant);
                 addProperty(property);
-                tenant.removePropertyReference();
+                tenant.removePropertyReference(); // to avoid circular reference
             } else {
-                LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", propertyId);
-                // TODO: Handle the case where the tenant with the given ID is not found
+                LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
+                throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
             }
 
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -349,8 +353,7 @@ public class JpaPropertyService implements PropertyService {
             }
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            return null;
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -370,7 +373,7 @@ public class JpaPropertyService implements PropertyService {
             addProperty(property);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -381,8 +384,7 @@ public class JpaPropertyService implements PropertyService {
             return bookingService.getBookingsByProperty(optionalProperty.get());
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
-            return Collections.emptySet();
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -397,7 +399,7 @@ public class JpaPropertyService implements PropertyService {
             bookingService.addBooking(booking);
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
-            // TODO: Handle the case where the property or bill with the given ID is not found
+            throw new EntityNotFoundException("Either the property or the booking could not be found");
         }
     }
 
@@ -410,7 +412,7 @@ public class JpaPropertyService implements PropertyService {
             bookingService.addBooking(optionalBooking.get());
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
-            // TODO: Handle the case where the property or bill with the given ID is not found
+            throw new EntityNotFoundException("Either the property or the bill could not be found");
         }
     }
 
@@ -425,8 +427,7 @@ public class JpaPropertyService implements PropertyService {
             return crutch;
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
-            // TODO: Handle the case where the property with the given ID is not found
-            return Collections.emptySet();
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
         }
     }
 
@@ -441,7 +442,7 @@ public class JpaPropertyService implements PropertyService {
             billService.addBill(bill);
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
-            // TODO: Handle the case where the property or bill with the given ID is not found
+            throw new EntityNotFoundException("Either the property or the bill could not be found");
         }
     }
 
@@ -462,7 +463,7 @@ public class JpaPropertyService implements PropertyService {
             billRepository.save(optionalBill.get());
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
-            // TODO: Handle the case where the property or bill with the given ID is not found
+            throw new EntityNotFoundException("Either the property or the bill could not be found");
         }
     }
 

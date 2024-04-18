@@ -114,4 +114,10 @@ public class AdvancedManagerController {
         service.declineBooking(bookingId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/delete_property/{propertyId}")
+    public ResponseEntity<String> removeProperty(@PathVariable Long propertyId) {
+        service.removeProperty(propertyId);
+        return ResponseEntity.ok("Property removed successfully.");
+    }
 }

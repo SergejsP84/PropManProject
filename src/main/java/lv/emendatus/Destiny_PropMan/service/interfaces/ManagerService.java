@@ -20,4 +20,6 @@ public interface ManagerService {
     void purgeProperties(Long managerId);
     Manager getManagerByLogin(String login);
     Manager getManagerByEmail(String email);
+    Manager getManagerByConfirmationToken(String confirmationToken);
+    boolean isTokenValid(Manager manager, String token);
 }

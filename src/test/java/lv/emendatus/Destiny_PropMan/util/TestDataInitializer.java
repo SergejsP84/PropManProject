@@ -389,7 +389,7 @@ public class TestDataInitializer {
         booking1.setEndDate(Timestamp.valueOf("2022-10-04 12:00:00"));
         booking1.setProperty(property1);
         booking1.setStatus(BookingStatus.CONFIRMED);
-        booking1.setIsPaid(true);
+        booking1.setPaid(true);
         booking1.setTenantId(1L);
 
         booking2.setId(2L);
@@ -397,7 +397,7 @@ public class TestDataInitializer {
         booking2.setEndDate(Timestamp.valueOf("2022-12-17 12:00:00"));
         booking2.setProperty(property2);
         booking2.setStatus(BookingStatus.PENDING_PAYMENT);
-        booking2.setIsPaid(false);
+        booking2.setPaid(false);
         booking2.setTenantId(2L);
 
         booking3.setId(3L);
@@ -405,7 +405,7 @@ public class TestDataInitializer {
         booking3.setEndDate(Timestamp.valueOf("2024-02-13 15:00:00"));
         booking3.setProperty(property3);
         booking3.setStatus(BookingStatus.CURRENT);
-        booking3.setIsPaid(false);
+        booking3.setPaid(false);
         booking3.setTenantId(3L);
 
         bookingService.addBooking(booking1);
