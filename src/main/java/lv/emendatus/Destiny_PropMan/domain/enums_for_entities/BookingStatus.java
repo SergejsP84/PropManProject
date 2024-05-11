@@ -7,4 +7,5 @@ public enum BookingStatus {
     CURRENT, // the guy's staying on premises right now
     CANCELLED, // says it all per se
     OVER, // successfully completed
+    PROPERTY_LOCKED_BY_MANAGER // whenever a Manager wishes to lock a property fo some time
 }

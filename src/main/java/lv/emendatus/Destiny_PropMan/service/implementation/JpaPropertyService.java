@@ -389,9 +389,9 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void addBookingToProperty(Long propertyId, Long bookingIdd) {
+    public void addBookingToProperty(Long propertyId, Long bookingId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
-        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingIdd);
+        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
         if (optionalProperty.isPresent() && optionalBooking.isPresent()) {
             Property property = optionalProperty.get();
             Booking booking = optionalBooking.get();

@@ -18,6 +18,7 @@ public class AdminRefundDTO {
     private Long tenantId;
     private Long bookingId;
     private Double amount;
+    private Currency currency;
     private Timestamp createdAt;
     private LocalDate dueDate;
     private String paymentDeadline;

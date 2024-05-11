@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class SearchCriteria {
     private LocalDate endDate;
     private Double minPrice;
     private Double maxPrice;
+    private Currency currency;
     private Float minSizeM2;
     private Float maxSizeM2;
     private Float rating;

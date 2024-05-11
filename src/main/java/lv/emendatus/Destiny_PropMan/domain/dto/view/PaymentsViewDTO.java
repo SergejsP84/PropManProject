@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 
 import java.sql.Timestamp;
 
@@ -13,6 +14,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class PaymentsViewDTO {
     private Double amount; // from the TenantPayment class
+    private String currency;
     private String description; // from the Property class
     private String address; // from the Property class
     private String settlement; // from the Property class

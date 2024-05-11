@@ -33,6 +33,7 @@ public class NumericalConfig {
     @Enumerated(EnumType.STRING)
     private NumConfigType type;
 
+
     @ManyToOne
     @JoinColumn(name = "currency_id")
     private Currency currency;
@@ -41,13 +42,13 @@ public class NumericalConfig {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NumericalConfig that = (NumericalConfig) o;
-        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(value, that.value);
+        NumericalConfig config = (NumericalConfig) o;
+        return Objects.equals(id, config.id) && Objects.equals(name, config.name) && Objects.equals(value, config.value) && type == config.type && Objects.equals(currency, config.currency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, value);
+        return Objects.hash(id, name, value, type, currency);
     }
 
     @Override
@@ -56,6 +57,8 @@ public class NumericalConfig {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", value=" + value +
+                ", type=" + type +
+                ", currency=" + currency +
                 '}';
     }
 }

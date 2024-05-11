@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.*;
 
 @Getter
@@ -27,6 +29,7 @@ public class Manager {
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private ManagerType type;
+    @NotBlank(message = "Manager's name is required")
     @Column(name = "manager_name")
     private String managerName;
 //    @Column(name = "description", length = 1084)
@@ -36,21 +39,41 @@ public class Manager {
     private boolean isActive;
     @Column(name = "join_date")
     private Timestamp joinDate;
+
+    @NotBlank(message = "Manager's login is required")
     @Column(name = "login")
     private String login;
+
+    @NotNull
+    @NotEmpty
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$", message = "Password must contain at least one lowercase letter, one uppercase letter, and one digit")
     @Column(name = "password")
     private String password;
+
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
     @JsonIgnore
+    @NotNull
     private Set<Property> properties;
     @Column(name = "phone")
     private String phone;
+    @NotBlank(message = "Manager's email is required")
     @Column(name = "email")
     private String email;
     @Column(name = "iban")
     private String iban;
+
+    @NotBlank(message = "Payment card number is required")
     @Column(name = "payment_card_no")
     private String paymentCardNo;
+
+    @NotBlank(message = "Card validity date is required")
+    @Column(name = "card_validity_date")
+    private YearMonth cardValidityDate;
+
+    @NotBlank(message = "CVV is required")
+    @Column(name = "cvv")
+    private char[] cvv;
     @Column(name = "confirmation_token")
     private String confirmationToken;
 
@@ -62,6 +85,7 @@ public class Manager {
     @Column(name = "authority")
     private Collection<? extends GrantedAuthority> authorities;
 
+    @NotNull
     @Column(name = "known_ips")
     private List<String> knownIps;
 

@@ -1,5 +1,9 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_Add;
+import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_Delete;
+import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_GetAll;
+import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_GetByID;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaCurrencyService;
@@ -24,6 +28,7 @@ public class CurrencyController {
     }
 
     @PostMapping("/add")
+    @Currency_Add
     public ResponseEntity<Void> addCurrency(@RequestBody Currency currency) {
         currencyService.addCurrency(currency);
         System.out.println("Added new currency: " + currency.getDesignation());
@@ -31,12 +36,14 @@ public class CurrencyController {
     }
 
     @GetMapping("/getall")
+    @Currency_GetAll
     public ResponseEntity<List<Currency>> getAllCurrencies() {
         List<Currency> currencies = currencyService.getAllCurrencies();
         return new ResponseEntity<>(currencies, HttpStatus.OK);
     }
 
     @GetMapping("/getCurrencyById")
+    @Currency_GetByID
     public ResponseEntity<Currency> getCurrencyById(@RequestParam Long id) {
         Optional<Currency> result = currencyService.getCurrencyById(id);
         return result.map(currency -> new ResponseEntity<>(currency, HttpStatus.OK))
@@ -44,6 +51,7 @@ public class CurrencyController {
     }
 
     @DeleteMapping("/deleteCurrencyById/{id}")
+    @Currency_Delete
     public void deleteByID(@PathVariable Long id) {
         if (currencyService.getCurrencyById(id).isPresent()) {
             System.out.println("Deleting currency " + currencyService.getCurrencyById(id).get().getDesignation());

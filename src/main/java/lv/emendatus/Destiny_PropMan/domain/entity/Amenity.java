@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.Objects;
 import java.util.Set;
@@ -12,6 +13,7 @@ public class Amenity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Amenity description is required")
     @Column(name = "description")
     private String description;
 

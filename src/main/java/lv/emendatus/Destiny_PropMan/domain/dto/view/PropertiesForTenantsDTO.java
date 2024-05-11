@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 
 import java.util.List;
 import java.util.Set;
@@ -22,8 +23,9 @@ public class PropertiesForTenantsDTO {
     private Double pricePerDay;
     private Double pricePerWeek;
     private Double pricePerMonth;
+    private Currency currency;
     private Set<String> amenities;
-    private List<String> photos; // TODO: add functionality if needed
+    private List<String> photos;
     private boolean available;
     private List<ReviewDTO> reviews;
 }

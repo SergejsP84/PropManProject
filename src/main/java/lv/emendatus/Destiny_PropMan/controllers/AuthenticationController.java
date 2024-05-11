@@ -12,6 +12,7 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.service.implementation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,7 +77,7 @@ public class AuthenticationController {
 
     @PostMapping("/admin-login")
     public ResponseEntity<?> adminLogin(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
-        System.out.println("Admin login method invoked");
+        System.out.println("!!! - Admin login method INVOKED!");
         Admin admin = loginService.authenticateAdmin(loginDTO, request);
         if (admin != null) {
             return ResponseEntity.ok(admin);

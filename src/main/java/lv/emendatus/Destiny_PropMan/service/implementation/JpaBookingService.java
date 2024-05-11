@@ -134,7 +134,10 @@ public class JpaBookingService implements BookingService {
 
     @Override
     public void updateBookingStatus(Long bookingId, BookingStatus newStatus) {
-        bookingRepository.findById(bookingId).ifPresent(booking -> booking.setStatus(newStatus));
+        bookingRepository.findById(bookingId).ifPresent(booking -> {
+            booking.setStatus(newStatus);
+            bookingRepository.save(booking);
+        });
     }
 
     @Override

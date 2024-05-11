@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.util.Scanner;
 
@@ -13,7 +14,8 @@ import java.util.Scanner;
 public class AdminPasswordCheck implements ApplicationRunner {
     @Autowired
     private JpaAdminAccountsService adminService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
     public AdminPasswordCheck(BCryptPasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
@@ -21,9 +23,15 @@ public class AdminPasswordCheck implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         Admin defaultAdmin = adminService.findByLogin("DefaultAdmin").orElse(null);
         if (defaultAdmin != null && "DefaultPassword".equals(defaultAdmin.getPassword())) {
+            String mainEmail;
             System.out.println("Please change the default admin password.");
             String newPassword = promptForNewPassword();
             defaultAdmin.setPassword(passwordEncoder.encode(newPassword));
+            System.out.println("Enter the email for the default admin. This will also be used as mailing address by the system in this version.");
+            try (Scanner scanner = new Scanner(System.in)) {
+                mainEmail = scanner.nextLine();
+            }
+            defaultAdmin.setEmail(mainEmail);
             adminService.addAdmin(defaultAdmin);
         } else {
             adminService.createDefaultAdmin();

@@ -3,22 +3,24 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.dto.search.PropertySearchResultDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.search.SearchCriteria;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-import lv.emendatus.Destiny_PropMan.domain.entity.PropertyAmenity;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class PropertySearchService implements lv.emendatus.Destiny_PropMan.service.interfaces.PropertySearchService {
 
     private final JpaPropertyService propertyService;
+    private final JpaCurrencyService currencyService;
 
-    public PropertySearchService(JpaPropertyService propertyService) {
+    public PropertySearchService(JpaPropertyService propertyService, JpaCurrencyService currencyService) {
         this.propertyService = propertyService;
+        this.currencyService = currencyService;
     }
 
     @Override
@@ -46,6 +48,13 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
             suitableProperties.removeIf(property -> property.getRating() < criteria.getRating());
         }
 //        System.out.println("After rating sieve - isPresent: " + suitableProperties.size());
+
+        // Converting price ranges to base currency
+        if (!criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
+            if (criteria.getMaxPrice() != null) criteria.setMaxPrice(criteria.getMaxPrice() * criteria.getCurrency().getRateToBase());
+            if (criteria.getMinPrice() != null) criteria.setMinPrice(criteria.getMinPrice() * criteria.getCurrency().getRateToBase());
+        }
+
         if (criteria.getMaxPrice() != null || criteria.getMinPrice() != null) {
             Double minPrice = Double.MIN_VALUE;
             Double maxPrice = Double.MAX_VALUE;
@@ -63,6 +72,8 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
                 minPrice = criteria.getMinPrice();
                 maxPrice = criteria.getMaxPrice();
             }
+
+
 //            System.out.println("Conducting search with:");
 //            System.out.println("Minimum price - " + minPrice);
 //            System.out.println("Maximum price - " + maxPrice);

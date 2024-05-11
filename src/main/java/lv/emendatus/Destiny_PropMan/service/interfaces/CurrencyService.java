@@ -10,5 +10,7 @@ public interface CurrencyService {
     Optional<Currency> getCurrencyById(Long id);
     void addCurrency(Currency currency);
     void deleteCurrency(Long id);
-
+    void setBaseCurrency(Long id);
+    void createDefaultCurrency();
+    Currency returnBaseCurrency();
 }

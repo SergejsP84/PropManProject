@@ -80,5 +80,13 @@ public class JpaNumericalConfigService implements NumericalConfigService {
         return result;
     }
 
+    @Override
+    public Optional<NumericalConfig> getNumericalConfigByName(String name) {
+        for (NumericalConfig config : getAllNumericalConfigs()) {
+            if (config.getName().equals(name)) return Optional.of(config);
+        }
+        return Optional.empty();
+    }
+
 
 }

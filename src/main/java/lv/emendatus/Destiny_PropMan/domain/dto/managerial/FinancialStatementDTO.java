@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,4 +17,5 @@ import java.util.Map;
 public class FinancialStatementDTO {
     Map<Long, Double> income; // Property Id as key, total income for the period as value
     List<Map<String, Double>> expenses; // Expense category from bills as key, total costs for that category as value
+    List<Currency> incomeCurrencies = new ArrayList<>();
 }

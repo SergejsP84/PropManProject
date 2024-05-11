@@ -78,9 +78,16 @@ public class TestDataInitializer {
         System.out.println("Saved Amenity " + amenityService.getAmenityById(4L).get().getDescription());
 
         // creating Currencies
-        Currency currency1 = new Currency(1L, "EUR");
-        Currency currency2 = new Currency(2L, "USD");
-        Currency currency3 = new Currency(3L, "THB");
+        Currency currency1 = new Currency();
+        currency1.setId(1L);
+        currency1.setDesignation("EUR");
+        Currency currency2 = new Currency();
+        currency2.setId(2L);
+        currency2.setDesignation("USD");
+        Currency currency3 = new Currency();
+        currency3.setId(3L);
+        currency3.setDesignation("THB");
+
 
         // saving Currencies
         currencyService.addCurrency(currency1);

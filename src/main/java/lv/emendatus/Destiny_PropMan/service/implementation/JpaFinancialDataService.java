@@ -16,9 +16,9 @@ import java.util.List;
 
 @Service
 public class JpaFinancialDataService implements FinancialDataService {
-    private static final String COMPLETED_PAYMENTS_FILE_PATH = "path/to/completed_payments.txt";
-    private static final String COMPLETED_REFUNDS_FILE_PATH = "path/to/completed_refunds.txt";
-    private static final String COMPLETED_PAYOUTS_FILE_PATH = "path/to/completed_payouts.txt";
+    private static final String COMPLETED_PAYMENTS_FILE_PATH = "completed_payments.txt";
+    private static final String COMPLETED_REFUNDS_FILE_PATH = "completed_refunds.txt";
+    private static final String COMPLETED_PAYOUTS_FILE_PATH = "completed_payouts.txt";
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
 
     @Override
@@ -39,10 +39,9 @@ public class JpaFinancialDataService implements FinancialDataService {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                // Split the line by space to extract the timestamp
                 String[] parts = line.split(" ", 2);
                 if (parts.length >= 2) {
-                    LocalDateTime timestamp = LocalDateTime.parse(parts[0]); // Assuming the timestamp is the first part
+                    LocalDateTime timestamp = LocalDateTime.parse(parts[0]);
                     if (timestamp.getMonth() == month) {
                         records.add(line);
                     }

@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,13 +23,17 @@ public class TenantPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Amount is required")
     @Column(name = "amount", precision = 10)
     private Double amount;
-
+    @ManyToOne
+    @JoinColumn(name = "currency_id")
+    private Currency currency;
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private Tenant tenant;
 
+    @NotBlank(message = "Manager ID is required")
     @Column(name = "manager_id")
     private Long managerId;
 
@@ -54,13 +59,13 @@ public class TenantPayment {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TenantPayment that = (TenantPayment) o;
-        return receivedFromTenant == that.receivedFromTenant && feePaidToManager == that.feePaidToManager && Objects.equals(id, that.id) && Objects.equals(amount, that.amount) && Objects.equals(tenant, that.tenant) && Objects.equals(managerId, that.managerId) && Objects.equals(associatedPropertyId, that.associatedPropertyId) && Objects.equals(managerPayment, that.managerPayment) && Objects.equals(receiptDue, that.receiptDue);
+        TenantPayment payment = (TenantPayment) o;
+        return receivedFromTenant == payment.receivedFromTenant && feePaidToManager == payment.feePaidToManager && Objects.equals(id, payment.id) && Objects.equals(amount, payment.amount) && Objects.equals(currency, payment.currency) && Objects.equals(tenant, payment.tenant) && Objects.equals(managerId, payment.managerId) && Objects.equals(associatedPropertyId, payment.associatedPropertyId) && Objects.equals(associatedBookingId, payment.associatedBookingId) && Objects.equals(managerPayment, payment.managerPayment) && Objects.equals(receiptDue, payment.receiptDue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, amount, tenant, managerId, associatedPropertyId, receivedFromTenant, managerPayment, feePaidToManager, receiptDue);
+        return Objects.hash(id, amount, currency, tenant, managerId, associatedPropertyId, associatedBookingId, receivedFromTenant, managerPayment, feePaidToManager, receiptDue);
     }
 
     @Override
@@ -68,9 +73,11 @@ public class TenantPayment {
         return "TenantPayment{" +
                 "id=" + id +
                 ", amount=" + amount +
+                ", currency=" + currency +
                 ", tenant=" + tenant +
                 ", managerId=" + managerId +
                 ", associatedPropertyId=" + associatedPropertyId +
+                ", associatedBookingId=" + associatedBookingId +
                 ", receivedFromTenant=" + receivedFromTenant +
                 ", managerPayment=" + managerPayment +
                 ", feePaidToManager=" + feePaidToManager +

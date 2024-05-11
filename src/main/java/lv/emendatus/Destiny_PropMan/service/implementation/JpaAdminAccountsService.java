@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.entity.Admin;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.AdminRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdminAccountsService;
@@ -20,10 +21,14 @@ import java.util.Optional;
 public class JpaAdminAccountsService implements AdminAccountsService {
     @Autowired
     private AdminRepository adminRepository;
+    private final JpaTenantService tenantService;
+    private final JpaManagerService managerService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final Logger LOGGER = LogManager.getLogger(JpaTenantRegistrationService.class);
 
-    public JpaAdminAccountsService(BCryptPasswordEncoder passwordEncoder) {
+    public JpaAdminAccountsService(JpaTenantService tenantService, JpaManagerService managerService, BCryptPasswordEncoder passwordEncoder) {
+        this.tenantService = tenantService;
+        this.managerService = managerService;
         this.passwordEncoder = passwordEncoder;
     }
     @Override
@@ -36,17 +41,25 @@ public class JpaAdminAccountsService implements AdminAccountsService {
     }
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
+    @Transactional
     public void createAdmin(String name, String login, String password) {
-        Admin admin = new Admin();
-        admin.setName(name);
-        admin.setLogin(login);
-        admin.setPassword(passwordEncoder.encode(password));
-        List<String> knownIPs = new ArrayList<>();
-        admin.setKnownIps(knownIPs);
-        addAdmin(admin);
+        if (tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null && findByLogin(login).isEmpty()) {
+            Admin admin = new Admin();
+            admin.setName(name);
+            admin.setLogin(login);
+            admin.setPassword(passwordEncoder.encode(password));
+            List<String> knownIPs = new ArrayList<>();
+            admin.setKnownIps(knownIPs);
+            addAdmin(admin);
+        } else {
+            LOGGER.log(Level.INFO, "This login already exists, please select a different one.");
+            System.out.println("This login already exists, please select a different one.");
+        }
+
     }
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
+    @Transactional
     public void deleteAdminByLogin(String login) {
         Optional<Admin> admin = findByLogin(login);
         if (admin.isPresent()) {

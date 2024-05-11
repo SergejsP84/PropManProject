@@ -25,4 +25,5 @@ public class PropertyAdditionDTO {
     private Double pricePerDay;
     private Double pricePerWeek;
     private Double pricePerMonth;
+    private Long currencyId;
 }

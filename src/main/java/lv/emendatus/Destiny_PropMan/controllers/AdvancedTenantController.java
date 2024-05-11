@@ -5,6 +5,8 @@ import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,12 @@ public class AdvancedTenantController {
     }
 
     @GetMapping("/property/details/{propertyId}")
-    public ResponseEntity<PropertiesForTenantsDTO> viewPropertyDetails(@PathVariable Long propertyId) {
-        PropertiesForTenantsDTO propertyDetails = service.getPropertyDetails(propertyId);
+    public ResponseEntity<PropertiesForTenantsDTO> viewPropertyDetails(@PathVariable Long propertyId, @AuthenticationPrincipal UserDetails userDetails) {
+        String tenantId = null;
+        if (userDetails != null) {
+            tenantId = userDetails.getUsername();
+        }
+        PropertiesForTenantsDTO propertyDetails = service.getPropertyDetails(propertyId, tenantId);
         return ResponseEntity.ok(propertyDetails);
     }
 

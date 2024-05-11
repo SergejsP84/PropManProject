@@ -1,16 +1,16 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
+import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
-import lv.emendatus.Destiny_PropMan.exceptions.BookingNotFoundException;
-import lv.emendatus.Destiny_PropMan.exceptions.EarlyTerminationRequestNotFound;
-import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
-import lv.emendatus.Destiny_PropMan.exceptions.PropertyNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.*;
 import lv.emendatus.Destiny_PropMan.mapper.BookingMapper;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerMapper;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerPropertyMapper;
@@ -29,7 +29,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,6 +39,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
+
+import javax.mail.MessagingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 @Service
 public class JpaAdvancedManagerService implements AdvancedManagerService {
@@ -58,6 +69,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     private final JpaEarlyTerminationRequestService terminationService;
     private final JpaRefundService refundService;
     private final JpaPayoutService payoutService;
+    private final JpaCurrencyService currencyService;
+    private final JpaEmailService emailService;
     @Autowired
     private final ManagerMapper managerMapper;
     @Autowired
@@ -66,7 +79,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     private final PropertyCreationMapper propertyCreationMapper;
     @Autowired
     private final BookingMapper bookingMapper;
-    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, BookingMapper bookingMapper) {
+    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaEmailService emailService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, BookingMapper bookingMapper) {
         this.managerRepository = managerRepository;
         this.bookingRepository = bookingRepository;
         this.managerService = managerService;
@@ -82,6 +95,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         this.terminationService = terminationService;
         this.refundService = refundService;
         this.payoutService = payoutService;
+        this.currencyService = currencyService;
+        this.emailService = emailService;
         this.managerMapper = managerMapper;
         this.managerPropertyMapper = managerPropertyMapper;
         this.propertyCreationMapper = propertyCreationMapper;
@@ -102,6 +117,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile) {
         Optional<Manager> managerOptional = managerRepository.findById(managerId);
         if (managerOptional.isPresent()) {
@@ -197,6 +213,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @Transactional
     public void submitClaimfromManager(Long bookingId, String description) {
         Optional<Booking> booking = bookingService.getBookingById(bookingId);
         if (booking.isEmpty()) {
@@ -250,6 +267,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void closeBookingByManager(Long bookingId) {
         int delaySetOrDefault = 7;
         for (NumericalConfig config : configService.getSystemSettings()) {
@@ -283,6 +301,13 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                 history.setStartDate(booking.getStartDate());
                 history.setEndDate(booking.getEndDate());
                 leasingHistoryService.addLeasingHistory(history);
+                if (optionalTenant.isPresent()) {
+                    List<LeasingHistory> histories = optionalTenant.get().getLeasingHistories();
+                    histories.add(history);
+                    optionalTenant.get().setLeasingHistories(histories);
+                    tenantService.addTenant(optionalTenant.get());
+                }
+                propertyService.removeBookingFromProperty(booking.getProperty().getId(), bookingId);
                 bookingService.deleteBooking(bookingId);
             }
         } else {
@@ -293,6 +318,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId) {
         List<TenantPayment> completedPaymentsWithinPeriod =
                 tenantPaymentService.getPaymentsByDateRange(periodStart.atStartOfDay(), periodEnd.atStartOfDay())
@@ -307,7 +333,17 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             if (income.containsKey(propertyId)) {
                 Double totalIncome = income.get(propertyId) + paymentAmount;
                 income.put(propertyId, totalIncome);
+                if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
+                    List<Currency> currencies = statementDTO.getIncomeCurrencies();
+                    currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
+                    statementDTO.setIncomeCurrencies(currencies);
+                }
             } else {
+                if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
+                    List<Currency> currencies = statementDTO.getIncomeCurrencies();
+                    currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
+                    statementDTO.setIncomeCurrencies(currencies);
+                }
                 income.put(propertyId, paymentAmount);
             }
         }
@@ -380,16 +416,28 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @Transactional
     public void addProperty(PropertyAdditionDTO propertyDTO) {
-        Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
-        property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
-        property.setBills(new HashSet<>());
-        property.setBookings(new HashSet<>());
-        propertyService.addProperty(property);
+        Optional<Manager> optionalManager = managerService.getManagerById(propertyDTO.getManager().getId());
+        if (optionalManager.isPresent()) {
+            if (optionalManager.get().isActive()) {
+                Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
+                property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+                property.setBills(new HashSet<>());
+                property.setBookings(new HashSet<>());
+                propertyService.addProperty(property);
+            } else {
+                LOGGER.warn("Inactive managers cannot add properties.");
+            }
+        } else {
+            LOGGER.error("No manager with the specified ID exists in the database.");
+            throw new ManagerNotFoundException("No manager with the specified ID exists in the database.");
+        }
     }
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @Transactional
     public PropertyDiscount setDiscountOrSurcharge(PropertyDiscountDTO propertyDiscountDTO) {
         Optional<Property> optionalProperty = propertyService.getPropertyById(propertyDiscountDTO.getPropertyId());
         if (optionalProperty.isPresent()) {
@@ -414,6 +462,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd) {
         Optional<Property> property = propertyService.getPropertyById(propertyId);
         if (property.isPresent()) {
@@ -443,10 +492,21 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void approveBooking(Long bookingId) {
         if (bookingService.getBookingById(bookingId).isPresent()) {
             Long managerId = bookingService.getBookingById(bookingId).get().getProperty().getManager().getId();
             bookingService.updateBookingStatus(bookingId, BookingStatus.PENDING_PAYMENT);
+            if (tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).isPresent()) {
+                Tenant tenant = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get();
+                try {
+                    emailService.sendEmail(tenant.getEmail(),
+                            "Booking at [Platform Name] confirmed!",
+                            createConfirmationLetterToTenant(tenant.getFirstName(), tenant.getLastName(), bookingService.getBookingById(bookingId).get()));
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
+            }
         } else {
             LOGGER.error("No booking with the specified ID exists in the database.");
             throw new BookingNotFoundException("No booking with the specified ID exists in the database.");
@@ -455,10 +515,23 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void declineBooking(Long bookingId) {
         if (bookingService.getBookingById(bookingId).isPresent()) {
             Long managerId = bookingService.getBookingById(bookingId).get().getProperty().getManager().getId();
             bookingService.updateBookingStatus(bookingId, BookingStatus.CANCELLED);
+            try {
+                if (tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).isPresent()) {
+                String firstName = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get().getFirstName();
+                String surName = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get().getLastName();
+                String tenantEmail = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get().getEmail();
+                emailService.sendEmail(tenantEmail,
+                        "Booking request declined",
+                        createRefusalLetterToTenant(firstName, surName, bookingService.getBookingById(bookingId).get()));
+                }
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
         } else {
             LOGGER.error("No booking with the specified ID exists in the database.");
             throw new BookingNotFoundException("No booking with the specified ID exists in the database.");
@@ -467,6 +540,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void acceptEarlyTermination(Long requestId, String reply) {
         Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
         if (requestOptional.isPresent()) {
@@ -481,7 +555,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                 bookingService.addBooking(booking);
                 TenantPayment payment = tenantPaymentService.getPaymentByBooking(booking.getId());
                 Double newAmount = bookingService.calculateTotalPrice(booking.getId());
-                Double refundForTenant = payment.getAmount() - newAmount;
+                double refundForTenant = payment.getAmount() - newAmount;
                 int penaltyPercent = 0;
                 for (NumericalConfig config : configService.getSystemSettings()) {
                     if (config.getName().equals("EarlyTerminationPenalty")) penaltyPercent = config.getValue().intValue();
@@ -501,6 +575,16 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                 refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
                 refundService.addRefund(refund);
                 request.setProcessedOn(LocalDate.now());
+                if (tenantService.getTenantById(booking.getTenantId()).isPresent()) {
+                    Tenant tenant = tenantService.getTenantById(booking.getTenantId()).get();
+                    try {
+                        emailService.sendEmail(tenant.getEmail(),
+                                "Early termination request granted!",
+                                createETAcceptanceLetterToTenant(tenant.getFirstName(), tenant.getLastName(), refund, request));
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                    }
+                }
             } else {
                 LOGGER.error("Could not retrieve the appropriate booking for request with ID {}.", requestId);
                 throw new BookingNotFoundException("Associated booking not found");
@@ -514,6 +598,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void declineEarlyTermination(Long requestId, String reply) {
         Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
         if (requestOptional.isPresent()) {
@@ -523,6 +608,16 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             request.setManagersResponse(reply);
             request.setProcessedOn(LocalDate.now());
             terminationService.addETRequest(request);
+            if (tenantService.getTenantById(request.getTenantId()).isPresent()) {
+                Tenant tenant = tenantService.getTenantById(request.getTenantId()).get();
+                try {
+                    emailService.sendEmail(tenant.getEmail(),
+                            "Early termination request denied",
+                            createETDenialLetterToTenant(tenant.getFirstName(), tenant.getLastName(), request));
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
+            }
         } else {
             LOGGER.error("Early termination request with ID {} not found.", requestId);
             throw new EarlyTerminationRequestNotFound("Early termination request not found");
@@ -531,6 +626,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void removeProperty(Long propertyId) {
         boolean canRemove = true;
         Optional<Property> propertyOptional = propertyService.getPropertyById(propertyId);
@@ -547,6 +643,13 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                     return;
                 }
             }
+            Optional<Manager> optionalManager = managerService.getManagerById(managerId);
+            if (optionalManager.isPresent()) {
+                if (!optionalManager.get().isActive()) {
+                    LOGGER.warn("Blocked managers cannot remove properties.");
+                    canRemove = false;
+                }
+            }
             if (canRemove) {
                 for (Booking booking : bookings) {
                     if (booking.getStatus().equals(BookingStatus.OVER)) {
@@ -557,6 +660,12 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                         history.setStartDate(booking.getStartDate());
                         history.setEndDate(booking.getEndDate());
                         leasingHistoryService.addLeasingHistory(history);
+                        if (optionalTenant.isPresent()) {
+                            List<LeasingHistory> histories = optionalTenant.get().getLeasingHistories();
+                            histories.add(history);
+                            optionalTenant.get().setLeasingHistories(histories);
+                            tenantService.addTenant(optionalTenant.get());
+                        }
                         bookingService.deleteBooking(booking.getId());
                     }
                     if (booking.getStatus().equals(BookingStatus.PENDING_APPROVAL))
@@ -571,4 +680,132 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         }
     }
 
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void uploadPhotos(Long propertyId, MultipartFile[] files) throws FileStorageException {
+        Property property = propertyService.getPropertyById(propertyId)
+                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
+        Long managerId = property.getManager().getId();
+        for (MultipartFile file : files) {
+            String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+            String uploadDir = "/photos/" + propertyId + "/";
+            String filePath = uploadDir + fileName;
+            try {
+                Path path = Paths.get(uploadDir);
+                if (!Files.exists(path)) {
+                    Files.createDirectories(path);
+                }
+                Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                List<String> updated = property.getPhotos();
+                updated.add(filePath);
+                property.setPhotos(updated);
+            } catch (IOException e) {
+                throw new FileStorageException("Could not store file " + fileName + ". Please try again!", e);
+            }
+        }
+        propertyService.addProperty(property);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void removePhoto(Long propertyId, String photoUrl) throws EntityNotFoundException, FileStorageException {
+        Property property = propertyService.getPropertyById(propertyId)
+                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
+        List<String> photos = property.getPhotos();
+        if (photos.contains(photoUrl)) {
+            try {
+                Files.deleteIfExists(Paths.get(photoUrl));
+                photos.remove(photoUrl);
+                property.setPhotos(photos);
+                propertyService.addProperty(property);
+            } catch (IOException e) {
+                throw new FileStorageException("Failed to delete photo: " + photoUrl, e);
+            }
+        } else {
+            throw new EntityNotFoundException("Photo not found for property with id: " + propertyId);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd) {
+        Long managerId;
+        if (propertyService.getPropertyById(propertyId).isPresent()) {
+            managerId = propertyService.getPropertyById(propertyId).get().getManager().getId();
+        } else managerId = 0L;
+        if (!(bookingService.
+                getBookingsByDateRangeWithOverlaps(periodStart,
+                        periodEnd)).isEmpty()) {
+            List<Booking> existingBookings = bookingService.
+                    getBookingsByDateRangeWithOverlaps(periodStart,periodEnd);
+            List<Booking> specificPropertyBookings = new ArrayList<>();
+            for (Booking booking : existingBookings) {
+                if (booking.getProperty().getId().equals(propertyId)) specificPropertyBookings.add(booking);
+            }
+            for (Booking booking : specificPropertyBookings) {
+                if (!booking.getStatus().equals(BookingStatus.CANCELLED)) {
+                    LOGGER.log(Level.WARN, "Cannot make property unavailable for a booked period");
+                }
+            }
+        } else {
+            if (propertyService.getPropertyById(propertyId).isPresent()) {
+                Booking booking = new Booking();
+                booking.setProperty(propertyService.getPropertyById(propertyId).get());
+                booking.setTenantId(0L);
+                booking.setPaid(false);
+                booking.setStatus(BookingStatus.PROPERTY_LOCKED_BY_MANAGER);
+                booking.setStartDate(Timestamp.valueOf(periodStart.atStartOfDay()));
+                booking.setEndDate(Timestamp.valueOf(periodEnd.atStartOfDay().plusDays(1)));
+                bookingService.addBooking(booking);
+                LOGGER.log(Level.INFO, "Property " + propertyService.getPropertyById(propertyId).get().getId() +
+                        " closed off by its manager for a period of " + Timestamp.valueOf(periodStart.atStartOfDay())
+                        + " through " + Timestamp.valueOf(periodEnd.atStartOfDay().plusDays(1)));
+            }
+        }
+    }
+
+    // AUXILIARY METHODS
+    public String createConfirmationLetterToTenant(String firstName, String lastName, Booking booking) {
+        String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
+        String info = "We are happy to inform you that your booking for the period of " + booking.getStartDate().toString() + "through " + booking.getEndDate().toString() + " has been confirmed by the property's manager.\n\n";
+        String info2 = "Please make sure to remit the rental fee payment by " + tenantPaymentService.getPaymentByBooking(booking.getId()).getReceiptDue().toString() + ".";
+        String communication = "Meanwhile, you can contact your manager directly at " + booking.getProperty().getManager().getEmail() + ".\n\n";
+        String communication2 = "Should an urgent issue arise, you can also call your manager at " + booking.getProperty().getManager().getPhone() + ".\n\n";
+        String closing = "We wish you a great trip to " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + "!\n\nBest regards,\n[Your Company Name]";
+
+        return greeting + info + info2 + communication + communication2 + closing;
+    }
+
+    public String createRefusalLetterToTenant(String firstName, String lastName, Booking booking) {
+        String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
+        String info = "We are sorry to inform you that your booking with ID " + booking.getId() + " could not by the property's manager.\n\n";
+        String closing = "Please accept our sincere apologies. While our platform cannot affect this manager's decision, we would love to invite you to browse other properties in " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + " that our website has to offer. \n\nBest regards,\n[Your Company Name]";
+        return greeting + info + closing;
+    }
+
+    public String createETAcceptanceLetterToTenant(String firstName, String lastName, Refund refund, EarlyTerminationRequest request) {
+        String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
+        String info = "Your manager has kindly granted your early termination request in respect of the booking with ID " + refund.getBookingId() + ". Your updated booking will end on" + request.getTerminationDate() + ".\n\n";
+        int refundPeriodSetOrDefault = 15;
+        int delaySetOrDefault = 7;
+        for (NumericalConfig config : configService.getSystemSettings()) {
+            if (config.getName().equals("RefundPaymentPeriodDays")) refundPeriodSetOrDefault = config.getValue().intValue();
+            if (config.getName().equals("ClaimPeriodDays")) delaySetOrDefault = config.getValue().intValue();
+        }
+        String info2 = "Your payment has been adjusted accordingly, and a refund of " + refund.getCurrency().getDesignation() + " " + refund.getAmount() + " is estimated to be remitted to you by " + LocalDateTime.now().plusDays(delaySetOrDefault).plusDays(refundPeriodSetOrDefault) + ".";
+        String closing = "We are looking forward to seeing you again! \n\nBest regards,\n[Your Company Name]";
+        return greeting + info + closing;
+    }
+
+    public String createETDenialLetterToTenant(String firstName, String lastName, EarlyTerminationRequest request) {
+        String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
+        String info = "We are sorry to inform you that your early termination request for booking with ID " + request.getBookingId() + " has been declined by the property's manager.\n\n";
+        String info2 = "Our current policy does entitle our managers to abstain from granting early termination requests if there is a valid reason for that. Here is the comment submitted by the manager:";
+        String managersComment = request.getComment() + "\n\n";
+        String closing = "Please accept our sincere apologies. If you think you request was denied wrongfully, please contact us to appeal against this manager's decision. \n\nBest regards,\n[Your Company Name]";
+        return greeting + info + info2 + managersComment + closing;
+    }
 }

@@ -1,15 +1,19 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.Admin.AdminPayoutDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.Admin.AdminRefundDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.Admin.SetNumConfigDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyAdditionDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
+import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.exceptions.*;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerMapper;
@@ -22,17 +26,15 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 
 @Service
@@ -49,7 +51,8 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     public final JpaNumericalConfigService configService;
     public final JpaThirdPartyPaymentProviderService paymentProviderService;
     public final JpaPayoutService payoutService;
-
+    public final JpaCurrencyService currencyService;
+    private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder;
     private final TenantMapper tenantMapper;
     private final ManagerMapper managerMapper;
@@ -59,7 +62,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
 
-    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
+    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.bookingService = bookingService;
@@ -71,6 +74,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         this.configService = configService;
         this.paymentProviderService = paymentProviderService;
         this.payoutService = payoutService;
+        this.currencyService = currencyService;
         this.passwordEncoder = passwordEncoder;
         this.tenantMapper = tenantMapper;
         this.managerMapper = managerMapper;
@@ -79,6 +83,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void toggleTenantStatus(Long tenantId) {
         Optional<Tenant> tenant = tenantService.getTenantById(tenantId);
         if (tenant.isPresent()) {
@@ -90,25 +95,41 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-//    @Transactional
-//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void toggleManagerStatus(Long managerId) {
         System.out.println("toggleManagerStatus method initiated");
-        Optional<Manager> manager = managerService.getManagerById(managerId);
-        if (manager.isPresent()) {
-            System.out.println("Manager " + managerId + "has been found");
-            System.out.println("The manager's Active status is " + manager.get().isActive());
-            manager.get().setActive(!manager.get().isActive());
-            System.out.println("The manager's Active status has been set to " + manager.get().isActive());
-            managerService.addManager(manager.get());
-            System.out.println("The updated manager has been saved to the database");
-            Optional<Manager> manager2 = managerService.getManagerById(managerId);
-            if (manager2.isPresent()) {
-                System.out.println("Manager re-obtained from the database");
-                System.out.println("The retrieved manager's Active status is " + manager2.get().isActive());
+        Optional<Manager> optionalManager = managerService.getManagerById(managerId);
+        if (optionalManager.isPresent()) {
+//            System.out.println("Manager " + managerId + "has been found");
+//            System.out.println("The manager's Active status is " + manager.get().isActive());
+            Manager manager = optionalManager.get();
+            if (manager.isActive()) {
+                manager.setActive(false);
+                for (Property property : propertyService.getPropertiesByManager(managerId)) {
+                    property.setStatus(PropertyStatus.BLOCKED);
+                    propertyService.addProperty(property);
+                }
+                managerService.addManager(manager);
             } else {
-                System.out.println("Something else is wrong");
+                manager.setActive(true);
+                for (Property property : propertyService.getPropertiesByManager(managerId)) {
+                    if (property.getStatus().equals(PropertyStatus.BLOCKED)) property.setStatus(PropertyStatus.AVAILABLE);
+                    propertyService.addProperty(property);
+                }
+                managerService.addManager(manager);
             }
+//            manager.get().setActive(!manager.get().isActive());
+//            System.out.println("The manager's Active status has been set to " + manager.get().isActive());
+//            managerService.addManager(manager.get());
+//            System.out.println("The updated manager has been saved to the database");
+//            Optional<Manager> manager2 = managerService.getManagerById(managerId);
+//            if (manager2.isPresent()) {
+//                System.out.println("Manager re-obtained from the database");
+//                System.out.println("The retrieved manager's Active status is " + manager2.get().isActive());
+//            } else {
+//                System.out.println("Something else is wrong");
+//            }
         } else {
             LOGGER.warn("No manager with the ID {} found in the database", managerId);
         }
@@ -116,6 +137,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void registerTenantForAdmin(TenantRegistrationDTO registrationDTO) {
         if (!isValidPaymentCardNumber(registrationDTO.getPaymentCardNo())) {
             LOGGER.error("Invalid payment card number for tenant registration");
@@ -148,7 +170,14 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         tenant.setCurrentProperty(null);
         tenant.setLeasingHistories(new ArrayList<>());
         tenant.setPaymentCardNo(registrationDTO.getPaymentCardNo());
+        tenant.setCardValidityDate(registrationDTO.getCardValidityDate());
+        try {
+            tenant.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         tenant.setConfirmationToken("");
+        tenant.setPreferredCurrency(currencyService.returnBaseCurrency());
         List<String> knownIPs = new ArrayList<>();
         tenant.setKnownIps(knownIPs);
         tenantService.addTenant(tenant);
@@ -157,6 +186,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void registerManager(ManagerRegistrationDTO registrationDTO) {
         if (!isValidPaymentCardNumber(registrationDTO.getPaymentCardNo())) {
             LOGGER.error("Invalid payment card number for manager registration");
@@ -183,6 +213,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
         manager.setPaymentCardNo(registrationDTO.getPaymentCardNo());
+        manager.setCardValidityDate(registrationDTO.getCardValidityDate());
+        try {
+            manager.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         manager.setPassword(encodedPassword);
         manager.setActive(true);
@@ -242,6 +278,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile) {
         Optional<Manager> managerOptional = managerService.getManagerById(managerId);
         if (managerOptional.isPresent()) {
@@ -282,6 +319,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void removeTenant(Long tenantId) {
         boolean obstaclesPresent = false;
         if (tenantService.getTenantById(tenantId).isPresent()) {
@@ -348,6 +386,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         history.setStartDate(booking.getStartDate());
                         history.setEndDate(booking.getEndDate());
                         leasingHistoryService.addLeasingHistory(history);
+                        if (optionalTenant.isPresent()) {
+                            List<LeasingHistory> histories = optionalTenant.get().getLeasingHistories();
+                            histories.add(history);
+                            optionalTenant.get().setLeasingHistories(histories);
+                            tenantService.addTenant(optionalTenant.get());
+                        }
                         bookingService.deleteBooking(booking.getId());
                     }
                 }
@@ -436,6 +480,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void removeManager(Long managerId) {
         boolean obstaclesPresent = false;
         if (managerService.getManagerById(managerId).isPresent()) {
@@ -498,6 +543,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         history.setStartDate(booking.getStartDate());
                         history.setEndDate(booking.getEndDate());
                         leasingHistoryService.addLeasingHistory(history);
+                        if (optionalTenant.isPresent()) {
+                            List<LeasingHistory> histories = optionalTenant.get().getLeasingHistories();
+                            histories.add(history);
+                            optionalTenant.get().setLeasingHistories(histories);
+                            tenantService.addTenant(optionalTenant.get());
+                        }
                         bookingService.deleteBooking(booking.getId());
                     }
                 }
@@ -571,6 +622,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void addProperty(PropertyAdditionDTO propertyDTO) {
         Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
         property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
@@ -581,6 +633,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void removeProperty(Long propertyId) {
         Optional<Property> propertyOptional = propertyService.getPropertyById(propertyId);
         if (propertyOptional.isPresent()) {
@@ -603,6 +656,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                     history.setStartDate(booking.getStartDate());
                     history.setEndDate(booking.getEndDate());
                     leasingHistoryService.addLeasingHistory(history);
+                    if (optionalTenant.isPresent()) {
+                        List<LeasingHistory> histories = optionalTenant.get().getLeasingHistories();
+                        histories.add(history);
+                        optionalTenant.get().setLeasingHistories(histories);
+                        tenantService.addTenant(optionalTenant.get());
+                    }
                     bookingService.deleteBooking(booking.getId());
                 }
                 if (booking.getStatus().equals(BookingStatus.PENDING_APPROVAL)) booking.setStatus(BookingStatus.CANCELLED);
@@ -632,6 +691,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             dto.setBookingId(refund.getBookingId());
             dto.setTenantId(refund.getTenantId());
             dto.setCreatedAt(refund.getCreatedAt());
+            dto.setCurrency(refund.getCurrency());
             int refundPeriodSetOrDefault = 15;
             for (NumericalConfig config : configService.getSystemSettings()) {
                 if (config.getName().equals("RefundPaymentPeriodDays")) refundPeriodSetOrDefault = config.getValue().intValue();
@@ -650,9 +710,18 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public boolean settleRefund(Refund refund) {
         try {
-            boolean paymentSuccessful = paymentProviderService.stub2(refund);
+            boolean paymentSuccessful = false;
+            if (tenantService.getTenantById(refund.getTenantId()).isPresent()) {
+                if (tenantService.getTenantById(refund.getTenantId()).get().getCardValidityDate().isBefore(YearMonth.now()))                 {
+                    LOGGER.error("Refund processing failed for refund with ID {} due to the expiration of the tenant's payment card.", refund.getId());
+                } else{
+                    // Add third-party payment processing mechanism in the service
+                    paymentSuccessful = paymentProviderService.stub2(refund);
+                }
+            }
             if (paymentSuccessful) {
                 try {
                     File file = new File(COMPLETED_REFUNDS_FILE_PATH);
@@ -660,7 +729,9 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         file.createNewFile();
                     }
                     try (FileWriter writer = new FileWriter(file, true)) {
-                        writer.write(LocalDateTime.now().toString() + " Refund " + refund.getId() + " completed: " + refund.getAmount() + " paid to Tenant " + refund.getTenantId() + ", booking ID: " + refund.getBookingId() + "\n");
+                        String currencyDesignation = "";
+                        if (currencyService.getCurrencyById(refund.getId()).isPresent()) currencyDesignation = currencyService.getCurrencyById(refund.getId()).get().getDesignation();
+                        writer.write(LocalDateTime.now().toString() + " Refund " + refund.getId() + " completed: " + currencyDesignation + " " + refund.getAmount() + " paid to Tenant " + refund.getTenantId() + ", booking ID: " + refund.getBookingId() + "\n");
                     }
                 } catch (IOException e) {
                     LOGGER.error("Error occurred while writing completed refund record: " + e.getMessage());
@@ -689,11 +760,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             dto.setBookingId(payout.getBookingId());
             dto.setManagerId(payout.getManagerId());
             dto.setCreatedAt(payout.getCreatedAt());
-            int refundPeriodSetOrDefault = 20;
+            dto.setCurrency(payout.getCurrency());
+            int payoutPeriodSetOrDefault = 20;
             for (NumericalConfig config : configService.getSystemSettings()) {
-                if (config.getName().equals("PayoutPaymentPeriodDays")) refundPeriodSetOrDefault = config.getValue().intValue();
+                if (config.getName().equals("PayoutPaymentPeriodDays")) payoutPeriodSetOrDefault = config.getValue().intValue();
             }
-            dto.setDueDate(dto.getCreatedAt().toLocalDateTime().toLocalDate().plusDays(refundPeriodSetOrDefault));
+            dto.setDueDate(dto.getCreatedAt().toLocalDateTime().toLocalDate().plusDays(payoutPeriodSetOrDefault));
             Instant instant = payout.getCreatedAt().toInstant();
             LocalDateTime creationTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
             Duration duration = Duration.between(creationTime.toLocalDate().atStartOfDay(), dto.getDueDate().atStartOfDay());
@@ -707,9 +779,18 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public boolean settlePayout(Payout payout) {
         try {
-            boolean paymentSuccessful = paymentProviderService.stub3(payout);
+            boolean paymentSuccessful = false;
+            if (managerService.getManagerById(payout.getManagerId()).isPresent()) {
+                if (managerService.getManagerById(payout.getManagerId()).get().getCardValidityDate().isBefore(YearMonth.now()))                 {
+                    LOGGER.error("Payout processing failed for payout with ID {} due to the expiration of the manager's payment card.", payout.getId());
+                } else{
+                    // Add third-party payment processing mechanism in the service
+                    paymentSuccessful = paymentProviderService.stub3(payout);
+                }
+            }
             if (paymentSuccessful) {
                 try {
                     File file = new File(COMPLETED_PAYOUTS_FILE_PATH);
@@ -717,7 +798,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         file.createNewFile();
                     }
                     try (FileWriter writer = new FileWriter(file, true)) {
-                        writer.write(LocalDateTime.now().toString() + " Payout " + payout.getId() + " completed: " + payout.getAmount() + " paid to Manager " + payout.getManagerId() + ", booking ID: " + payout.getBookingId() + "\n");
+                        writer.write(LocalDateTime.now().toString() + " Payout " + payout.getId() + " completed: " + payout.getCurrency().getDesignation() + " " + payout.getAmount() + " paid to Manager " + payout.getManagerId() + ", booking ID: " + payout.getBookingId() + "\n");
                     }
                 } catch (IOException e) {
                     LOGGER.error("Error occurred while writing completed payout record: " + e.getMessage());
@@ -737,25 +818,290 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void createPayout(Long bookingId, Long managerId, Double amount) {
+    @Transactional
+    public void createPayout(Long bookingId, Long managerId, Double amount, Long currencyId) {
         Payout payout = new Payout();
         payout.setBookingId(bookingId);
         payout.setManagerId(managerId);
         payout.setAmount(amount);
         payout.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        if (currencyService.getCurrencyById(currencyId).isPresent()) {
+        payout.setCurrency(currencyService.getCurrencyById(currencyId).get());
+        } else {
+            payout.setCurrency(currencyService.returnBaseCurrency());
+        }
         payoutService.addPayout(payout);
     }
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void createRefund(Long bookingId, Long tenantId, Double amount) {
+    @Transactional
+    public void createRefund(Long bookingId, Long tenantId, Double amount, Long currencyId) {
         Refund refund = new Refund();
         refund.setAmount(amount);
         refund.setBookingId(bookingId);
         refund.setTenantId(tenantId);
         refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        if (currencyService.getCurrencyById(currencyId).isPresent()) {
+            refund.setCurrency(currencyService.getCurrencyById(currencyId).get());
+        } else {
+            refund.setCurrency(currencyService.returnBaseCurrency());
+        }
         refundService.addRefund(refund);
     }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    public void addNewCurrency(String designation, Double rateToBase) {
+        boolean exists = false;
+        for (Currency currency : currencyService.getAllCurrencies()) {
+            if (currency.getDesignation().equals(designation)) {
+                LOGGER.warn("This currency already exists in the database.");
+                exists = true;
+            }
+        }
+        if (!exists) {
+            Currency currency = new Currency();
+            currency.setIsBaseCurrency(false);
+            currency.setDesignation(designation);
+            currency.setRateToBase(rateToBase);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    public void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies) {
+        currencyService.setBaseCurrency(newBaseCurrencyId);
+        int listIndex = 0;
+        for (Currency currency : currencyService.getAllCurrencies()) {
+            if (!currency.getIsBaseCurrency()) {
+                currency.setRateToBase(ratesForOtherCurrencies.get(listIndex));
+                listIndex++;
+            }
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    public void setNumericalConfigs(SetNumConfigDTO dto) {
+        // Yeah, I know it's perverted... It's just that the project has evolved FAR from the initially contemplated setup, sorry
+        List<NumericalConfig> systemSettings = configService.getSystemSettings();
+        boolean mustCreateRefundPaymentPeriodDays = true;
+        boolean mustCreatePayoutPaymentPeriodDays = true;
+        boolean mustCreateClaimPeriodDays = true;
+        boolean mustCreatePaymentPeriodDays = true;
+        boolean mustCreateEarlyTerminationPenalty = true;
+        boolean mustCreateSystemInterestRate = true;
+        boolean mustCreateLateCancellationPeriodInDays = true;
+        boolean mustCreateUrgentCancellationPeriodInDays = true;
+        boolean mustCreateUrgentCancellationPenalty = true;
+        boolean mustCreateLateCancellationPenalty = true;
+        boolean mustCreateRegularCancellationPenalty = true;
+        for (NumericalConfig config : systemSettings) {
+            if (config.getName().equals("RefundPaymentPeriodDays")) mustCreateRefundPaymentPeriodDays = false;
+            if (config.getName().equals("PayoutPaymentPeriodDays")) mustCreatePayoutPaymentPeriodDays = false;
+            if (config.getName().equals("ClaimPeriodDays")) mustCreateClaimPeriodDays = false;
+            if (config.getName().equals("PaymentPeriodDays")) mustCreatePaymentPeriodDays = false;
+            if (config.getName().equals("EarlyTerminationPenalty")) mustCreateEarlyTerminationPenalty = false;
+            if (config.getName().equals("SystemInterestRate")) mustCreateSystemInterestRate = false;
+            if (config.getName().equals("UrgentCancellationPeriodInDays")) mustCreateUrgentCancellationPeriodInDays = false;
+            if (config.getName().equals("LateCancellationPeriodInDays")) mustCreateLateCancellationPeriodInDays = false;
+            if (config.getName().equals("UrgentCancellationPenalty")) mustCreateUrgentCancellationPenalty = false;
+            if (config.getName().equals("LateCancellationPenalty")) mustCreateLateCancellationPenalty = false;
+            if (config.getName().equals("RegularCancellationPenalty")) mustCreateRegularCancellationPenalty = false;
+        }
+        if (mustCreateRefundPaymentPeriodDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("RefundPaymentPeriodDays");
+            config.setValue(15.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Refund payment period set to 15 days");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("RefundPaymentPeriodDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getRefundPaymentPeriodDays())) {
+                    config.get().setValue((double) dto.getRefundPaymentPeriodDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Refund payment period set to " + dto.getRefundPaymentPeriodDays() + " days");
+                }
+            }
+        }
+        if (mustCreatePayoutPaymentPeriodDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("PayoutPaymentPeriodDays");
+            config.setValue(20.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Payout payment period set to 20 days");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("PayoutPaymentPeriodDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getPayoutPaymentPeriodDays())) {
+                    config.get().setValue((double) dto.getPayoutPaymentPeriodDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Payout payment period set to " + dto.getPayoutPaymentPeriodDays() + " days");
+                }
+            }
+        }
+        if (mustCreateClaimPeriodDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("ClaimPeriodDays");
+            config.setValue(7.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Claim period set to 7 days");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("ClaimPeriodDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getClaimPeriodDays())) {
+                    config.get().setValue((double) dto.getClaimPeriodDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Claim period set to " + dto.getClaimPeriodDays() + " days");
+                }
+            }
+        }
+        if (mustCreateEarlyTerminationPenalty) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("EarlyTerminationPenalty");
+            config.setValue(0.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Early termination penalty set to 0%");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("EarlyTerminationPenalty");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getEarlyTerminationPenalty())) {
+                    config.get().setValue((double) dto.getEarlyTerminationPenalty());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Early termination penalty set to " + dto.getEarlyTerminationPenalty() + "%");
+                }
+            }
+        }
+        if (mustCreatePaymentPeriodDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("PaymentPeriodDays");
+            config.setValue(8.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Tenant payment period set to 8 days before arrival");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("PaymentPeriodDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getPaymentPeriodDays())) {
+                    config.get().setValue((double) dto.getPaymentPeriodDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Tenant payment period set to " + dto.getPaymentPeriodDays() + " days before arrival");
+                }
+            }
+        }
+        if (mustCreateSystemInterestRate) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("SystemInterestRate");
+            config.setValue(10.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("System interest rate set to 10%");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("SystemInterestRate");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getSystemInterestRate())) {
+                    config.get().setValue((double) dto.getSystemInterestRate());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("System interest rate set to " + dto.getSystemInterestRate() + "%");
+                }
+            }
+        }
+        if (mustCreateLateCancellationPeriodInDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("LateCancellationPeriodInDays");
+            config.setValue(10.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Late cancellation period set to 10 days");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("LateCancellationPeriodInDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getLateCancellationPeriodInDays())) {
+                    config.get().setValue((double) dto.getLateCancellationPeriodInDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Late cancellation period set to " + dto.getLateCancellationPeriodInDays() + " days");
+                }
+            }
+        }
+        if (mustCreateUrgentCancellationPeriodInDays) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("UrgentCancellationPeriodInDays");
+            config.setValue(3.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Urgent cancellation period set to 3 days");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("UrgentCancellationPeriodInDays");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getUrgentCancellationPeriodInDays())) {
+                    config.get().setValue((double) dto.getUrgentCancellationPeriodInDays());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Urgent cancellation period set to " + dto.getUrgentCancellationPeriodInDays() + " days");
+                }
+            }
+        }
+        if (mustCreateUrgentCancellationPenalty) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("UrgentCancellationPenalty");
+            config.setValue(50.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Urgent cancellation penalty set to 50%");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("UrgentCancellationPenalty");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getUrgentCancellationPenaltyPercentage())) {
+                    config.get().setValue((double) dto.getUrgentCancellationPenaltyPercentage());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Urgent cancellation penalty set to " + dto.getUrgentCancellationPenaltyPercentage() + "%");
+                }
+            }
+        }
+        if (mustCreateLateCancellationPenalty) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("LateCancellationPenalty");
+            config.setValue(25.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Late cancellation penalty set to 25%");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("LateCancellationPenalty");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getLateCancellationPenaltyPercentage())) {
+                    config.get().setValue((double) dto.getLateCancellationPenaltyPercentage());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Late cancellation penalty set to " + dto.getLateCancellationPenaltyPercentage() + "%");
+                }
+            }
+        }
+        if (mustCreateRegularCancellationPenalty) {
+            NumericalConfig config = new NumericalConfig();
+            config.setName("RegularCancellationPenalty");
+            config.setValue(0.0);
+            config.setType(NumConfigType.SYSTEM_SETTING);
+            configService.addNumericalConfig(config);
+            LOGGER.info("Regular cancellation penalty set to 0%");
+        } else {
+            Optional<NumericalConfig> config = configService.getNumericalConfigByName("RegularCancellationPenalty");
+            if (config.isPresent()) {
+                if (!config.get().getValue().equals((double) dto.getRegularCancellationPenaltyPercentage())) {
+                    config.get().setValue((double) dto.getRegularCancellationPenaltyPercentage());
+                    configService.addNumericalConfig(config.get());
+                    LOGGER.info("Regular cancellation penalty set to " + dto.getRegularCancellationPenaltyPercentage() + "%");
+                }
+            }
+        }
+    }
+
 
     // AUXILIARY METHODS
     // LUHN LOGIC
@@ -806,6 +1152,24 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
     private boolean isEmailBusy(String email) {
         return tenantService.getTenantByEmail(email) == null;
+    }
+
+    // Encrypt CVV using AES encryption
+    public static String encryptCVV(char[] cvv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
+        return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+    }
+
+    // Decrypt CVV using AES decryption
+    public static String decryptCVV(String encryptedCVV) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedCVVBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedCVV));
+        return new String(decryptedCVVBytes);
     }
 
 }

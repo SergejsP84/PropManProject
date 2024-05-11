@@ -52,7 +52,9 @@ public class NumericalConfigControllerTest {
     @Test
     public void testGetConfigByIdById() throws Exception {
         NumericalConfig config = new NumericalConfig();
-        Currency currency = new Currency(1L, "EUR");
+        Currency currency = new Currency();
+        currency.setId(1L);
+        currency.setDesignation("EUR");
         config.setId(1L);
         config.setCurrency(currency);
         config.setName("Default");
@@ -64,7 +66,9 @@ public class NumericalConfigControllerTest {
     @Test
     public void testAddConfig() throws Exception {
         NumericalConfig config = new NumericalConfig();
-        Currency currency = new Currency(1L, "EUR");
+        Currency currency = new Currency();
+        currency.setId(1L);
+        currency.setDesignation("EUR");
         config.setId(1L);
         config.setCurrency(currency);
         config.setName("Default");
@@ -77,7 +81,9 @@ public class NumericalConfigControllerTest {
     @Test
     public void testDeleteConfigById() throws Exception {
         NumericalConfig config = new NumericalConfig();
-        Currency currency = new Currency(1L, "EUR");
+        Currency currency = new Currency();
+        currency.setId(1L);
+        currency.setDesignation("EUR");
         config.setId(1L);
         config.setCurrency(currency);
         config.setName("Default");
@@ -90,13 +96,17 @@ public class NumericalConfigControllerTest {
     @Test
     public void testGetConfigByCurrency() throws Exception {
         NumericalConfig config1 = new NumericalConfig();
-        Currency currency1 = new Currency(1L, "EUR");
+        Currency currency1 = new Currency();
+        currency1.setId(1L);
+        currency1.setDesignation("EUR");
         config1.setId(1L);
         config1.setCurrency(currency1);
         config1.setName("Default");
         config1.setValue(1.00);
         NumericalConfig config2 = new NumericalConfig();
-        Currency currency2 = new Currency(2L, "THB");
+        Currency currency2 = new Currency();
+        currency1.setId(2L);
+        currency1.setDesignation("THB");
         config2.setId(2L);
         config2.setCurrency(currency2);
         config2.setName("Thai Tourist Surcharge");
@@ -122,7 +132,9 @@ public class NumericalConfigControllerTest {
     @Test
     public void testUpdateConfig() throws Exception {
         NumericalConfig config1 = new NumericalConfig();
-        Currency currency1 = new Currency(1L, "EUR");
+        Currency currency1 = new Currency();
+        currency1.setId(1L);
+        currency1.setDesignation("EUR");
         config1.setId(1L);
         config1.setCurrency(currency1);
         config1.setName("Initial");

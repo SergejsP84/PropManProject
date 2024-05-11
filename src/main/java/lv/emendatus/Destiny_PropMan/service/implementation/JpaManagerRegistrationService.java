@@ -1,26 +1,26 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import org.springframework.transaction.annotation.Transactional;
+import lv.emendatus.Destiny_PropMan.domain.dto.profile.CardUpdateDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.TokenResetter;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
-import lv.emendatus.Destiny_PropMan.exceptions.EmailAlreadyExistsException;
-import lv.emendatus.Destiny_PropMan.exceptions.InvalidPaymentCardNumberException;
-import lv.emendatus.Destiny_PropMan.exceptions.LoginAlreadyExistsException;
-import lv.emendatus.Destiny_PropMan.exceptions.PasswordMismatchException;
+import lv.emendatus.Destiny_PropMan.exceptions.*;
 import lv.emendatus.Destiny_PropMan.service.interfaces.ManagerRegistrationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.mail.MessagingException;
-import javax.security.auth.login.LoginException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class JpaManagerRegistrationService implements ManagerRegistrationService {
@@ -31,18 +31,24 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     private final BCryptPasswordEncoder passwordEncoder;
     private final JpaEmailService emailService;
     private final JpaTokenResetService resetService;
+    private final JpaAdminAccountsService adminAccountsService;
+
     private final Logger LOGGER = LogManager.getLogger(JpaTenantRegistrationService.class);
 
-    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService) {
+    private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
+
+    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService, JpaAdminAccountsService adminAccountsService) {
         this.managerService = managerService;
         this.tenantService = tenantService;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.resetService = resetService;
+        this.adminAccountsService = adminAccountsService;
     }
 
     @Override
+    @Transactional
     public void registerManager(ManagerRegistrationDTO registrationDTO) {
         if (!isValidPaymentCardNumber(registrationDTO.getPaymentCardNo())) {
             LOGGER.error("Invalid payment card number for manager registration");
@@ -69,6 +75,12 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
         manager.setPaymentCardNo(registrationDTO.getPaymentCardNo());
+        manager.setCardValidityDate(registrationDTO.getCardValidityDate());
+        try {
+            manager.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         manager.setPassword(encodedPassword);
         manager.setActive(false);
@@ -90,6 +102,26 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         resetter.setUserId(manager.getId());
         resetter.setUserType(UserType.MANAGER);
         resetService.addResetter(resetter);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #dto.userId == principal.id")
+    @Transactional
+    public void updateManagerPaymentCard(CardUpdateDTO dto) {
+        if (dto.getUserType() != UserType.MANAGER) {
+            throw new IllegalArgumentException("User type must be MANAGER.");
+        }
+        Manager manager = managerService.getManagerById(dto.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Manager not found with ID: " + dto.getUserId()));
+        manager.setPaymentCardNo(dto.getNewCardNumber());
+        manager.setCardValidityDate(dto.getNewValidityDate());
+        try {
+            String encryptedCvv = encryptCVV(dto.getNewCvv());
+            manager.setCvv(encryptedCvv.toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException("Error encrypting CVV.", e);
+        }
+        managerService.addManager(manager);
     }
 
     // AUXILIARY METHODS
@@ -137,10 +169,13 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     }
 
     private boolean isLoginBusy(String login) {
-        return tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null;
+        return !(tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null && adminAccountsService.findByLogin(login).isEmpty());
     }
     private boolean isEmailBusy(String email) {
-        return managerService.getManagerByEmail(email) == null;
+        for (Manager manager : managerService.getAllManagers()) {
+            if (manager.getEmail().equals(email)) return true;
+        }
+        return false;
     }
 
     public String createConfirmationEmailBody(String managerName, String confirmationLink) {
@@ -152,5 +187,23 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
 
         return greeting + explanation + link + expiration + instructions + closing;
+    }
+
+    // Encrypt CVV using AES encryption
+    public static String encryptCVV(char[] cvv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
+        return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+    }
+
+    // Decrypt CVV using AES decryption
+    public static String decryptCVV(String encryptedCVV) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedCVVBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedCVV));
+        return new String(decryptedCVVBytes);
     }
 }

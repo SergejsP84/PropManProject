@@ -183,9 +183,21 @@ public class Spare_TestDataInitializer {
     }
 
     public void initializeCurrencies() {
-        Currency currency1 = new Currency(1L, "EUR");
-        Currency currency2 = new Currency(2L, "USD");
-        Currency currency3 = new Currency(3L, "THB");
+        Currency currency1 = new Currency();
+        Currency currency2 = new Currency();
+        Currency currency3 = new Currency();
+        currency1.setId(1L);
+        currency1.setDesignation("EUR");
+        currency1.setIsBaseCurrency(true);
+        currency1.setRateToBase(1.00);
+        currency2.setId(2L);
+        currency2.setDesignation("USD");
+        currency2.setIsBaseCurrency(false);
+        currency2.setRateToBase(0.93);
+        currency3.setId(3L);
+        currency3.setDesignation("THB");
+        currency3.setIsBaseCurrency(false);
+        currency3.setRateToBase(0.31);
         currencyService.addCurrency(currency1);
         currencyService.addCurrency(currency2);
         currencyService.addCurrency(currency3);

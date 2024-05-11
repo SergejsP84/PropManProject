@@ -6,6 +6,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservatio
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +19,7 @@ public interface AdvancedManagerService {
 
     ManagerReservationDTO viewReservationsForManager(Long managerId);
 
-    public ManagerReservationDTO viewReservationsForProperty(Long propertyId);
+    ManagerReservationDTO viewReservationsForProperty(Long propertyId);
 
     List<BookingDTO_Reservation> getBookingsForProperty(Long propertyId);
 
@@ -30,25 +31,29 @@ public interface AdvancedManagerService {
 
     FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId);
 
-    public List<Bill> getUnpaidBillsForProperty(Long propertyId);
+    List<Bill> getUnpaidBillsForProperty(Long propertyId);
 
-    public List<Bill> getUnpaidBillsForManager(Long managerId);
+    List<Bill> getUnpaidBillsForManager(Long managerId);
 
-    public void addProperty(PropertyAdditionDTO propertyDTO);
+    void addProperty(PropertyAdditionDTO propertyDTO);
 
-    public PropertyDiscount setDiscountOrSurcharge (PropertyDiscountDTO propertyDiscountDTO);
+    PropertyDiscount setDiscountOrSurcharge (PropertyDiscountDTO propertyDiscountDTO);
 
-    public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
+    void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
 
-    public List<Booking> getBookingsPendingApproval (Long managerId);
+    List<Booking> getBookingsPendingApproval (Long managerId);
 
-    public void approveBooking (Long bookingId);
+    void approveBooking (Long bookingId);
 
-    public void declineBooking (Long bookingId);
+    void declineBooking (Long bookingId);
 
-    public void acceptEarlyTermination(Long requestId, String reply);
+    void acceptEarlyTermination(Long requestId, String reply);
 
-    public void declineEarlyTermination(Long requestId, String reply);
+    void declineEarlyTermination(Long requestId, String reply);
 
     void removeProperty (Long propertyId);
+    void uploadPhotos(Long propertyId, MultipartFile[] files);
+    void removePhoto(Long propertyId, String photoUrl);
+
+    void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
 }

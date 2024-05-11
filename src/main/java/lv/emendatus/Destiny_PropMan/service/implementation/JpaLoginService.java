@@ -35,14 +35,16 @@ public class JpaLoginService implements LoginService {
     private final JpaManagerService managerService;
     private final JpaAdminAccountsService adminService;
     private final JpaEmailService emailService;
+    private final UserDetailsInnerService userDetailsService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
 
-    public JpaLoginService(JpaTenantService tenantService, JpaManagerService managerService, JpaAdminAccountsService adminService, JpaEmailService emailService, BCryptPasswordEncoder passwordEncoder) {
+    public JpaLoginService(JpaTenantService tenantService, JpaManagerService managerService, JpaAdminAccountsService adminService, JpaEmailService emailService, UserDetailsInnerService userDetailsService, BCryptPasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.adminService = adminService;
         this.emailService = emailService;
+        this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
     @Override
@@ -51,6 +53,7 @@ public class JpaLoginService implements LoginService {
         Tenant tenant = tenantService.getTenantByLogin(loginDTO.getLogin());
         if (tenant != null && passwordEncoder.matches(loginDTO.getPassword(), tenant.getPassword())) {
             if (tenant.getKnownIps().contains(clientIpAddress)) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
                 Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.TENANT);
                 tenant.setAuthorities(authorities);
                 LOGGER.info("Successful login attempt for Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
@@ -58,6 +61,7 @@ public class JpaLoginService implements LoginService {
             } else {
                 initiateTwoFactorAuthentication(tenant.getEmail());
                 LOGGER.info("Two-factor identification requested from Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
+                System.out.println("New IP " + clientIpAddress + " detected for tenant " + tenant.getId());
                 return null;
             }
         }
@@ -70,6 +74,7 @@ public class JpaLoginService implements LoginService {
         Manager manager = managerService.getManagerByLogin(loginDTO.getLogin());
         if (manager != null && passwordEncoder.matches(loginDTO.getPassword(), manager.getPassword())) {
             if (manager.getKnownIps().contains(clientIpAddress)) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
                 Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.MANAGER);
                 manager.setAuthorities(authorities);
                 LOGGER.info("Successful login attempt for Manager: " + manager.getLogin() + " at " + LocalDateTime.now());
@@ -77,6 +82,7 @@ public class JpaLoginService implements LoginService {
             } else {
                 initiateTwoFactorAuthentication(manager.getEmail());
                 LOGGER.info("Two-factor identification requested from Manager: " + manager.getLogin() + " at " + LocalDateTime.now());
+                System.out.println("New IP " + clientIpAddress + " detected for manager " + manager.getId());
                 return null;
             }
         }
@@ -89,16 +95,20 @@ public class JpaLoginService implements LoginService {
         Admin admin = adminService.findByLogin(loginDTO.getLogin()).orElse(null);
         if (admin != null && passwordEncoder.matches(loginDTO.getPassword(), admin.getPassword())) {
             if (admin.getKnownIps().contains(clientIpAddress)) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
                 Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.ADMIN);
                 admin.setAuthorities(authorities);
                 LOGGER.info("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
+                System.out.println("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
                 return admin;
             } else {
                 if (!admin.getName().equals("DefaultAdmin")) {
                 initiateTwoFactorAuthentication(admin.getEmail());
                 LOGGER.info("Two-factor identification requested from Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
+                    System.out.println("New IP " + clientIpAddress + " detected for admin " + admin.getId());
                 return null;
                 } else {
+                    System.out.println("Successful login attempt for DefaultAdmin at " + LocalDateTime.now());
                     return admin;
                 }
             }

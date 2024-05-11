@@ -7,12 +7,17 @@ import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservatio
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
+import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
+import lv.emendatus.Destiny_PropMan.exceptions.FileStorageException;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -120,4 +125,29 @@ public class AdvancedManagerController {
         service.removeProperty(propertyId);
         return ResponseEntity.ok("Property removed successfully.");
     }
+
+    @PostMapping("/addPhotos/{propertyId}")
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    public ResponseEntity<String> uploadPhotos(@PathVariable Long propertyId, @RequestParam("files") MultipartFile[] files) {
+        try {
+            service.uploadPhotos(propertyId, files);
+            return ResponseEntity.ok("Photos uploaded successfully.");
+        } catch (FileStorageException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload photos: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/removePhoto/{propertyId}")
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    public ResponseEntity<String> removePhoto(@PathVariable Long propertyId, @RequestParam String photoUrl) {
+        try {
+            service.removePhoto(propertyId, photoUrl);
+            return ResponseEntity.ok("Photo removed successfully.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (FileStorageException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to remove photo: " + e.getMessage());
+        }
+    }
+
 }

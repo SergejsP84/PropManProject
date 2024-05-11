@@ -21,13 +21,14 @@ public class ManagerController {
         this.managerService = managerService;
     }
 
-    @PostMapping("/add")
+    @PostMapping("/add") // Same-same, this has to be a root post method
+    // See the general principles for restful service construction
     public ResponseEntity<Void> addManager(@RequestBody Manager manager) {
         managerService.addManager(manager);
         System.out.println("Added new manager: " + manager.getManagerName());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
-    @GetMapping("/getall")
+    @GetMapping("/getall") // GetAlls must be implemented with no extra path parameters ("/managers")
     public ResponseEntity<List<Manager>> getAllManagers() {
         List<Manager> managers = managerService.getAllManagers();
         return new ResponseEntity<>(managers, HttpStatus.OK);

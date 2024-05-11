@@ -1,11 +1,15 @@
 package lv.emendatus.Destiny_PropMan.domain.dto.registration;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.YearMonth;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -34,6 +38,12 @@ public class ManagerRegistrationDTO {
     @NotEmpty
     @Size(min = 16, max = 19, message = "Payment card number must be between 16 and 19 characters")
     private String paymentCardNo;
+    @NotNull(message = "Card validity date must be provided")
+    private YearMonth cardValidityDate;
+    @NotNull(message = "CVV must be provided")
+    @Size(min = 3, max = 4, message = "CVV must be between 3 and 4 characters")
+    private char[] cvv;
+
     @NotNull
     @NotEmpty
     private String login;

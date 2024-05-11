@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ public class JpaPasswordService implements PasswordService {
         this.passwordEncoder = passwordEncoder;
     }
     @Override
+    @Transactional
     public void changePassword(String login, UserType userType, String newPassword, String reEnterNewPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword);
         if (!validatePassword(newPassword)) {
@@ -55,6 +57,7 @@ public class JpaPasswordService implements PasswordService {
         }
     }
     @Override
+    @Transactional
     public void resetPassword(String email, UserType userType, String newPassword, String reEnterNewPassword) {
         String confirmationToken = tokenService.generateToken();
         LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
@@ -79,6 +82,7 @@ public class JpaPasswordService implements PasswordService {
     }
 
     @Override
+    @Transactional
     public void completePasswordReset(String token, String newPassword, String reEnterNewPassword) {
         if (!validatePassword(newPassword)) {
             LOGGER.warn("Invalid password format");

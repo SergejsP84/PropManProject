@@ -19,6 +19,8 @@ public class JpaManagerService implements ManagerService {
     private final ManagerRepository managerRepository;
     private final PropertyRepository propertyRepository;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+
+
     public JpaManagerService(ManagerRepository managerRepository, PropertyRepository propertyRepository) {
         this.managerRepository = managerRepository;
         this.propertyRepository = propertyRepository;

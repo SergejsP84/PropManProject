@@ -155,14 +155,14 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/new_payout")
-    public ResponseEntity<String> addNewPayout(@RequestParam Long bookingId, @RequestParam Long managerId, @RequestParam Double amount) {
-        adminFunctionalityService.createPayout(bookingId, managerId, amount);
+    public ResponseEntity<String> addNewPayout(@RequestParam Long bookingId, @RequestParam Long managerId, @RequestParam Double amount, @RequestParam Long currencyId) {
+        adminFunctionalityService.createPayout(bookingId, managerId, amount, currencyId);
         return ResponseEntity.ok("Payout added successfully.");
     }
 
     @PostMapping("/new_refund")
-    public ResponseEntity<String> addNewRefund(@RequestParam Long bookingId, @RequestParam Long tenantId, @RequestParam Double amount) {
-        adminFunctionalityService.createRefund(bookingId, tenantId, amount);
+    public ResponseEntity<String> addNewRefund(@RequestParam Long bookingId, @RequestParam Long tenantId, @RequestParam Double amount, @RequestParam Long currencyId) {
+        adminFunctionalityService.createRefund(bookingId, tenantId, amount, currencyId);
         return ResponseEntity.ok("Refund added successfully.");
     }
 }

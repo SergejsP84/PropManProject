@@ -21,6 +21,7 @@ public interface PaymentsViewMapper {
     @Mapping(source = "property.settlement", target = "settlement")
     @Mapping(source = "property.country", target = "country")
     @Mapping(source = "tenantPayment.receiptDue", target = "receiptDue")
+    @Mapping(source = "tenantPayment.currency.designation", target = "currency")
     PaymentsViewDTO toDTO(TenantPayment tenantPayment, Property property);
 
     default List<PaymentsViewDTO> toDTOList(List<TenantPayment> tenantPayments, List<Property> properties) {

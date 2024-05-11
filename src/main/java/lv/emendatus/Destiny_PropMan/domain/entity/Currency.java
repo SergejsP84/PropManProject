@@ -1,10 +1,19 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Objects;
 import java.util.Set;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "currencies")
 public class Currency {
@@ -13,37 +22,36 @@ public class Currency {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Currency designation is required")
     @Column(name = "designation")
     private String designation;
 
-    @OneToMany(mappedBy = "currency") // not sure if needed
+    @Column(name = "is_base_currency")
+    private Boolean isBaseCurrency;
+
+    @Column(name = "rate_to_base")
+    private Double rateToBase;
+
+    @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
     private Set<Bill> bills;
 
-    @OneToMany(mappedBy = "currency") // not sure if needed
+    @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
     private Set<NumericalConfig> numericalConfigs;
 
-    public Currency() {
-    }
+    @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    private Set<Refund> refunds;
 
+    @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    private Set<Payout> payouts;
+
+    @OneToMany(mappedBy = "preferredCurrency") // not sure if needed, retained for possible further use
+    private Set<Tenant> tenants;
+
+    @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    private Set<TenantPayment> tenantPayments;
 
     public Currency(Long id, String designation) {
         this.id = id;
-        this.designation = designation;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getDesignation() {
-        return designation;
-    }
-
-    public void setDesignation(String designation) {
         this.designation = designation;
     }
 
@@ -52,12 +60,12 @@ public class Currency {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Currency currency = (Currency) o;
-        return Objects.equals(id, currency.id) && Objects.equals(designation, currency.designation);
+        return Objects.equals(id, currency.id) && Objects.equals(designation, currency.designation) && Objects.equals(isBaseCurrency, currency.isBaseCurrency) && Objects.equals(rateToBase, currency.rateToBase);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, designation);
+        return Objects.hash(id, designation, isBaseCurrency, rateToBase);
     }
 
     @Override
@@ -65,6 +73,8 @@ public class Currency {
         return "Currency{" +
                 "id=" + id +
                 ", designation='" + designation + '\'' +
+                ", isBaseCurrency=" + isBaseCurrency +
+                ", rateToBase=" + rateToBase +
                 '}';
     }
 }

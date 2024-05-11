@@ -1,18 +1,15 @@
 package lv.emendatus.Destiny_PropMan.mapper;
-import lv.emendatus.Destiny_PropMan.domain.dto.communication.CommunicationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.FavoritePropertyDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.PropertiesForTenantsDTO;
-import lv.emendatus.Destiny_PropMan.domain.entity.Message;
 import lv.emendatus.Destiny_PropMan.exceptions.PropertyNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
-public interface PropertyMapper {
-    PropertyMapper INSTANCE = Mappers.getMapper(PropertyMapper.class);
+public interface PropertyViewMapper {
+    PropertyViewMapper INSTANCE = Mappers.getMapper(PropertyViewMapper.class);
 
     PropertiesForTenantsDTO propertyToPropertiesForTenantsDTO(Property property);
 

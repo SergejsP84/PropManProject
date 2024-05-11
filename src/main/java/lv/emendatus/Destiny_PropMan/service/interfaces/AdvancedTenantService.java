@@ -15,7 +15,7 @@ import java.util.List;
 public interface AdvancedTenantService {
 
     // View Property Details
-    PropertiesForTenantsDTO getPropertyDetails(Long propertyId);
+    PropertiesForTenantsDTO getPropertyDetails(Long propertyId, String tenantId);
 
 
     // Save Favorites

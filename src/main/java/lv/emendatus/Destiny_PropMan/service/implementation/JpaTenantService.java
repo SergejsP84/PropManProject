@@ -68,7 +68,7 @@ public class JpaTenantService implements TenantService {
     @Override
     public Tenant getTenantByEmail(String email) {
         for (Tenant tenant : getAllTenants()) {
-            if (tenant.getEmail().equals(email)) return tenant;
+            if (email.equals(tenant.getEmail())) return tenant;
         }
         return null;
     }
