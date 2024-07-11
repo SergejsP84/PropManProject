@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
+import lv.emendatus.Destiny_PropMan.domain.dto.registration.AdminRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.Admin;
 
 import java.util.List;
@@ -10,6 +11,6 @@ public interface AdminAccountsService {
     Optional<Admin> findByLogin(String login);
     void createDefaultAdmin();
     void addAdmin(Admin admin);
-    void createAdmin(String name, String login, String password);
+    void createAdmin(AdminRegistrationDTO dto);
     void deleteAdminByLogin(String login);
 }

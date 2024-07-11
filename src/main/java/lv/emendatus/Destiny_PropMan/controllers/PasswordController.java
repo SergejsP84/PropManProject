@@ -1,5 +1,8 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.password_controller.ChangePassword;
+import lv.emendatus.Destiny_PropMan.annotation.password_controller.CompletePasswordReset;
+import lv.emendatus.Destiny_PropMan.annotation.password_controller.RequestPasswordReset;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordChangeDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordResetConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordResetDTO;
@@ -16,6 +19,7 @@ public class PasswordController {
         this.passwordService = passwordService;
     }
     @PostMapping("/change")
+    @ChangePassword
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO) {
         try {
             passwordService.changePassword(passwordChangeDTO.getLogin(), passwordChangeDTO.getUserType(),
@@ -26,6 +30,7 @@ public class PasswordController {
         }
     }
     @PostMapping("/request-reset")
+    @RequestPasswordReset
     public ResponseEntity<String> requestPasswordReset(@RequestBody PasswordResetDTO requestDTO) {
         try {
             passwordService.resetPassword(requestDTO.getEmail(), requestDTO.getUserType(), requestDTO.getNewPassword(), requestDTO.getReEnterNewPassword());
@@ -36,6 +41,7 @@ public class PasswordController {
     }
 
     @PostMapping("/complete-reset")
+    @CompletePasswordReset
     public ResponseEntity<String> completePasswordReset(@RequestBody PasswordResetConfirmationDTO requestDTO) {
         try {
             passwordService.completePasswordReset(requestDTO.getToken(), requestDTO.getNewPassword(), requestDTO.getReEnterNewPassword());

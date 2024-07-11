@@ -3,6 +3,7 @@ package lv.emendatus.Destiny_PropMan.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import lv.emendatus.Destiny_PropMan.annotation.authentication_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.LoginDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
@@ -43,6 +44,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register/tenant")
+    @Authentication_RegisterTenant
     public ResponseEntity<?> registerTenant(@RequestBody @Valid TenantRegistrationDTO registrationDTO) {
         try {
             tenantRegistrationService.registerTenant(registrationDTO);
@@ -53,6 +55,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register/manager")
+    @Authentication_RegisterManager
     public ResponseEntity<?> registerManager(@RequestBody @Valid ManagerRegistrationDTO registrationDTO) {
         try {
             managerRegistrationService.registerManager(registrationDTO);
@@ -63,6 +66,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
+    @Authentication_Login
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
         Tenant tenant = loginService.authenticateTenant(loginDTO, request);
         if (tenant != null) {
@@ -76,6 +80,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/admin-login")
+    @Authentication_AdminLogin
     public ResponseEntity<?> adminLogin(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
         System.out.println("!!! - Admin login method INVOKED!");
         Admin admin = loginService.authenticateAdmin(loginDTO, request);
@@ -86,6 +91,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-otp-tenant")
+    @Authentication_VerifyOtpTenant
     public ResponseEntity<?> verifyOtpTenant(@RequestParam String otp, HttpServletRequest request) {
         // Retrieve the stored OTP from the user session
         HttpSession session = request.getSession();
@@ -118,6 +124,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-otp-manager")
+    @Authentication_VerifyOtpManager
     public ResponseEntity<?> verifyOtpManager(@RequestParam String otp, HttpServletRequest request) {
         HttpSession session = request.getSession();
         String storedOtp = (String) session.getAttribute("otp");
@@ -142,6 +149,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-otp-admin")
+    @Authentication_VerifyOtpAdmin
     public ResponseEntity<?> verifyOtpAdmin(@RequestParam String otp, HttpServletRequest request) {
         HttpSession session = request.getSession();
         String storedOtp = (String) session.getAttribute("otp");

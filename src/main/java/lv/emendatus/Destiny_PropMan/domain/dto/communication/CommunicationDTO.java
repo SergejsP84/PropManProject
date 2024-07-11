@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CommunicationDTO {
     private Long id;
-    private Long senderId; // ID of the sender (tenant)
+    private Long senderId; // ID of the sender
     private String senderType; // "Tenant" or "Manager"
-    private Long receiverId; // ID of the receiver (host/manager)
+    private Long receiverId; // ID of the receiver (of the opposite type)
     private String receiverType;
     private String message;
     private LocalDateTime sentAt;

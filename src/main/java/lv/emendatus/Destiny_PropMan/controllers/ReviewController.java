@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.review_controller.GetReviewsByProperty;
+import lv.emendatus.Destiny_PropMan.annotation.review_controller.LeaveReview;
 import lv.emendatus.Destiny_PropMan.domain.dto.communication.CommunicationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.ReviewDTO;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaReviewService;
@@ -20,11 +22,13 @@ public class ReviewController {
     }
 
     @PostMapping("/post")
+    @LeaveReview
     public ResponseEntity<Void> leaveReview(@RequestBody ReviewDTO review) {
         service.leaveReview(review);
         return ResponseEntity.ok().build();
     }
     @GetMapping("/getByProperty/{propertyId}")
+    @GetReviewsByProperty
     public ResponseEntity<List<ReviewDTO>> getReviewsByProperty(@PathVariable Long propertyId) {
         List<ReviewDTO> reviews = service.findByPropertyId(propertyId)
                 .stream()

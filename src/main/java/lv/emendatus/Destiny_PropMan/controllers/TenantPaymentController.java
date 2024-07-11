@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.tenant_payment_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
@@ -32,23 +33,27 @@ public class TenantPaymentController {
     }
 
     @PostMapping("/add")
+    @TenantPayment_Add
     public ResponseEntity<Void> addPayment(@RequestBody TenantPayment payment) {
         service.addTenantPayment(payment);
         System.out.println("Added new tenant payment: " + payment.getId());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
     @GetMapping("/getall")
+    @TenantPayment_GetAll
     public ResponseEntity<List<TenantPayment>> getAllPayments() {
         List<TenantPayment> payments = service.getAllTenantPayments();
         return new ResponseEntity<>(payments, HttpStatus.OK);
     }
     @GetMapping("/getPaymentById/{id}")
+    @TenantPayment_GetByID
     public ResponseEntity<TenantPayment> getPaymentById(@PathVariable Long id) {
         Optional<TenantPayment> result = service.getTenantPaymentById(id);
         return result.map(payment -> new ResponseEntity<>(payment, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     @DeleteMapping("/deletePaymentById/{id}")
+    @TenantPayment_Delete
     public void deleteByID(@PathVariable Long id) {
         if (service.getTenantPaymentById(id).isPresent()) {
             System.out.println("Deleting tenant payment " + id);
@@ -58,6 +63,7 @@ public class TenantPaymentController {
         }
     }
     @GetMapping("/getByTenant/{ten_id}")
+    @TenantPayment_GetByTenant
     public ResponseEntity<List<TenantPayment>> getPaymentsByTenant(@PathVariable Long ten_id) {
         Optional<Tenant> obtained = tenantService.getTenantById(ten_id);
         if (obtained.isPresent()) {
@@ -74,6 +80,7 @@ public class TenantPaymentController {
         }
     }
     @GetMapping("/getByManager/{man_id}")
+    @TenantPayment_GetByManager
     public ResponseEntity<List<TenantPayment>> getPaymentsByManager(@PathVariable Long man_id) {
         Optional<Manager> obtained = managerService.getManagerById(man_id);
         if (obtained.isPresent()) {
@@ -90,6 +97,7 @@ public class TenantPaymentController {
         }
     }
     @GetMapping("/getByProperty/{prop_id}")
+    @TenantPayment_GetByProperty
     public ResponseEntity<List<TenantPayment>> getPaymentsByProperty(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -106,17 +114,20 @@ public class TenantPaymentController {
         }
     }
     @GetMapping("/getUnsettled")
+    @TenantPayment_GetUnsettled
     public ResponseEntity<List<TenantPayment>> getUnsettled() {
         List<TenantPayment> unsettledPayments = service.getUnsettledPayments();
         return new ResponseEntity<>(unsettledPayments, HttpStatus.OK);
     }
     @PostMapping("/settle/{id}")
+    @TenantPayment_Settle
     public ResponseEntity<Void> settlePayment(@PathVariable Long id) {
         service.settlePayment(id);
         System.out.println("Settled payment: " + id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
     @GetMapping("/getByDateRange")
+    @TenantPayment_GetByDueDateRange
     public ResponseEntity<List<TenantPayment>> getPaymentsByDueDateRange(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {

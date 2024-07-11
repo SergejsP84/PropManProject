@@ -34,20 +34,15 @@ import java.lang.annotation.Target;
                         required = true,
                         in = ParameterIn.PATH,
                         schema = @Schema(type = "string"),
-                        examples = {
-                                @ExampleObject(
-                                        name = "Example request with correct Id",
-                                        value = "1"
-                                ),
-                                @ExampleObject(
-                                        name = "Example request with non-exist Id",
-                                        value = "5000000"
-                                ),
-                                @ExampleObject(
-                                        name = "Example request with invalid Id",
-                                        value = "-1"
-                                )
-                        }
+                        examples = @ExampleObject(
+                                name = "Example Currency",
+                                value = "{\n" +
+                                        "  \"id\": 1,\n" +
+                                        "  \"designation\": \"USD\",\n" +
+                                        "  \"isBaseCurrency\": false,\n" +
+                                        "  \"rateToBase\": 0.95,\n" +
+                                        "}"
+                        )
                 )
         },
         responses = {
@@ -70,6 +65,14 @@ import java.lang.annotation.Target;
                 @ApiResponse(
                         responseCode = "400",
                         description = "Invalid ID",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class)
+                        )
+                ),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Internal server error: An unexpected error occurred",
                         content = @Content(
                                 mediaType = "application/json",
                                 schema = @Schema(implementation = ErrorResponse.class)

@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ public class TenantPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Amount is required")
+    @NotNull(message = "Amount is required")
     @Column(name = "amount", precision = 10)
     private Double amount;
     @ManyToOne
@@ -33,7 +34,7 @@ public class TenantPayment {
     @JoinColumn(name = "tenant_id")
     private Tenant tenant;
 
-    @NotBlank(message = "Manager ID is required")
+    @NotNull(message = "Manager ID is required")
     @Column(name = "manager_id")
     private Long managerId;
 

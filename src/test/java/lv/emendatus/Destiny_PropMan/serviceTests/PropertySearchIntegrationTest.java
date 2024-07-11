@@ -2,37 +2,29 @@ package lv.emendatus.Destiny_PropMan.serviceTests;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.search.PropertySearchResultDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.search.SearchCriteria;
-import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
-import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
 import lv.emendatus.Destiny_PropMan.service.implementation.PropertySearchService;
 import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +55,7 @@ class PropertySearchIntegrationTest {
         searchCriteria.setStartDate(LocalDate.now());
         searchCriteria.setEndDate(LocalDate.now().plusDays(7));
         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
-        Assert.assertEquals(2L, (long) searchResults.get(0).getId());
+        assertEquals(2L, (long) searchResults.get(0).getId());
     }
 
     @Test
@@ -75,9 +67,9 @@ class PropertySearchIntegrationTest {
         searchCriteria.setStartDate(LocalDate.of(2024, 3, 5));
         searchCriteria.setEndDate(LocalDate.of(2024, 3, 18));
         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
-        Assert.assertEquals(2, searchResults.size());
-        Assert.assertEquals(1L, (long) searchResults.get(0).getId());
-        Assert.assertEquals(3L, (long) searchResults.get(1).getId());
+        assertEquals(2, searchResults.size());
+        assertEquals(1L, (long) searchResults.get(0).getId());
+        assertEquals(3L, (long) searchResults.get(1).getId());
     }
 
     @Test
@@ -90,8 +82,8 @@ class PropertySearchIntegrationTest {
         searchCriteria.setEndDate(LocalDate.of(2024, 4, 15));
         searchCriteria.setMaxPrice(120.0);
         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
-        Assert.assertEquals(1, searchResults.size());
-        Assert.assertEquals(1L, (long) searchResults.get(0).getId());
+        assertEquals(1, searchResults.size());
+        assertEquals(1L, (long) searchResults.get(0).getId());
     }
 
 }

@@ -4,6 +4,7 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 
 public interface ThirdPartyPaymentProviderService {
 
@@ -13,4 +14,7 @@ public interface ThirdPartyPaymentProviderService {
     Boolean stub(TenantPayment tenantPayment);
     Boolean stub2(Refund refund);
     Boolean stub3(Payout payout);
+
+    public String decryptCardNumber(Long userId, UserType userType, String encryptedCardNumber) throws Exception;
+    public String decryptCVV(Long userId, UserType userType, String encryptedCVV) throws Exception;
 }

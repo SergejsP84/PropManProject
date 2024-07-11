@@ -15,7 +15,7 @@ import java.util.List;
 public interface AdvancedTenantService {
 
     // View Property Details
-    PropertiesForTenantsDTO getPropertyDetails(Long propertyId, String tenantId);
+    PropertiesForTenantsDTO getPropertyDetails(Long propertyId, String tenantLogin);
 
 
     // Save Favorites
@@ -40,5 +40,7 @@ public interface AdvancedTenantService {
     void requestEarlyTermination(Long bookingId, LocalDateTime terminationDate, String comment);
 
     // Pay the booking
-    public void processPayment(TenantPayment tenantPayment);
+    void processPayment(TenantPayment tenantPayment);
+
+    void rateAProperty(Long tenantId, Long bookingId, Integer rating);
 }

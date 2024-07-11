@@ -3,15 +3,24 @@ package lv.emendatus.Destiny_PropMan.config;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
 import org.springframework.beans.factory.annotation.Value;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.Tag;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+/*
+
+      USE http://localhost:8080/swagger-ui/index.html TO ACCESS SWAGGER UI!
+
+ */
+
 
 @OpenAPIDefinition(
         info = @Info(
@@ -20,7 +29,7 @@ import springfox.documentation.spring.web.plugins.Docket;
                         "The overall data structure is as follows:<br>"
                         + "I. User entities:<br>"
                         + "  1) Admin - the user/users in charge of managing the system<br>"
-                        + "  2) Manager - a user who rents out a property or similar properties at the platform<br>"
+                        + "  2) Manager - a user who rents out a property or several properties at the platform<br>"
                         + "  3) Tenant - a user renting properties via the platform for remuneration<br>"
                         + "II. Rental process entities:<br>"
                         + "  1) Property - a property available for rent<br>"
@@ -40,10 +49,14 @@ import springfox.documentation.spring.web.plugins.Docket;
                         + "  1) Claim - a claim that can be lodged by a Tenant against a Manager, or vice versa<br>"
                         + "  2) Message - a message sent by a Tenant to a Manager or vice versa<br>"
                         + "  3) Review - a review of a Property that a Tenant can leave after a Booking is over <br>"
+                        + "  4) PropertyRating - a separate entity contributing to the overall rating of each specific Property. <br>"
+                        + "  5) TenantRating - a separate entity contributing to the overall rating of each specific Tenant. <br>"
                         + "V. Auxiliary entities:<br>"
                         + "  1) Numerical config - used to store various numerical values, including some system settings<br>"
                         + "  2) PropertyAmenity - an auxiliary entity linking Properties and Amenities<br>"
-                        + "  3) TokenResetter - an auxiliary entity employed in the process of resetting email confirmation and password reset tokens"
+                        + "  3) TokenResetter - an auxiliary entity employed in the process of resetting email confirmation and password reset tokens<br>"
+                        + "  4) NumericDataMapping - a three-layered map used to store keys for decrypting users' sensitive financial data, specifically, payment card numbers and CVV codes<br>"
+                        + "  5) PropertyLock - an auxiliary entity required in order to allow a Manager to unlock any of his/her Properties that might have been locked for a specific period previously<br>"
                         ,
                 version = "1.0.0",
                 contact = @Contact(
@@ -56,27 +69,12 @@ import springfox.documentation.spring.web.plugins.Docket;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    @Value("${lv.emendatus.Destiny_PropMan}")
-    private String GROUP_NAME;
-    public static final String AUTHORIZATION = "Authorization service";
+    public static final String AUTHORIZATION = "Authorization and/or user management service";
     public static final String GENERAL = "Generally available service";
     public static final String ADMIN_FUNCTION = "Admin functionality service";
     public static final String MANAGER_FUNCTION = "Manager functionality service";
     public static final String TENANT_FUNCTION = "Tenant functionality service";
     public static final String OTHER = "Miscellaneous";
 
-    @Bean
-    public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .apis(RequestHandlerSelectors.basePackage(GROUP_NAME))
-                .paths(PathSelectors.any())
-                .build()
-                .tags(new Tag(AUTHORIZATION, "API for user registration, signup, sign-in and password reset procedures"))
-                .tags(new Tag(GENERAL, "API for functions not requiring authentication, such as Property viewing"))
-                .tags(new Tag(ADMIN_FUNCTION, "API for Admin functionality"))
-                .tags(new Tag(MANAGER_FUNCTION, "API for Manager functionality"))
-                .tags(new Tag(TENANT_FUNCTION, "API for Tenant functionality"))
-                .tags(new Tag(OTHER, "API for miscellaneous functions. Most of these endpoints are not exposed for use, but retained for possible future restructuring"));
-    }
+
 }

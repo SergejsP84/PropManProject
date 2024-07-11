@@ -61,10 +61,11 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     private final JpaThirdPartyPaymentProviderService paymentProviderService;
     private final JpaCurrencyService currencyService;
     private final JpaEmailService emailService;
+    private final JpaPropertyRatingService ratingService;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
     private static final String COMPLETED_PAYMENTS_FILE_PATH = "completedTenantPayments.txt";
 
-    public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyViewMapper propertyMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService, JpaTenantPaymentService paymentService, JpaPropertyService propertyService, JpaEarlyTerminationRequestService terminationService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaCurrencyService currencyService, JpaEmailService emailService) {
+    public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyViewMapper propertyMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService, JpaTenantPaymentService paymentService, JpaPropertyService propertyService, JpaEarlyTerminationRequestService terminationService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaCurrencyService currencyService, JpaEmailService emailService, JpaPropertyRatingService ratingService) {
         this.propertyRepository = propertyRepository;
         this.propertyMapper = propertyMapper;
         this.tenantRepository = tenantRepository;
@@ -82,6 +83,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
         this.paymentProviderService = paymentProviderService;
         this.currencyService = currencyService;
         this.emailService = emailService;
+        this.ratingService = ratingService;
     }
 
     @Override
@@ -380,6 +382,72 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
             // Handle payment failure as in line with the third-party payment service provider's data output
         }
     }
+
+    @Override
+    @Transactional
+    public void rateAProperty(Long tenantId, Long bookingId, Integer rating) {
+        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
+        if (optionalBooking.isPresent()) {
+            Optional<Tenant> optionalTenant = tenantService.getTenantById(tenantId);
+            if (optionalTenant.isPresent()) {
+                if (rating >= 1 && rating <=5) {
+                    Booking booking = optionalBooking.get();
+                    Tenant tenant = optionalTenant.get();
+                    if (booking.getTenantId().equals(tenant.getId())) {
+                        if (!ratingService.bookingAlreadyRated(bookingId)) {
+                            if (booking.getStatus().equals(BookingStatus.OVER)) {
+                                Optional<Property> optionalProperty = propertyService.getPropertyById(booking.getProperty().getId());
+                                if (optionalProperty.isPresent()) {
+                                    Property property = optionalProperty.get();
+                                    PropertyRating propertyRating = new PropertyRating();
+                                    propertyRating.setTenantId(tenantId);
+                                    propertyRating.setBookingId(bookingId);
+                                    propertyRating.setPropertyId(property.getId());
+                                    propertyRating.setRating(rating);
+                                    ratingService.addPropertyRating(propertyRating);
+                                    List<PropertyRating> existingRatings = ratingService.getRatingsForProperty(property.getId());
+                                    if (existingRatings.isEmpty() || existingRatings.size() == 1) {
+                                        property.setRating(Float.valueOf(rating));
+                                    } else {
+                                        int totalScore = 0;
+                                        for (PropertyRating item : existingRatings) {
+                                            totalScore += item.getRating();
+                                        }
+                                        totalScore += rating;
+                                        Float updatedRating = (float) (totalScore / existingRatings.size());
+                                        property.setRating(updatedRating);
+                                    }
+                                    propertyService.addProperty(property);
+                                } else {
+                                    LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", tenantId);
+                                    throw new PropertyNotFoundException("No property found with ID: " + tenantId);
+                                }
+                            } else {
+                                LOGGER.log(Level.WARN, "Can only rate Bookings that are already over!");
+                                System.out.println("Can only rate Bookings that are already over!");
+                            }
+                        } else {
+                            LOGGER.log(Level.WARN, "This Booking has already been rated!");
+                            System.out.println("This Booking has already been rated!");
+                        }
+                    } else {
+                        LOGGER.log(Level.WARN, "A Tenant may only rate his/her own Bookings!");
+                        System.out.println("A Tenant may only rate his/her own Bookings!");
+                    }
+                } else {
+                    LOGGER.log(Level.WARN, "Invalid rating specified: the rating must be between 1 and 5 inclusive");
+                    System.out.println("Invalid rating specified: the rating must be between 1 and 5 inclusive");
+                }
+            } else {
+                LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
+                throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
+            }
+        } else {
+            LOGGER.log(Level.ERROR, "No booking with the {} ID exists in the database.", bookingId);
+            throw new BookingNotFoundException("No booking found with ID: " + bookingId);
+        }
+    }
+
     // AUXILIARY METHODS
     public String createPaymentConfirmationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class JpaTenantService implements TenantService {
@@ -55,7 +56,7 @@ public class JpaTenantService implements TenantService {
         return allTenants.stream()
                 .filter(tenant -> tenant.getFirstName().toLowerCase().contains(lowercaseName) ||
                         tenant.getLastName().toLowerCase().contains(lowercaseName))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

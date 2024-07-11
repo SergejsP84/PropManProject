@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.manager_registration_controller.RegisterManager;
+import lv.emendatus.Destiny_PropMan.annotation.manager_registration_controller.UpdateManagerCard;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.CardUpdateDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerRegistrationService;
@@ -15,12 +17,14 @@ public class ManagerRegistrationController {
     private JpaManagerRegistrationService managerRegistrationService;
 
     @PostMapping("/signup")
+    @RegisterManager
     public ResponseEntity<Void> registerManager(@RequestBody ManagerRegistrationDTO registrationDTO) {
         managerRegistrationService.registerManager(registrationDTO);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/card-update/{managerId}")
+    @UpdateManagerCard
     public ResponseEntity<Void> updateManagerPaymentCard(@PathVariable Long managerId, @RequestBody CardUpdateDTO dto) {
         dto.setUserId(managerId);
         managerRegistrationService.updateManagerPaymentCard(dto);

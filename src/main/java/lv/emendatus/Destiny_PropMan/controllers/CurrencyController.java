@@ -42,9 +42,9 @@ public class CurrencyController {
         return new ResponseEntity<>(currencies, HttpStatus.OK);
     }
 
-    @GetMapping("/getCurrencyById")
+    @GetMapping("/getCurrencyById/{id}")
     @Currency_GetByID
-    public ResponseEntity<Currency> getCurrencyById(@RequestParam Long id) {
+    public ResponseEntity<Currency> getCurrencyById(@PathVariable Long id) {
         Optional<Currency> result = currencyService.getCurrencyById(id);
         return result.map(currency -> new ResponseEntity<>(currency, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

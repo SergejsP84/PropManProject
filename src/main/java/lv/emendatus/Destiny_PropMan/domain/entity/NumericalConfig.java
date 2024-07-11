@@ -25,8 +25,7 @@ public class NumericalConfig {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "\"value\"") // supposed to be 1 by default, change to any value between 0 and 1 to set a discount
-    // the comment above only applies to discounts, other uses can be found.
+    @Column(name = "\"value\"")
     private Double value;
 
     @Column(name = "type")

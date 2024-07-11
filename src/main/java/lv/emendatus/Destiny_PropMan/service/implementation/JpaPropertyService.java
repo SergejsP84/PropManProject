@@ -12,7 +12,9 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -207,10 +209,13 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void addAmenityToProperty(Long propertyId, Long amenityId) {
         PropertyAmenity propertyAmenity = new PropertyAmenity();
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
         if (optionalProperty.isPresent()) {
+            Long managerId = optionalProperty.get().getManager().getId();
             propertyAmenity.setProperty_id(propertyId);
             propertyAmenity.setAmenity_id(amenityId);
             propertyAmenityRepository.save(propertyAmenity);
@@ -221,11 +226,14 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
     public void removeAmenityFromProperty(Long propertyId, Long amenityId) {
         List<PropertyAmenity> propertyAmenities = propertyAmenityRepository.findAll();
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
         if (optionalProperty.isPresent()) {
-        Property property = optionalProperty.get();
+            Long managerId = optionalProperty.get().getManager().getId();
+            Property property = optionalProperty.get();
             for (PropertyAmenity propertyAmenity : propertyAmenities) {
             if (propertyAmenity.getProperty_id().equals(propertyId)
                 && propertyAmenity.getAmenity_id().equals(amenityId)) {
@@ -397,6 +405,13 @@ public class JpaPropertyService implements PropertyService {
             Booking booking = optionalBooking.get();
             booking.setProperty(property);
             bookingService.addBooking(booking);
+            Set<Booking> existingBookings = new HashSet<>();
+            if (!(property.getBookings().isEmpty() || property.getBookings().equals(null))) {
+                existingBookings = property.getBookings();
+            }
+            existingBookings.add(booking);
+            property.setBookings(existingBookings);
+            propertyRepository.save(property);
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
             throw new EntityNotFoundException("Either the property or the booking could not be found");
@@ -408,8 +423,16 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
         if (optionalProperty.isPresent() && optionalBooking.isPresent()) {
-            optionalBooking.get().setProperty(null);
-            bookingService.addBooking(optionalBooking.get());
+            Property property = optionalProperty.get();
+            Set<Booking> existingBookings = new HashSet<>();
+            if (!(property.getBookings().isEmpty() || property.getBookings().equals(null))) {
+                existingBookings = property.getBookings();
+            }
+            for (Booking booking : existingBookings) {
+                if (booking.equals(optionalBooking.get())) existingBookings.remove(booking);
+            }
+            property.setBookings(existingBookings);
+            propertyRepository.save(property);
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
             throw new EntityNotFoundException("Either the property or the bill could not be found");
@@ -440,6 +463,13 @@ public class JpaPropertyService implements PropertyService {
             Bill bill = optionalBill.get();
             bill.setProperty(property);
             billService.addBill(bill);
+            Set<Bill> existingBills = new HashSet<>();
+            if (!(property.getBills().isEmpty() || property.getBills().equals(null))) {
+                existingBills = property.getBills();
+            }
+            existingBills.add(bill);
+            property.setBills(existingBills);
+            propertyRepository.save(property);
         } else {
             LOGGER.log(Level.ERROR, "Missing property or bill");
             throw new EntityNotFoundException("Either the property or the bill could not be found");
@@ -467,6 +497,7 @@ public class JpaPropertyService implements PropertyService {
         }
     }
 
+    // AUXILIARY METHOD
     @Override
     public List<Property> getPropertiesByManager(Long managerId) {
         return getAllProperties().stream().filter(property -> property.getManager().getId().equals(managerId)).toList();

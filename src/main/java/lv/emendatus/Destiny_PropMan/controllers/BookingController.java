@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.booking_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
@@ -31,36 +32,28 @@ public class BookingController {
     }
 
     @PostMapping("/add")
+    @Booking_Add
     public ResponseEntity<Void> addBooking(@RequestBody Booking booking) {
         bookingService.addBooking(booking);
         System.out.println("Added new booking: " + booking.getId());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
-    /*
-    ADDITION BODY:
-    {
-  "property": {
-    "id": 1
-  },
-  "tenantId": 2,
-  "startDate": "2022-01-01T10:00:00Z",
-  "endDate": "2022-01-10T10:00:00Z",
-  "isPaid": false,
-  "status": "PENDING_PAYMENT"
-}
-     */
+
     @GetMapping("/getall")
+    @Booking_GetAll
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
         return new ResponseEntity<>(bookings, HttpStatus.OK);
     }
     @GetMapping("/getBookingById/{id}")
+    @Booking_GetByID
     public ResponseEntity<Booking> getBookingById(@PathVariable Long id) {
         Optional<Booking> result = bookingService.getBookingById(id);
         return result.map(booking -> new ResponseEntity<>(booking, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     @DeleteMapping("/deleteBookingById/{id}")
+    @Booking_Delete
     public void deleteByID(@PathVariable Long id) {
         if (bookingService.getBookingById(id).isPresent()) {
             System.out.println("Deleting booking " + id);
@@ -70,6 +63,7 @@ public class BookingController {
         }
     }
     @GetMapping("/getByProperty/{prop_id}")
+    @Booking_GetByProperty
     public ResponseEntity<Set<Booking>> getBookingsByProperty(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -86,10 +80,10 @@ public class BookingController {
         }
     }
     @GetMapping("/getByTenant/{ten_id}")
+    @Booking_GetByTenant
     public ResponseEntity<Set<Booking>> getBookingsByTenant(@PathVariable Long ten_id) {
         Optional<Tenant> obtained = tenantService.getTenantById(ten_id);
         if (obtained.isPresent()) {
-//            System.out.println("Recovered a Tenant with ID " +obtained.get().getId());
             Set<Booking> bookings = bookingService.getBookingsByTenant(obtained.get());
             if (!bookings.isEmpty()) {
                 return new ResponseEntity<>(bookings, HttpStatus.OK);
@@ -103,6 +97,7 @@ public class BookingController {
         }
     }
     @GetMapping("/getByDateRange/")
+    @Booking_GetByDateRange
     public ResponseEntity<List<Booking>> getBookingsByDateRange(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
@@ -118,6 +113,7 @@ public class BookingController {
         // http://localhost:8080/booking/getByDateRange/?start=2024-02-10&end=2024-02-18
     }
     @GetMapping("/getByDateRangeWithOverlaps/")
+    @Booking_GetByDateRangeWithOverlaps
     public ResponseEntity<List<Booking>> getBookingsByDateRangeWithOverlaps(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
@@ -133,11 +129,13 @@ public class BookingController {
         // http://localhost:8080/booking/getByDateRangeWithOverlaps/?start=2024-02-10&end=2024-02-18
     }
     @GetMapping("/getByStatus")
+    @Booking_GetByStatus
     public ResponseEntity<List<Booking>> getBookingsByStatus(@RequestParam BookingStatus status) {
         List<Booking> bookings = bookingService.getBookingsByStatus(status);
         return new ResponseEntity<>(bookings, HttpStatus.OK);
     }
     @PostMapping("/updateStatus/{booking_id}")
+    @Booking_UpdateStatus
     public ResponseEntity<Void> updateStatus(@PathVariable Long booking_id, @RequestParam BookingStatus status) {
         Optional<Booking> bookings = bookingService.getBookingById(booking_id);
         if (bookings.isPresent()) {
@@ -149,6 +147,7 @@ public class BookingController {
         }
     }
     @GetMapping("/getPrice/{booking_id}")
+    @Booking_GetPrice
     public ResponseEntity<Double> getBookingPrice(@PathVariable Long booking_id) {
         Optional<Booking> bookings = bookingService.getBookingById(booking_id);
         if (bookings.isPresent()) {

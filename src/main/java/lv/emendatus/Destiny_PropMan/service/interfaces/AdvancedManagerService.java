@@ -56,4 +56,10 @@ public interface AdvancedManagerService {
     void removePhoto(Long propertyId, String photoUrl);
 
     void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
+    void unlockProperty(Long propertyId);
+
+    void addBillToProperty(BillAdditionDTO dto, Long propertyId);
+    void deleteBillFromProperty(Long billId, Long propertyId);
+
+    void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating);
 }

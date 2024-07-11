@@ -26,6 +26,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.security.core.Authentication;
 
@@ -45,6 +47,23 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    private static final String[] SWAGGER_WHITELIST = {
+            // -- Swagger UI v3 (OpenAPI)
+            "/v2/API-docs",
+            "/v3/API-docs",
+            "/api-docs/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
+
+    };
+
+//    @Bean
+//    public HttpFirewall allowSemicolonHttpFirewall() {
+//        StrictHttpFirewall firewall = new StrictHttpFirewall();
+//        firewall.setAllowSemicolon(true); // Allow semicolon in URL
+//        return firewall;
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("!!! - securityFilterChain method INVOKED!");
@@ -62,12 +81,16 @@ public class SecurityConfig {
                 // Временные разрешения - по завершении работы те эндпойнты, которые
                 // не несут пользовательских функций, будут закрыты .denyAll()
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/admin/toggle_manager_status/2").permitAll()
+                        .requestMatchers("/admin/toggle_manager_status/{id}").permitAll()
                         .requestMatchers("/tenants/getall").permitAll()
                         .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoint
                         .requestMatchers("/tenants/getall").permitAll()
                         .requestMatchers("/property/getPropertyById/{id}").permitAll()
                         .requestMatchers("/property/update_country/{id}").permitAll()
+                        .requestMatchers("/admins-control/create").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/add_amenity").hasAuthority("ADMIN")
+                        .requestMatchers("/managerial/manager/{managerId}/bookings").hasAuthority("MANAGER")
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -88,10 +111,13 @@ public class SecurityConfig {
                                 .logoutUrl("/logout")
                                 .logoutSuccessUrl("/")
                                 .permitAll()
-                );
+                )
+
+                ;
 
         return http.build();
     }
+
 
 //    @Autowired
 //    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {

@@ -13,6 +13,7 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,8 +29,9 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "manager")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    @JsonBackReference // To handle the recursion during serialization
     private Manager manager;
 
     @Column(name = "status")
@@ -61,29 +63,28 @@ public class Property {
     @Column(name = "rating")
     private Float rating;
 
-    @NotBlank(message = "Price per day is required")
+    @NotNull(message = "Price per day is required")
     @Column(name = "price_per_day")
     private Double pricePerDay;
 
-    @NotBlank(message = "Price per week is required")
+    @NotNull(message = "Price per week is required")
     @Column(name = "price_per_week")
     private Double pricePerWeek;
 
-    @NotBlank(message = "Price per month is required")
+    @NotNull(message = "Price per month is required")
     @Column(name = "price_per_month")
     private Double pricePerMonth;
 
-    @OneToMany(mappedBy = "property")
-    @JsonIgnore
-    @NotNull
-    private Set<Booking> bookings;
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Ignore bookings to prevent recursion
+    private Set<Booking> bookings = new HashSet<>();
 
-    @NotNull
-    @OneToMany(mappedBy = "property")
-    private Set<Bill> bills;
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Ignore bills to prevent recursion
+    private Set<Bill> bills = new HashSet<>();
 
     @JsonBackReference
-    @OneToOne(mappedBy = "currentProperty")
+    @OneToOne(mappedBy = "currentProperty", fetch = FetchType.LAZY)
     private Tenant tenant;
 
     @Column(name = "links_to_photos")
@@ -94,12 +95,12 @@ public class Property {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Property property = (Property) o;
-        return Objects.equals(id, property.id) && Objects.equals(manager, property.manager) && status == property.status && Objects.equals(createdAt, property.createdAt) && type == property.type && Objects.equals(address, property.address) && Objects.equals(country, property.country) && Objects.equals(settlement, property.settlement) && Objects.equals(sizeM2, property.sizeM2) && Objects.equals(description, property.description) && Objects.equals(rating, property.rating) && Objects.equals(pricePerDay, property.pricePerDay) && Objects.equals(pricePerWeek, property.pricePerWeek) && Objects.equals(pricePerMonth, property.pricePerMonth) && Objects.equals(bookings, property.bookings) && Objects.equals(bills, property.bills) && Objects.equals(tenant, property.tenant) && Objects.equals(photos, property.photos);
+        return Objects.equals(id, property.id) && Objects.equals(manager, property.manager) && status == property.status && Objects.equals(createdAt, property.createdAt) && type == property.type && Objects.equals(address, property.address) && Objects.equals(country, property.country) && Objects.equals(settlement, property.settlement) && Objects.equals(sizeM2, property.sizeM2) && Objects.equals(description, property.description) && Objects.equals(rating, property.rating) && Objects.equals(pricePerDay, property.pricePerDay) && Objects.equals(pricePerWeek, property.pricePerWeek) && Objects.equals(pricePerMonth, property.pricePerMonth);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, manager, status, createdAt, type, address, country, settlement, sizeM2, description, rating, pricePerDay, pricePerWeek, pricePerMonth, bookings, bills, tenant, photos);
+        return Objects.hash(id, manager, status, createdAt, type, address, country, settlement, sizeM2, description, rating, pricePerDay, pricePerWeek, pricePerMonth);
     }
 
     @Override
@@ -119,13 +120,8 @@ public class Property {
                 ", pricePerDay=" + pricePerDay +
                 ", pricePerWeek=" + pricePerWeek +
                 ", pricePerMonth=" + pricePerMonth +
-                ", bookings=" + bookings +
-                ", bills=" + bills +
-                ", tenant=" + tenant +
-                ", photos=" + photos +
                 '}';
     }
-
     public void removeTenantReference() {
         this.tenant = null;
     }

@@ -1,6 +1,10 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import jakarta.annotation.PostConstruct;
+import lv.emendatus.Destiny_PropMan.domain.dto.registration.AdminRegistrationDTO;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserRole;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.entity.Admin;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.AdminRepository;
@@ -42,20 +46,23 @@ public class JpaAdminAccountsService implements AdminAccountsService {
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
     @Transactional
-    public void createAdmin(String name, String login, String password) {
-        if (tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null && findByLogin(login).isEmpty()) {
+    public void createAdmin(AdminRegistrationDTO dto) {
+        if (tenantService.getTenantByLogin(dto.getLogin()) == null && managerService.getManagerByLogin(dto.getLogin()) == null && findByLogin(dto.getLogin()).isEmpty()) {
             Admin admin = new Admin();
-            admin.setName(name);
-            admin.setLogin(login);
-            admin.setPassword(passwordEncoder.encode(password));
+            admin.setName(dto.getName());
+            admin.setLogin(dto.getLogin());
+            admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+            admin.setEmail(dto.getEmail());
             List<String> knownIPs = new ArrayList<>();
             admin.setKnownIps(knownIPs);
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ADMIN"));
+            admin.setAuthorities(authorities);
             addAdmin(admin);
         } else {
             LOGGER.log(Level.INFO, "This login already exists, please select a different one.");
             System.out.println("This login already exists, please select a different one.");
         }
-
     }
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
@@ -91,12 +98,16 @@ public class JpaAdminAccountsService implements AdminAccountsService {
     @PostConstruct
     public void createDefaultAdmin() {
         if (!findByLogin("DefaultAdmin").isPresent()) {
+            System.out.println("   *** DefaultAdmin not found in the database, generating a new one ***");
             Admin defaultAdmin = new Admin();
             defaultAdmin.setName("DefaultAdmin");
             defaultAdmin.setLogin("DefaultAdmin");
             defaultAdmin.setPassword("DefaultPassword");
             List<String> knownIPs = new ArrayList<>();
             defaultAdmin.setKnownIps(knownIPs);
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ADMIN"));
+            defaultAdmin.setAuthorities(authorities);
             addAdmin(defaultAdmin);
         }
     }

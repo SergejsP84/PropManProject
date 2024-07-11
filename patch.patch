@@ -1,0 +1,916 @@
+Index: src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertySearchIntegrationTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertySearchIntegrationTest.java b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertySearchIntegrationTest.java
+--- a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertySearchIntegrationTest.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertySearchIntegrationTest.java	(date 1716046666489)
+@@ -2,37 +2,29 @@
+ 
+ import lv.emendatus.Destiny_PropMan.domain.dto.search.PropertySearchResultDTO;
+ import lv.emendatus.Destiny_PropMan.domain.dto.search.SearchCriteria;
+-import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
+-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
+ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyType;
+ import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
+ import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
+-import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
+ import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
+ import lv.emendatus.Destiny_PropMan.service.implementation.PropertySearchService;
+ import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
+-import org.junit.Assert;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.extension.ExtendWith;
+-import org.junit.runner.RunWith;
+ import org.mockito.InjectMocks;
+ import org.mockito.Mock;
+ import org.mockito.junit.jupiter.MockitoExtension;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+ import org.springframework.context.annotation.ComponentScan;
+-import org.springframework.test.context.junit4.SpringRunner;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
+ 
+-import java.sql.Timestamp;
+ import java.time.LocalDate;
+ import java.util.List;
+-import java.util.Optional;
+ 
+-import static org.junit.Assert.assertTrue;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ 
+-@RunWith(SpringRunner.class)
++@ExtendWith(SpringExtension.class)
+ @DataJpaTest
+ @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
+ @ExtendWith(MockitoExtension.class)
+@@ -63,7 +55,7 @@
+         searchCriteria.setStartDate(LocalDate.now());
+         searchCriteria.setEndDate(LocalDate.now().plusDays(7));
+         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
+-        Assert.assertEquals(2L, (long) searchResults.get(0).getId());
++        assertEquals(2L, (long) searchResults.get(0).getId());
+     }
+ 
+     @Test
+@@ -75,9 +67,9 @@
+         searchCriteria.setStartDate(LocalDate.of(2024, 3, 5));
+         searchCriteria.setEndDate(LocalDate.of(2024, 3, 18));
+         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
+-        Assert.assertEquals(2, searchResults.size());
+-        Assert.assertEquals(1L, (long) searchResults.get(0).getId());
+-        Assert.assertEquals(3L, (long) searchResults.get(1).getId());
++        assertEquals(2, searchResults.size());
++        assertEquals(1L, (long) searchResults.get(0).getId());
++        assertEquals(3L, (long) searchResults.get(1).getId());
+     }
+ 
+     @Test
+@@ -90,8 +82,8 @@
+         searchCriteria.setEndDate(LocalDate.of(2024, 4, 15));
+         searchCriteria.setMaxPrice(120.0);
+         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(searchCriteria);
+-        Assert.assertEquals(1, searchResults.size());
+-        Assert.assertEquals(1L, (long) searchResults.get(0).getId());
++        assertEquals(1, searchResults.size());
++        assertEquals(1L, (long) searchResults.get(0).getId());
+     }
+ 
+ }
+Index: src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BillServiceIntegrationTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BillServiceIntegrationTest.java b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BillServiceIntegrationTest.java
+--- a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BillServiceIntegrationTest.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BillServiceIntegrationTest.java	(date 1716046702046)
+@@ -9,7 +9,6 @@
+ import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.extension.ExtendWith;
+-import org.junit.runner.RunWith;
+ import org.mockito.InjectMocks;
+ import org.mockito.Mock;
+ import org.mockito.Mockito;
+@@ -17,6 +16,7 @@
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+ import org.springframework.context.annotation.ComponentScan;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
+ import org.springframework.test.context.junit4.SpringRunner;
+ 
+ import java.time.LocalDate;
+@@ -27,7 +27,7 @@
+ import static org.mockito.Mockito.verify;
+ import static org.mockito.ArgumentMatchers.any;
+ 
+-@RunWith(SpringRunner.class)
++@ExtendWith(SpringExtension.class)
+ @DataJpaTest
+ @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
+ @ExtendWith(MockitoExtension.class)
+Index: src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/TenantPaymentServiceIntegrationTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/TenantPaymentServiceIntegrationTest.java b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/TenantPaymentServiceIntegrationTest.java
+--- a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/TenantPaymentServiceIntegrationTest.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/TenantPaymentServiceIntegrationTest.java	(date 1716046666516)
+@@ -12,13 +12,13 @@
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.extension.ExtendWith;
+-import org.junit.runner.RunWith;
+ import org.mockito.InjectMocks;
+ import org.mockito.Mock;
+ import org.mockito.junit.jupiter.MockitoExtension;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+ import org.springframework.context.annotation.ComponentScan;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
+ import org.springframework.test.context.junit4.SpringRunner;
+ 
+ import java.time.LocalDate;
+@@ -30,7 +30,7 @@
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+-@RunWith(SpringRunner.class)
++@ExtendWith(SpringExtension.class)
+ @DataJpaTest
+ @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
+ @ExtendWith(MockitoExtension.class)
+Index: src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertyIntegrationTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertyIntegrationTest.java b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertyIntegrationTest.java
+--- a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertyIntegrationTest.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/PropertyIntegrationTest.java	(date 1716046257373)
+@@ -8,28 +8,28 @@
+ import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
+ import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
+ import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
+-import org.junit.Assert;
++
+ import org.junit.jupiter.api.Assertions;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.extension.ExtendWith;
+-import org.junit.runner.RunWith;
++
+ import org.mockito.InjectMocks;
+-import org.mockito.Mock;
++
+ import org.mockito.junit.jupiter.MockitoExtension;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+ import org.springframework.context.annotation.ComponentScan;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
+ import org.springframework.test.context.junit4.SpringRunner;
+ 
+ import java.time.LocalDate;
+ import java.util.*;
+ 
+-import static org.junit.Assert.assertNull;
+-import static org.junit.Assert.assertTrue;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+-@RunWith(SpringRunner.class)
++@ExtendWith(SpringExtension.class)
+ @DataJpaTest
+ @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
+ @ExtendWith(MockitoExtension.class)
+@@ -158,33 +158,33 @@
+     @Test
+     public void updatePropertyAddress() {
+         propertyService.updatePropertyAddress(1L, "Presidential Suite, Hotel Overlook");
+-        Assert.assertEquals("Presidential Suite, Hotel Overlook", propertyService.getPropertyById(1L).get().getAddress());
++        assertEquals("Presidential Suite, Hotel Overlook", propertyService.getPropertyById(1L).get().getAddress());
+     }
+     @Test
+     public void updatePropertySettlement() {
+         propertyService.updatePropertySettlement(2L, "Riga");
+-        Assert.assertEquals("Riga", propertyService.getPropertyById(2L).get().getSettlement());
++        assertEquals("Riga", propertyService.getPropertyById(2L).get().getSettlement());
+     }
+     @Test
+     public void updatePropertyCountry() {
+         propertyService.updatePropertyCountry(3L, "Vietnam");
+-        Assert.assertEquals("Vietnam", propertyService.getPropertyById(3L).get().getCountry());
++       assertEquals("Vietnam", propertyService.getPropertyById(3L).get().getCountry());
+     }
+ 
+     @Test
+     public void updatePropertyPricePerDay() {
+         propertyService.updatePropertyPricePerDay(1L, 999.0);
+-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerDay(), 0.0);
++        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerDay(), 0.0);
+     }
+     @Test
+     public void updatePropertyPricePerWeek() {
+         propertyService.updatePropertyPricePerWeek(1L, 999.0);
+-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerWeek(), 0.0);
++        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerWeek(), 0.0);
+     }
+     @Test
+     public void updatePropertyPricePerMonth() {
+         propertyService.updatePropertyPricePerMonth(1L, 999.0);
+-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerMonth(), 0.0);
++        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerMonth(), 0.0);
+     }
+ 
+     @Test
+Index: src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BookingServiceIntegrationTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BookingServiceIntegrationTest.java b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BookingServiceIntegrationTest.java
+--- a/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BookingServiceIntegrationTest.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/test/java/lv/emendatus/Destiny_PropMan/serviceTests/BookingServiceIntegrationTest.java	(date 1716046666476)
+@@ -9,30 +9,29 @@
+ import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRepository;
+ import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
+ import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
+-import lv.emendatus.Destiny_PropMan.service.interfaces.CurrencyService;
++
+ import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.extension.ExtendWith;
+-import org.junit.runner.RunWith;
++
+ import org.mockito.InjectMocks;
+ import org.mockito.Mock;
+-import org.mockito.Mockito;
++
+ import org.mockito.junit.jupiter.MockitoExtension;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+ import org.springframework.context.annotation.ComponentScan;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
+ import org.springframework.test.context.junit4.SpringRunner;
+ 
+ import java.time.LocalDate;
+ import java.util.*;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+-import static org.junit.jupiter.api.Assertions.assertTrue;
+-import static org.mockito.Mockito.verify;
+-import static org.mockito.ArgumentMatchers.any;
+ 
+-@RunWith(SpringRunner.class)
++
++@ExtendWith(SpringExtension.class)
+ @DataJpaTest
+ @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
+ @ExtendWith(MockitoExtension.class)
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/pom.xml	(date 1716047914459)
+@@ -1,219 +1,255 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+-	<modelVersion>4.0.0</modelVersion>
+-	<parent>
+-		<groupId>org.springframework.boot</groupId>
+-		<artifactId>spring-boot-starter-parent</artifactId>
+-		<version>3.2.0</version>
+-		<relativePath/> <!-- lookup parent from repository -->
+-	</parent>
+-	<groupId>lv.emendatus</groupId>
+-	<artifactId>GradProject_PropMan</artifactId>
+-	<version>0.0.1-SNAPSHOT</version>
+-	<name>Destiny Property Management Project</name>
+-	<description>My graduation project at Tel_ran</description>
+-	<properties>
+-		<java.version>17</java.version>
+-	</properties>
+-	<dependencies>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-data-jpa</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-validation</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-web</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>com.fasterxml.jackson.core</groupId>
+-			<artifactId>jackson-databind</artifactId>
+-<!--			<scope>test</scope>-->
+-		</dependency>
+-		<dependency>
+-			<groupId>org.hamcrest</groupId>
+-			<artifactId>hamcrest-all</artifactId>
+-			<version>1.3</version>
+-			<scope>test</scope>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
+-		<dependency>
+-			<groupId>com.h2database</groupId>
+-			<artifactId>h2</artifactId>
+-			<version>2.2.224</version>
+-			<scope>test</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.mapstruct</groupId>
+-			<artifactId>mapstruct</artifactId>
+-			<version>1.5.5.Final</version>
+-		</dependency>
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++    <parent>
++        <groupId>org.springframework.boot</groupId>
++        <artifactId>spring-boot-starter-parent</artifactId>
++        <version>3.2.0</version>
++        <relativePath/> <!-- lookup parent from repository -->
++    </parent>
++    <groupId>lv.emendatus</groupId>
++    <artifactId>GradProject_PropMan</artifactId>
++    <version>0.0.1-SNAPSHOT</version>
++    <name>Destiny Property Management Project</name>
++    <description>My graduation project at Tel_ran</description>
++    <properties>
++        <java.version>21</java.version>
++    </properties>
++    <dependencies>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-data-jpa</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-validation</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-web</artifactId>
++        </dependency>
++        <!--		<dependency>-->
++        <!--			<groupId>com.fasterxml.jackson.core</groupId>-->
++        <!--			<artifactId>jackson-databind</artifactId>-->
++        <!--&lt;!&ndash;			<scope>test</scope>&ndash;&gt;-->
++        <!--		</dependency>-->
++        <dependency>
++            <groupId>org.springdoc</groupId>
++            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
++            <version>2.5.0</version>
++        </dependency>
++
++<!--        <dependency>-->
++<!--            <groupId>org.springdoc</groupId>-->
++<!--            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>-->
++<!--            <version>2.0.2</version>-->
++<!--        </dependency>-->
++
++        <dependency>
++            <groupId>io.springfox</groupId>
++            <artifactId>springfox-spi</artifactId>
++            <version>3.0.0</version>
++        </dependency>
++
++        <dependency>
++            <groupId>io.springfox</groupId>
++            <artifactId>springfox-spring-web</artifactId>
++            <version>3.0.0</version>
++        </dependency>
++
++        <dependency>
++            <groupId>io.springfox</groupId>
++            <artifactId>springfox-swagger2</artifactId>
++            <version>3.0.0</version>
++        </dependency>
++
++        <dependency>
++            <groupId>io.swagger</groupId>
++            <artifactId>swagger-annotations</artifactId>
++            <version>1.5.20</version>
++        </dependency>
++
++        <dependency>
++            <groupId>org.hamcrest</groupId>
++            <artifactId>hamcrest-all</artifactId>
++            <version>1.3</version>
++            <scope>test</scope>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
++        <dependency>
++            <groupId>com.h2database</groupId>
++            <artifactId>h2</artifactId>
++            <version>2.2.224</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.mapstruct</groupId>
++            <artifactId>mapstruct</artifactId>
++            <version>1.5.5.Final</version>
++        </dependency>
+ 
+-		<dependency>
+-			<groupId>com.mysql</groupId>
+-			<artifactId>mysql-connector-j</artifactId>
+-			<scope>runtime</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-test</artifactId>
+-			<scope>test</scope>
+-		</dependency>
++        <dependency>
++            <groupId>com.mysql</groupId>
++            <artifactId>mysql-connector-j</artifactId>
++            <scope>runtime</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-test</artifactId>
++            <scope>test</scope>
++        </dependency>
+         <dependency>
+             <groupId>org.projectlombok</groupId>
+             <artifactId>lombok</artifactId>
+             <version>1.18.28</version>
+         </dependency>
+-        <dependency>
+-            <groupId>junit</groupId>
+-            <artifactId>junit</artifactId>
+-            <scope>test</scope>
+-        </dependency>
+-		<!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
+-		<dependency>
+-			<groupId>org.apache.maven.plugins</groupId>
+-			<artifactId>maven-compiler-plugin</artifactId>
+-			<version>3.11.0</version>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.projectlombok</groupId>
+-			<artifactId>lombok-mapstruct-binding</artifactId>
+-			<version>0.2.0</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-security</artifactId>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-test -->
+-		<dependency>
+-			<groupId>org.springframework.security</groupId>
+-			<artifactId>spring-security-test</artifactId>
+-			<version>6.2.3</version>
+-			<scope>test</scope>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-mail</artifactId>
+-			<version>3.2.4</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/javax.mail/javax.mail-api -->
+-		<dependency>
+-			<groupId>javax.mail</groupId>
+-			<artifactId>javax.mail-api</artifactId>
+-			<version>1.6.2</version>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.apache.poi</groupId>
+-			<artifactId>poi</artifactId>
+-			<version>5.2.4</version>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.apache.poi</groupId>
+-			<artifactId>poi-ooxml</artifactId>
+-			<version>5.2.4</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
+-		<dependency>
+-			<groupId>org.springframework.security</groupId>
+-			<artifactId>spring-security-config</artifactId>
+-			<version>6.2.3</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-web -->
+-		<dependency>
+-			<groupId>org.springframework.security</groupId>
+-			<artifactId>spring-security-web</artifactId>
+-			<version>6.2.3</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
+-		<dependency>
+-			<groupId>org.springframework.security</groupId>
+-			<artifactId>spring-security-core</artifactId>
+-			<version>6.2.3</version>
+-		</dependency>
+-		<!-- https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter -->
+-<!--		<dependency>-->
+-<!--			<groupId>io.springfox</groupId>-->
+-<!--			<artifactId>springfox-boot-starter</artifactId>-->
+-<!--			<version>3.0.0</version>-->
+-<!--		</dependency>-->
+-		<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+-<!--		<dependency>-->
+-<!--			<groupId>io.springfox</groupId>-->
+-<!--			<artifactId>springfox-swagger-ui</artifactId>-->
+-<!--			<version>3.0.0</version>-->
+-<!--		</dependency>-->
+-		<dependency>
+-			<groupId>jakarta.servlet</groupId>
+-			<artifactId>jakarta.servlet-api</artifactId>
+-			<version>5.0.0</version>
+-			<scope>provided</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springdoc</groupId>
+-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+-			<version>2.5.0</version>
+-		</dependency>
+-<!--		<dependency>-->
+-<!--			<groupId>io.swagger</groupId>-->
+-<!--			<artifactId>swagger-annotations</artifactId>-->
+-<!--			<version>1.6.14</version>-->
+-<!--		</dependency>-->
+-<!--		<dependency>-->
+-<!--			<groupId>org.springdoc</groupId>-->
+-<!--			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>-->
+-<!--			<version>2.3.0</version>-->
+-<!--		</dependency>-->
+-		<dependency>
+-			<groupId>io.springfox</groupId>
+-			<artifactId>springfox-swagger2</artifactId>
+-			<version>3.0.0</version>
+-		</dependency>
+-		<dependency>
+-			<groupId>javax.servlet</groupId>
+-			<artifactId>javax.servlet-api</artifactId>
+-			<version>3.1.0</version>
+-			<scope>provided</scope>
+-		</dependency>
+-	</dependencies>
++<!--        <dependency>-->
++<!--            <groupId>junit</groupId>-->
++<!--            <artifactId>junit</artifactId>-->
++<!--            <scope>test</scope>-->
++<!--        </dependency>-->
++        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
++        <dependency>
++            <groupId>org.apache.maven.plugins</groupId>
++            <artifactId>maven-compiler-plugin</artifactId>
++            <version>3.11.0</version>
++        </dependency>
++        <dependency>
++            <groupId>org.projectlombok</groupId>
++            <artifactId>lombok-mapstruct-binding</artifactId>
++            <version>0.2.0</version>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-security</artifactId>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-test -->
++        <dependency>
++            <groupId>org.springframework.security</groupId>
++            <artifactId>spring-security-test</artifactId>
++            <version>6.2.3</version>
++            <scope>test</scope>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-mail</artifactId>
++            <version>3.2.4</version>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/javax.mail/javax.mail-api -->
++        <dependency>
++            <groupId>javax.mail</groupId>
++            <artifactId>javax.mail-api</artifactId>
++            <version>1.6.2</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.poi</groupId>
++            <artifactId>poi</artifactId>
++            <version>5.2.4</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.poi</groupId>
++            <artifactId>poi-ooxml</artifactId>
++            <version>5.2.4</version>
++        </dependency>
++        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
++<!--        <dependency>-->
++<!--            <groupId>org.springframework.security</groupId>-->
++<!--            <artifactId>spring-security-config</artifactId>-->
++<!--            <version>6.2.3</version>-->
++<!--        </dependency>-->
++        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-web -->
++<!--        <dependency>-->
++<!--            <groupId>org.springframework.security</groupId>-->
++<!--            <artifactId>spring-security-web</artifactId>-->
++<!--            <version>6.2.3</version>-->
++<!--        </dependency>-->
++        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
++<!--        <dependency>-->
++<!--            <groupId>org.springframework.security</groupId>-->
++<!--            <artifactId>spring-security-core</artifactId>-->
++<!--            <version>6.2.3</version>-->
++<!--        </dependency>-->
++        <!-- https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter -->
++        <!--		<dependency>-->
++        <!--			<groupId>io.springfox</groupId>-->
++        <!--			<artifactId>springfox-boot-starter</artifactId>-->
++        <!--			<version>3.0.0</version>-->
++        <!--		</dependency>-->
++        <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
++        <!--		<dependency>-->
++        <!--			<groupId>io.springfox</groupId>-->
++        <!--			<artifactId>springfox-swagger-ui</artifactId>-->
++        <!--			<version>3.0.0</version>-->
++        <!--		</dependency>-->
++        <dependency>
++            <groupId>jakarta.servlet</groupId>
++            <artifactId>jakarta.servlet-api</artifactId>
++            <version>5.0.0</version>
++<!--          <scope>provided</scope>-->
++        </dependency>
++        <!--		<dependency>-->
++        <!--			<groupId>org.springdoc</groupId>-->
++        <!--			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>-->
++        <!--			<version>2.5.0</version>-->
++        <!--		</dependency>-->
++        <!--		<dependency>-->
++        <!--			<groupId>io.swagger</groupId>-->
++        <!--			<artifactId>swagger-annotations</artifactId>-->
++        <!--			<version>1.6.14</version>-->
++        <!--		</dependency>-->
++        <!--		<dependency>-->
++        <!--			<groupId>org.springdoc</groupId>-->
++        <!--			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>-->
++        <!--			<version>2.3.0</version>-->
++        <!--		</dependency>-->
++        <!--		<dependency>-->
++        <!--			<groupId>io.springfox</groupId>-->
++        <!--			<artifactId>springfox-swagger2</artifactId>-->
++        <!--			<version>3.0.0</version>-->
++        <!--		</dependency>-->
++        <dependency>
++            <groupId>javax.servlet</groupId>
++            <artifactId>javax.servlet-api</artifactId>
++            <version>3.1.0</version>
++<!--            <scope>provided</scope>-->
++        </dependency>
++    </dependencies>
+ 
+-	<build>
+-		<plugins>
+-			<plugin>
+-				<groupId>org.springframework.boot</groupId>
+-				<artifactId>spring-boot-maven-plugin</artifactId>
+-			</plugin>
+-			<plugin>
+-				<groupId>org.apache.maven.plugins</groupId>
+-				<artifactId>maven-compiler-plugin</artifactId>
+-				<version>3.11.0</version>
+-				<configuration>
+-					<source>11</source>
+-					<target>11</target>
+-					<annotationProcessorPaths>
+-						<path>
+-							<groupId>org.projectlombok</groupId>
+-							<artifactId>lombok</artifactId>
+-							<version>1.18.30</version>
+-						</path>
+-						<path>
+-							<groupId>org.mapstruct</groupId>
+-							<artifactId>mapstruct-processor</artifactId>
+-							<version>1.5.5.Final</version>
+-						</path>
+-						<path>
+-							<groupId>org.projectlombok</groupId>
+-							<artifactId>lombok-mapstruct-binding</artifactId>
+-							<version>0.2.0</version>
+-						</path>
+-					</annotationProcessorPaths>
+-				</configuration>
+-			</plugin>
+-		</plugins>
+-	</build>
++    <build>
++        <plugins>
++            <plugin>
++                <groupId>org.springframework.boot</groupId>
++                <artifactId>spring-boot-maven-plugin</artifactId>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <version>3.11.0</version>
++                <configuration>
++                    <source>21</source>
++                    <target>21</target>
++                    <annotationProcessorPaths>
++                        <path>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok</artifactId>
++                            <version>1.18.30</version>
++                        </path>
++                        <path>
++                            <groupId>org.mapstruct</groupId>
++                            <artifactId>mapstruct-processor</artifactId>
++                            <version>1.5.5.Final</version>
++                        </path>
++                        <path>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok-mapstruct-binding</artifactId>
++                            <version>0.2.0</version>
++                        </path>
++                    </annotationProcessorPaths>
++                </configuration>
++            </plugin>
++        </plugins>
++    </build>
+ </project>
+Index: src/main/resources/application.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/resources/application.properties b/src/main/resources/application.properties
+--- a/src/main/resources/application.properties	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/main/resources/application.properties	(date 1716048085937)
+@@ -1,7 +1,7 @@
+ # Database Configuration
+-spring.datasource.url=jdbc:mysql://localhost:3306/destiny_database
+-spring.datasource.username=MajorTom
+-spring.datasource.password=GroundControl
++spring.datasource.url=jdbc:mysql://localhost:3306/mdb
++spring.datasource.username=root
++spring.datasource.password=rootroot
+ spring.jpa.hibernate.ddl-auto=update
+ 
+ 
+@@ -14,4 +14,7 @@
+ #spring.mail.properties.mail.smtp.starttls.enable=true
+ 
+ ### Trying to view Spring Security logs here
+-logging.level.org.springframework.security=DEBUG
+\ No newline at end of file
++logging.level.org.springframework.security=DEBUG
++
++lv.emendatus.Destiny_PropMan=lv.emendatus.Destiny_PropMan
++spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+\ No newline at end of file
+Index: src/main/java/lv/emendatus/Destiny_PropMan/domain/entity/Admin.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/lv/emendatus/Destiny_PropMan/domain/entity/Admin.java b/src/main/java/lv/emendatus/Destiny_PropMan/domain/entity/Admin.java
+--- a/src/main/java/lv/emendatus/Destiny_PropMan/domain/entity/Admin.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/main/java/lv/emendatus/Destiny_PropMan/domain/entity/Admin.java	(date 1716047253505)
+@@ -42,7 +42,7 @@
+     @Column(name = "known_ips")
+     private List<String> knownIps;
+ 
+-    @NotBlank(message = "Email is required")
++   // @NotBlank(message = "Email is required")
+     @Column(name = "email")
+     private String email;
+ 
+Index: src/main/java/lv/emendatus/Destiny_PropMan/config/SwaggerConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/lv/emendatus/Destiny_PropMan/config/SwaggerConfig.java b/src/main/java/lv/emendatus/Destiny_PropMan/config/SwaggerConfig.java
+--- a/src/main/java/lv/emendatus/Destiny_PropMan/config/SwaggerConfig.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/main/java/lv/emendatus/Destiny_PropMan/config/SwaggerConfig.java	(date 1716047351276)
+@@ -3,15 +3,18 @@
+ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+ import io.swagger.v3.oas.annotations.info.Contact;
+ import io.swagger.v3.oas.annotations.info.Info;
++
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
+-import springfox.documentation.swagger2.annotations.EnableSwagger2;
++
+ import org.springframework.beans.factory.annotation.Value;
+ import springfox.documentation.builders.PathSelectors;
+ import springfox.documentation.builders.RequestHandlerSelectors;
+ import springfox.documentation.service.Tag;
+ import springfox.documentation.spi.DocumentationType;
+ import springfox.documentation.spring.web.plugins.Docket;
++import springfox.documentation.swagger2.annotations.EnableSwagger2;
++
+ 
+ @OpenAPIDefinition(
+         info = @Info(
+@@ -56,8 +59,9 @@
+ @EnableSwagger2
+ public class SwaggerConfig {
+ 
+-    @Value("${lv.emendatus.Destiny_PropMan}")
+-    private String GROUP_NAME;
++//    @Value("${lv.emendatus.Destiny_PropMan}")
++//    private String GROUP_NAME;
++
+     public static final String AUTHORIZATION = "Authorization service";
+     public static final String GENERAL = "Generally available service";
+     public static final String ADMIN_FUNCTION = "Admin functionality service";
+@@ -65,18 +69,18 @@
+     public static final String TENANT_FUNCTION = "Tenant functionality service";
+     public static final String OTHER = "Miscellaneous";
+ 
+-    @Bean
+-    public Docket api() {
+-        return new Docket(DocumentationType.SWAGGER_2)
+-                .select()
+-                .apis(RequestHandlerSelectors.basePackage(GROUP_NAME))
+-                .paths(PathSelectors.any())
+-                .build()
+-                .tags(new Tag(AUTHORIZATION, "API for user registration, signup, sign-in and password reset procedures"))
+-                .tags(new Tag(GENERAL, "API for functions not requiring authentication, such as Property viewing"))
+-                .tags(new Tag(ADMIN_FUNCTION, "API for Admin functionality"))
+-                .tags(new Tag(MANAGER_FUNCTION, "API for Manager functionality"))
+-                .tags(new Tag(TENANT_FUNCTION, "API for Tenant functionality"))
+-                .tags(new Tag(OTHER, "API for miscellaneous functions. Most of these endpoints are not exposed for use, but retained for possible future restructuring"));
+-    }
++//    @Bean
++//    public Docket api() {
++//        return new Docket(DocumentationType.SWAGGER_2)
++//                .select()
++//                .apis(RequestHandlerSelectors.basePackage(GROUP_NAME))
++//                .paths(PathSelectors.any())
++//                .build()
++//                .tags(new Tag(AUTHORIZATION, "API for user registration, signup, sign-in and password reset procedures"))
++//                .tags(new Tag(GENERAL, "API for functions not requiring authentication, such as Property viewing"))
++//                .tags(new Tag(ADMIN_FUNCTION, "API for Admin functionality"))
++//                .tags(new Tag(MANAGER_FUNCTION, "API for Manager functionality"))
++//                .tags(new Tag(TENANT_FUNCTION, "API for Tenant functionality"))
++//                .tags(new Tag(OTHER, "API for miscellaneous functions. Most of these endpoints are not exposed for use, but retained for possible future restructuring"));
++//    }
+ }
+Index: src/main/java/lv/emendatus/Destiny_PropMan/DestinyPropertyManagementProjectApplication.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/lv/emendatus/Destiny_PropMan/DestinyPropertyManagementProjectApplication.java b/src/main/java/lv/emendatus/Destiny_PropMan/DestinyPropertyManagementProjectApplication.java
+--- a/src/main/java/lv/emendatus/Destiny_PropMan/DestinyPropertyManagementProjectApplication.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/main/java/lv/emendatus/Destiny_PropMan/DestinyPropertyManagementProjectApplication.java	(date 1716045269679)
+@@ -6,6 +6,7 @@
+ import org.springframework.scheduling.annotation.EnableScheduling;
+ import org.springframework.transaction.annotation.EnableTransactionManagement;
+ 
++
+ @SpringBootApplication
+ @EnableScheduling
+ @EnableTransactionManagement
+@@ -13,6 +14,7 @@
+ 
+ 	public static void main(String[] args) {
+ 		SpringApplication.run(DestinyPropertyManagementProjectApplication.class, args);
++
+ 	}
+ 
+ }
+Index: src/main/java/lv/emendatus/Destiny_PropMan/service/implementation/JpaTenantService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/lv/emendatus/Destiny_PropMan/service/implementation/JpaTenantService.java b/src/main/java/lv/emendatus/Destiny_PropMan/service/implementation/JpaTenantService.java
+--- a/src/main/java/lv/emendatus/Destiny_PropMan/service/implementation/JpaTenantService.java	(revision 5b8d1ccdf975530c7f18f95b8ede4cb3251f5f09)
++++ b/src/main/java/lv/emendatus/Destiny_PropMan/service/implementation/JpaTenantService.java	(date 1716046473397)
+@@ -17,6 +17,7 @@
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Optional;
++import java.util.stream.Collectors;
+ 
+ @Service
+ public class JpaTenantService implements TenantService {
+@@ -55,7 +56,7 @@
+         return allTenants.stream()
+                 .filter(tenant -> tenant.getFirstName().toLowerCase().contains(lowercaseName) ||
+                         tenant.getLastName().toLowerCase().contains(lowercaseName))
+-                .toList();
++                .collect(Collectors.toList());
+     }
+ 
+     @Override

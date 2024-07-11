@@ -8,28 +8,28 @@ import lv.emendatus.Destiny_PropMan.repository.interfaces.*;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBookingService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;
 import lv.emendatus.Destiny_PropMan.util.TestDataInitializer;
-import org.junit.Assert;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
+
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
 import java.util.*;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 @ComponentScan(basePackages = {"lv.emendatus.Destiny_PropMan.util", "lv.emendatus.Destiny_PropMan.service.implementation"})
 @ExtendWith(MockitoExtension.class)
@@ -158,33 +158,33 @@ class PropertyIntegrationTest {
     @Test
     public void updatePropertyAddress() {
         propertyService.updatePropertyAddress(1L, "Presidential Suite, Hotel Overlook");
-        Assert.assertEquals("Presidential Suite, Hotel Overlook", propertyService.getPropertyById(1L).get().getAddress());
+        assertEquals("Presidential Suite, Hotel Overlook", propertyService.getPropertyById(1L).get().getAddress());
     }
     @Test
     public void updatePropertySettlement() {
         propertyService.updatePropertySettlement(2L, "Riga");
-        Assert.assertEquals("Riga", propertyService.getPropertyById(2L).get().getSettlement());
+        assertEquals("Riga", propertyService.getPropertyById(2L).get().getSettlement());
     }
     @Test
     public void updatePropertyCountry() {
         propertyService.updatePropertyCountry(3L, "Vietnam");
-        Assert.assertEquals("Vietnam", propertyService.getPropertyById(3L).get().getCountry());
+       assertEquals("Vietnam", propertyService.getPropertyById(3L).get().getCountry());
     }
 
     @Test
     public void updatePropertyPricePerDay() {
         propertyService.updatePropertyPricePerDay(1L, 999.0);
-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerDay(), 0.0);
+        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerDay(), 0.0);
     }
     @Test
     public void updatePropertyPricePerWeek() {
         propertyService.updatePropertyPricePerWeek(1L, 999.0);
-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerWeek(), 0.0);
+        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerWeek(), 0.0);
     }
     @Test
     public void updatePropertyPricePerMonth() {
         propertyService.updatePropertyPricePerMonth(1L, 999.0);
-        Assert.assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerMonth(), 0.0);
+        assertEquals(999.0, propertyService.getPropertyById(1L).get().getPricePerMonth(), 0.0);
     }
 
     @Test

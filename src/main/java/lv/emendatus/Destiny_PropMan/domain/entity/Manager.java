@@ -26,17 +26,21 @@ public class Manager {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private ManagerType type;
+
     @NotBlank(message = "Manager's name is required")
     @Column(name = "manager_name")
     private String managerName;
-//    @Column(name = "description", length = 1084)
+
     @Column(name = "description")
     private String description;
+
     @Column(name = "is_active")
     private boolean isActive;
+
     @Column(name = "join_date")
     private Timestamp joinDate;
 
@@ -51,15 +55,17 @@ public class Manager {
     @Column(name = "password")
     private String password;
 
-    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
-    @JsonIgnore
-    @NotNull
-    private Set<Property> properties;
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Ignore properties to prevent recursion
+    private Set<Property> properties = new HashSet<>();
+
     @Column(name = "phone")
     private String phone;
+
     @NotBlank(message = "Manager's email is required")
     @Column(name = "email")
     private String email;
+
     @Column(name = "iban")
     private String iban;
 
@@ -67,13 +73,14 @@ public class Manager {
     @Column(name = "payment_card_no")
     private String paymentCardNo;
 
-    @NotBlank(message = "Card validity date is required")
+    @NotNull(message = "Card validity date is required")
     @Column(name = "card_validity_date")
     private YearMonth cardValidityDate;
 
-    @NotBlank(message = "CVV is required")
+    @NotNull(message = "CVV is required")
     @Column(name = "cvv")
     private char[] cvv;
+
     @Column(name = "confirmation_token")
     private String confirmationToken;
 
@@ -85,21 +92,20 @@ public class Manager {
     @Column(name = "authority")
     private Collection<? extends GrantedAuthority> authorities;
 
-    @NotNull
     @Column(name = "known_ips")
-    private List<String> knownIps;
+    private List<String> knownIps = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Manager manager = (Manager) o;
-        return isActive == manager.isActive && Objects.equals(id, manager.id) && type == manager.type && Objects.equals(managerName, manager.managerName) && Objects.equals(description, manager.description) && Objects.equals(joinDate, manager.joinDate) && Objects.equals(login, manager.login) && Objects.equals(password, manager.password) && Objects.equals(properties, manager.properties) && Objects.equals(phone, manager.phone) && Objects.equals(email, manager.email) && Objects.equals(iban, manager.iban);
+        return isActive == manager.isActive && Objects.equals(id, manager.id) && type == manager.type && Objects.equals(managerName, manager.managerName) && Objects.equals(description, manager.description) && Objects.equals(joinDate, manager.joinDate) && Objects.equals(login, manager.login) && Objects.equals(password, manager.password) && Objects.equals(phone, manager.phone) && Objects.equals(email, manager.email) && Objects.equals(iban, manager.iban);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type, managerName, description, isActive, joinDate, login, password, properties, phone, email, iban);
+        return Objects.hash(id, type, managerName, description, isActive, joinDate, login, password, phone, email, iban);
     }
 
     @Override
@@ -113,10 +119,10 @@ public class Manager {
                 ", joinDate=" + joinDate +
                 ", login='" + login + '\'' +
                 ", password='" + password + '\'' +
-                ", properties=" + properties +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
                 ", iban='" + iban + '\'' +
                 '}';
     }
 }
+

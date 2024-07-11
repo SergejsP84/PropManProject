@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.bill_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
@@ -28,23 +29,27 @@ public class BillController {
     }
 
     @PostMapping("/add")
+    @Bill_Add
     public ResponseEntity<Void> addBill(@RequestBody Bill bill) {
         billService.addBill(bill);
         System.out.println("Added new bill: " + bill.getId());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
     @GetMapping("/getall")
+    @Bill_GetAll
     public ResponseEntity<List<Bill>> getAllBills() {
         List<Bill> bills = billService.getAllBills();
         return new ResponseEntity<>(bills, HttpStatus.OK);
     }
     @GetMapping("/getBillById/{id}")
+    @Bill_GetByID
     public ResponseEntity<Bill> getBillById(@PathVariable Long id) {
         Optional<Bill> result = billService.getBillById(id);
         return result.map(bill -> new ResponseEntity<>(bill, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     @DeleteMapping("/deleteBillById/{id}")
+    @Bill_Delete
     public void deleteByID(@PathVariable Long id) {
         if (billService.getBillById(id).isPresent()) {
             System.out.println("Deleting bill " + id);
@@ -54,6 +59,7 @@ public class BillController {
         }
     }
     @GetMapping("/getByProperty/{prop_id}")
+    @Bill_GetByProperty
     public ResponseEntity<List<Bill>> getBillsByProperty(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -70,6 +76,7 @@ public class BillController {
         }
     }
     @GetMapping("/getUnpaidBills/{prop_id}")
+    @Bill_GetUnpaidByProperty
     public ResponseEntity<List<Bill>> getUnpaidBills(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -86,6 +93,7 @@ public class BillController {
         }
     }
     @GetMapping("/getPaidBills/{prop_id}")
+    @Bill_GetPaidByProperty
     public ResponseEntity<List<Bill>> getPaidBills(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -103,6 +111,7 @@ public class BillController {
     }
 
     @GetMapping("/getByCategory/{prop_id}/{category}")
+    @Bill_GetByExpenseCategory
     public ResponseEntity<List<Bill>> getBillsByExpenseCategory(@PathVariable Long prop_id, @PathVariable String category) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -119,6 +128,7 @@ public class BillController {
         }
     }
     @GetMapping("/getByDueDate/{prop_id}")
+    @Bill_GetByDueDateRange
     public ResponseEntity<List<Bill>> getBillsByDueDateRange(
             @PathVariable Long prop_id,
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -140,6 +150,7 @@ public class BillController {
         }
     } // http://localhost:8080/bills/getByDueDate/4?start=2024-02-10&end=2024-02-18
     @PatchMapping("/togglePaymentStatus/{billId}")
+    @Bill_TogglePaymentStatus
     public ResponseEntity<Void> toggleBillPaymentStatus(@PathVariable Long billId) {
         try {
             billService.togglePaidStatus(billId);

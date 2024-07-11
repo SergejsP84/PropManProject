@@ -36,10 +36,7 @@ public class JpaManagerService implements ManagerService {
     @Override
     public void addManager(Manager manager)
     {
-        System.out.println("-- addManager method invoked");
         Manager savedManager = managerRepository.save(manager);
-        System.out.println("-- ID of the saved Manager entity: " + savedManager.getId());
-
     }
     @Override
     public void deleteManager(Long id) {
@@ -83,7 +80,6 @@ public class JpaManagerService implements ManagerService {
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
             Set<Property> existingProperties = getManagerProperties(managerId);
-            // Initialize the set if it is null
             if (existingProperties == null) {
                 existingProperties = new HashSet<>();
             }

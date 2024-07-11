@@ -3,7 +3,6 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
-import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
@@ -71,6 +70,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     private final JpaPayoutService payoutService;
     private final JpaCurrencyService currencyService;
     private final JpaEmailService emailService;
+    private final JpaPropertyLockService lockService;
     @Autowired
     private final ManagerMapper managerMapper;
     @Autowired
@@ -78,8 +78,10 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     @Autowired
     private final PropertyCreationMapper propertyCreationMapper;
     @Autowired
+    private final JpaTenantRatingService ratingService;
+    @Autowired
     private final BookingMapper bookingMapper;
-    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaEmailService emailService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, BookingMapper bookingMapper) {
+    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaEmailService emailService, JpaPropertyLockService lockService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, JpaTenantRatingService ratingService, BookingMapper bookingMapper) {
         this.managerRepository = managerRepository;
         this.bookingRepository = bookingRepository;
         this.managerService = managerService;
@@ -97,9 +99,11 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         this.payoutService = payoutService;
         this.currencyService = currencyService;
         this.emailService = emailService;
+        this.lockService = lockService;
         this.managerMapper = managerMapper;
         this.managerPropertyMapper = managerPropertyMapper;
         this.propertyCreationMapper = propertyCreationMapper;
+        this.ratingService = ratingService;
         this.bookingMapper = bookingMapper;
     }
 
@@ -138,6 +142,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                 .collect(Collectors.toList());
     }
 
+    // USED AS AN AUXILIARY METHOD
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     public ManagerReservationDTO viewReservationsForProperty(Long propertyId) {
@@ -151,6 +156,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         }
     }
 
+    // USED AS AN AUXILIARY METHOD
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     public ManagerReservationDTO viewReservationsForManager(Long managerId) {
@@ -671,6 +677,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                     if (booking.getStatus().equals(BookingStatus.PENDING_APPROVAL))
                         booking.setStatus(BookingStatus.CANCELLED);
                 }
+                managerService.removePropertyFromManager(property.getManager().getId(), propertyId);
                 propertyService.deleteProperty(propertyId);
                 LOGGER.info("Property with ID {} has been removed.", propertyId);
             }
@@ -713,6 +720,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     public void removePhoto(Long propertyId, String photoUrl) throws EntityNotFoundException, FileStorageException {
         Property property = propertyService.getPropertyById(propertyId)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
+        Long managerId = property.getManager().getId();
         List<String> photos = property.getPhotos();
         if (photos.contains(photoUrl)) {
             try {
@@ -747,7 +755,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             }
             for (Booking booking : specificPropertyBookings) {
                 if (!booking.getStatus().equals(BookingStatus.CANCELLED)) {
-                    LOGGER.log(Level.WARN, "Cannot make property unavailable for a booked period");
+                    LOGGER.log(Level.WARN, "Cannot make property unavailable for an already booked period");
                 }
             }
         } else {
@@ -760,10 +768,154 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                 booking.setStartDate(Timestamp.valueOf(periodStart.atStartOfDay()));
                 booking.setEndDate(Timestamp.valueOf(periodEnd.atStartOfDay().plusDays(1)));
                 bookingService.addBooking(booking);
-                LOGGER.log(Level.INFO, "Property " + propertyService.getPropertyById(propertyId).get().getId() +
+                Set<Booking> propertyBookings = bookingService.getBookingsByProperty(propertyService.getPropertyById(propertyId).get());
+                List<Booking> lockStubs = new ArrayList<>();
+                for (Booking propertyBooking : propertyBookings) {
+                    if (propertyBooking.getStatus().equals(BookingStatus.PROPERTY_LOCKED_BY_MANAGER)) lockStubs.add(propertyBooking);
+                }
+                Booking latestLockStub = lockStubs.get(0);
+                for (Booking stub : lockStubs) {
+                    if (stub.getId() > latestLockStub.getId()) latestLockStub = stub;
+                }
+                PropertyLock propertyLock = new PropertyLock();
+                propertyLock.setBookingStubId(latestLockStub.getId());
+                propertyLock.setPropertyId(propertyId);
+                lockService.addPropertyLock(propertyLock);
+                LOGGER.log(Level.INFO, "Property " + propertyId +
                         " closed off by its manager for a period of " + Timestamp.valueOf(periodStart.atStartOfDay())
                         + " through " + Timestamp.valueOf(periodEnd.atStartOfDay().plusDays(1)));
             }
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void unlockProperty(Long propertyId) {
+        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
+        if (!optionalProperty.isPresent()) {
+            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
+        }
+        Property property = optionalProperty.get();
+        Long managerId = property.getManager().getId();
+        List<PropertyLock> propertyLocks = lockService.getPropertyLocksByPropertyId(propertyId);
+        List<Long> bookingStubsToBeRemoved = propertyLocks.stream()
+                .map(PropertyLock::getBookingStubId)
+                .toList();
+        int lockCount = propertyLocks.size();
+        for (Long bookingId : bookingStubsToBeRemoved) {
+            bookingService.deleteBooking(bookingId);
+        }
+        LOGGER.log(Level.INFO, "Property unlocked: " + lockCount + " locks removed");
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void addBillToProperty(BillAdditionDTO dto, Long propertyId) {
+        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
+        if (optionalProperty.isPresent()) {
+            Property property = optionalProperty.get();
+            Long managerId = property.getManager().getId();
+            Bill bill = new Bill();
+            bill.setProperty(property);
+            bill.setPaid(false);
+            bill.setDueDate(dto.getDueDate());
+            bill.setCurrency(dto.getCurrency());
+            bill.setRecipient(dto.getRecipient());
+            bill.setExpenseCategory(dto.getExpenseCategory());
+            bill.setIssuedAt(dto.getIssuedAt());
+            bill.setRecipientIBAN(dto.getRecipientIBAN());
+            billService.addBill(bill);
+            Bill retrievedBill = billService.getLatestBill(propertyId);
+            propertyService.addBillToProperty(propertyId, retrievedBill.getId());
+        } else {
+            LOGGER.log(Level.WARN, "Property with ID {} not found in the database", propertyId);
+            System.out.println("Property with ID " + propertyId + " not found in the database");
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void deleteBillFromProperty(Long billId, Long propertyId) {
+        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
+        if (optionalProperty.isPresent()) {
+            Optional<Bill> optionalBill = billService.getBillById(billId);
+            if (optionalBill.isPresent()) {
+                Property property = optionalProperty.get();
+                Long managerId = property.getManager().getId();
+                Bill bill = optionalBill.get();
+                propertyService.removeBillFromProperty(propertyId, billId);
+                billService.deleteBill(billId);
+            } else {
+                LOGGER.log(Level.WARN, "Bill with ID {} not found in the database", billId);
+                System.out.println("Bill with ID " + billId + " not found in the database");
+            }
+        } else {
+            LOGGER.log(Level.WARN, "Property with ID {} not found in the database", propertyId);
+            System.out.println("Property with ID " + propertyId + " not found in the database");
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @Transactional
+    public void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating) {
+        Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
+        if (optionalBooking.isPresent()) {
+            Optional<Tenant> optionalTenant = tenantService.getTenantById(tenantId);
+            if (optionalTenant.isPresent()) {
+                if (rating >= 1 && rating <=5) {
+                    Booking booking = optionalBooking.get();
+                    Tenant tenant = optionalTenant.get();
+                    if (booking.getProperty().getManager().getId().equals(managerId)) {
+                        if (!ratingService.bookingAlreadyRated(bookingId)) {
+                            if (booking.getStatus().equals(BookingStatus.OVER)) {
+                                Tenant ratedTenant = optionalTenant.get();
+                                TenantRating tenantRating = new TenantRating();
+                                tenantRating.setTenantId(ratedTenant.getId());
+                                tenantRating.setBookingId(bookingId);
+                                tenantRating.setRating(rating);
+                                ratingService.addTenantRating(tenantRating);
+                                List<TenantRating> existingRatings = ratingService.getRatingsForTenant(ratedTenant.getId());
+                                    if (existingRatings.isEmpty() || existingRatings.size() == 1) {
+                                        ratedTenant.setRating(Float.valueOf(rating));
+                                    } else {
+                                        int totalScore = 0;
+                                        for (TenantRating item : existingRatings) {
+                                            totalScore += item.getRating();
+                                        }
+                                        totalScore += rating;
+                                        Float updatedRating = (float) (totalScore / existingRatings.size());
+                                        ratedTenant.setRating(updatedRating);
+                                    }
+                                    tenantService.addTenant(ratedTenant);
+
+                            } else {
+                                LOGGER.log(Level.WARN, "Can only rate Bookings that are already over!");
+                                System.out.println("Can only rate Bookings that are already over!");
+                            }
+                        } else {
+                            LOGGER.log(Level.WARN, "This Booking has already been rated!");
+                            System.out.println("This Booking has already been rated!");
+                        }
+                    } else {
+                        LOGGER.log(Level.WARN, "A Manager may only rate Tenants who stayed at his/her Property!");
+                        System.out.println("A Manager may only rate Tenants who stayed at his/her Property!");
+                    }
+                } else {
+                    LOGGER.log(Level.WARN, "Invalid rating specified: the rating must be between 1 and 5 inclusive");
+                    System.out.println("Invalid rating specified: the rating must be between 1 and 5 inclusive");
+                }
+            } else {
+                LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
+                throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
+            }
+        } else {
+            LOGGER.log(Level.ERROR, "No booking with the {} ID exists in the database.", bookingId);
+            throw new BookingNotFoundException("No booking found with ID: " + bookingId);
         }
     }
 

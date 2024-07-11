@@ -143,34 +143,50 @@ public class JpaBookingService implements BookingService {
     @Override
     public Double calculateTotalPrice(Long bookingId) {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+        if (bookingId.equals(4L)) System.out.println("Started processing the 4th booking");
         if (optionalBooking.isPresent()) {
             Booking booking = optionalBooking.get();
+            if (bookingId.equals(4L)) System.out.println("4th booking FOUND");
             LocalDateTime startDate = booking.getStartDate().toLocalDateTime();
+            if (bookingId.equals(4L)) System.out.println("Obtained start date: " + startDate);
             LocalDateTime endDate = booking.getEndDate().toLocalDateTime();
+            if (bookingId.equals(4L)) System.out.println("Obtained end date: " + endDate);
             long numberOfDays = 1 + ChronoUnit.DAYS.between(booking.getStartDate().toLocalDateTime(), booking.getEndDate().toLocalDateTime());
+            if (bookingId.equals(4L)) System.out.println("Number of days set to: " + numberOfDays);
             double totalPrice = 0.0;
             // months
             if (numberOfDays >= 30) {
+                if (bookingId.equals(4L)) System.out.println("Number of days greater than 30");
                 long fullMonths = numberOfDays / 30;
                 totalPrice += fullMonths * booking.getProperty().getPricePerMonth();
                 numberOfDays %= 30;
             }
             //weeks
             if (numberOfDays >= 7) {
+                if (bookingId.equals(4L)) System.out.println("Number of days greater than 7");
                 long fullWeeks = numberOfDays / 7;
                 totalPrice += fullWeeks * booking.getProperty().getPricePerWeek();
                 numberOfDays %= 7;
             }
             //remaining days
-            totalPrice += numberOfDays * booking.getProperty().getPricePerDay();
-            double costPerDay = totalPrice / numberOfDays;
+            if (numberOfDays > 0) {
+                if (bookingId.equals(4L)) System.out.println("More days left after subtracting full weeks");
+                totalPrice += numberOfDays * booking.getProperty().getPricePerDay();
+            }
+            if (bookingId.equals(4L)) System.out.println("Total calculated price: " + totalPrice);
+            double costPerDay = totalPrice / (1 + ChronoUnit.DAYS.between(startDate, endDate));
+            if (bookingId.equals(4L)) System.out.println("Cost per day: " + costPerDay);
             double finalPriceWithDiscountsAndSurcharges = 0.00;
             for (LocalDate date = startDate.toLocalDate(); !date.isAfter(endDate.toLocalDate()); date = date.plusDays(1)) {
                 int discountOrSurcharge = propertyDiscountService.getDiscountOrSurchargeForCalculations(booking.getProperty().getId(), startDate.toLocalDate(), endDate.toLocalDate(), date);
                 finalPriceWithDiscountsAndSurcharges += (costPerDay + (costPerDay * discountOrSurcharge / 100));
+                if (bookingId.equals(4L)) System.out.println("Final price considering discounts: " + finalPriceWithDiscountsAndSurcharges);
             }
             BigDecimal finalPrice = BigDecimal.valueOf(finalPriceWithDiscountsAndSurcharges);
+            if (bookingId.equals(4L)) System.out.println("Created a BigDecimal of the final price: " + finalPrice);
             BigDecimal roundedPrice = finalPrice.setScale(2, RoundingMode.HALF_UP);
+            if (bookingId.equals(4L)) System.out.println("Created a BigDecimal of the rounded final price: " + roundedPrice);
+            if (bookingId.equals(4L)) System.out.println("Returning the value: " + roundedPrice.doubleValue());
             return roundedPrice.doubleValue();
         } else {
             LOGGER.log(Level.ERROR, "No booking with the specified ID exists in the database.");

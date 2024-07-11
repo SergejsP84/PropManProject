@@ -33,21 +33,17 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
             List<Property> locatedProperties = propertyService.getPropertiesByLocation(criteria.getLocation());
             suitableProperties.removeIf(property -> !locatedProperties.contains(property));
         }
-//        System.out.println("After location sieve - isPresent: " + suitableProperties.size());
         if (criteria.getAmenityIds() != null && !criteria.getAmenityIds().isEmpty()) {
             Set<Property> propertiesWithAmenities = propertyService.getPropertiesWithAmenities(criteria.getAmenityIds());
             suitableProperties.removeIf(property -> !propertiesWithAmenities.contains(property));
         }
-//        System.out.println("After amenity sieve - isPresent: " + suitableProperties.size());
         if (criteria.getType() != null) {
             List<Property> typeProperties = propertyService.getPropertiesByType(criteria.getType());
             suitableProperties.removeIf(property -> !typeProperties.contains(property));
         }
-//        System.out.println("After type sieve - isPresent: " + suitableProperties.size());
         if (criteria.getRating() != null) {
             suitableProperties.removeIf(property -> property.getRating() < criteria.getRating());
         }
-//        System.out.println("After rating sieve - isPresent: " + suitableProperties.size());
 
         // Converting price ranges to base currency
         if (!criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
@@ -60,7 +56,6 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
             Double maxPrice = Double.MAX_VALUE;
             if (criteria.getMinPrice() == null) {
                 maxPrice = criteria.getMaxPrice();
-//                System.out.println("maxPrice set to " + maxPrice);
             }
             if (criteria.getMaxPrice() == null) {
                 minPrice = criteria.getMinPrice();
@@ -73,19 +68,11 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
                 maxPrice = criteria.getMaxPrice();
             }
 
-
-//            System.out.println("Conducting search with:");
-//            System.out.println("Minimum price - " + minPrice);
-//            System.out.println("Maximum price - " + maxPrice);
             List<Property> fittingProperties = propertyService.getPropertiesByDailyPriceRange(minPrice, maxPrice);
-//
-//            System.out.println("Fitting properties found: ");
-//            for (Property property : fittingProperties) {
-//                System.out.println(property.getId());
-//            }
+
             suitableProperties.removeIf(property -> !fittingProperties.contains(property));
         }
-//        System.out.println("After price sieve - isPresent: " + suitableProperties.size());
+
         if (criteria.getMinSizeM2() != null || criteria.getMaxSizeM2() != null) {
             Float minSize = Float.MIN_VALUE;
             Float maxSize = Float.MAX_VALUE;
@@ -106,7 +93,6 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
                 if (property.getSizeM2() < minSize || property.getSizeM2() > maxSize) suitableProperties.remove(property);
             }
         }
-//        System.out.println("After size sieve - isPresent: " + suitableProperties.size());
         List<PropertySearchResultDTO> resultDTOList = suitableProperties.stream()
                 .map(property -> {
                     PropertySearchResultDTO resultDTO = new PropertySearchResultDTO();

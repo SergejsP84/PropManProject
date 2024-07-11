@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
 
@@ -22,7 +24,6 @@ public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank(message = "Bill amount is required")
     @Column(name = "amount")
     private double amount;
     @ManyToOne
@@ -43,6 +44,8 @@ public class Bill {
     private boolean isPaid;
     @Column(name = "issued_at")
     private Timestamp issuedAt;
+    @Column(name = "added_at")
+    private Timestamp addedAt;
 
 
 }

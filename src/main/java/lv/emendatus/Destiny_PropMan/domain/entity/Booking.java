@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
@@ -19,7 +20,7 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Property field is required")
+    @NotNull(message = "Property field is required")
     @ManyToOne
     @JoinColumn(name = "property_id")
     private Property property;
@@ -27,20 +28,19 @@ public class Booking {
     @Column(name = "tenant_id")
     private Long tenantId;
 
-    @NotBlank(message = "Start date is required")
+    @NotNull(message = "Start date is required")
     @Column(name = "start_date")
     private Timestamp startDate;
 
-    @NotBlank(message = "End date is required")
+    @NotNull(message = "End date is required")
     @Column(name = "end_date")
     private Timestamp endDate;
 
     @Column(name = "is_paid")
     private boolean isPaid;
 
-    @NotBlank(message = "Booking status is required")
-    @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private BookingStatus status;
 
     public Booking() {

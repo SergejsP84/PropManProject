@@ -82,12 +82,15 @@ public class LeasingHistory {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LeasingHistory that = (LeasingHistory) o;
-        return Objects.equals(id, that.id) && Objects.equals(tenant, that.tenant) && Objects.equals(propertyId, that.propertyId) && Objects.equals(startDate, that.startDate) && Objects.equals(endDate, that.endDate);
+        return Objects.equals(id, that.id) &&
+                Objects.equals(propertyId, that.propertyId) &&
+                Objects.equals(startDate, that.startDate) &&
+                Objects.equals(endDate, that.endDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, tenant, propertyId, startDate, endDate);
+        return Objects.hash(id, propertyId, startDate, endDate);
     }
 
     @Override

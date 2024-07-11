@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmRegistration;
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerRegistrationService;
@@ -23,6 +24,7 @@ public class ConfirmationController {
     }
 
     @GetMapping("/confirm-registration")
+    @ConfirmRegistration
     public String confirmRegistration(@RequestParam("token") String token, Model model) {
         Tenant tenant = tenantService.getTenantByConfirmationToken(token);
         Manager manager = managerService.getManagerByConfirmationToken(token);

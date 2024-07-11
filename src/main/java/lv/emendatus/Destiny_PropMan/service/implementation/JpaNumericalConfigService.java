@@ -20,7 +20,6 @@ import java.util.Optional;
 @Service
 public class JpaNumericalConfigService implements NumericalConfigService {
     private final NumericalConfigRepository repository;
-
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
     public JpaNumericalConfigService(NumericalConfigRepository repository) {
         this.repository = repository;
@@ -34,7 +33,6 @@ public class JpaNumericalConfigService implements NumericalConfigService {
         return repository.findById(id);
     }
     @Override
-    @Transactional
     public void addNumericalConfig(NumericalConfig numericalConfig)
     {
         NumericalConfig savedConfig = repository.save(numericalConfig);
@@ -60,7 +58,6 @@ public class JpaNumericalConfigService implements NumericalConfigService {
         }
     }
     @Override
-    @Transactional
     public List<NumericalConfig> getNumericalConfigsByCurrency(Currency currency) {
         List<NumericalConfig> allConfigs = getAllNumericalConfigs();
         return allConfigs.stream()

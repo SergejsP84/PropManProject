@@ -1,5 +1,9 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_Add;
+import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_Delete;
+import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_GetAll;
+import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_GetByID;
 import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAmenityService;
@@ -19,6 +23,7 @@ public class AmenityController {
     }
 
     @PostMapping("/add")
+    @Amenity_Add
     public ResponseEntity<Void> addAmenity(@RequestBody Amenity amenity) {
         jpaAmenityService.addAmenity(amenity);
         System.out.println("Added new amenity: " + amenity.getDescription());
@@ -26,12 +31,14 @@ public class AmenityController {
     }
 
     @GetMapping("/getall")
+    @Amenity_GetAll
     public ResponseEntity<List<Amenity>> getAllAmenities() {
         List<Amenity> amenities = jpaAmenityService.getAllAmenities();
         return new ResponseEntity<>(amenities, HttpStatus.OK);
     }
 
     @GetMapping("/getAmenityById/{id}")
+    @Amenity_GetByID
     public ResponseEntity<Amenity> getAmenityById(@PathVariable Long id) {
         Optional<Amenity> result = jpaAmenityService.getAmenityById(id);
         return result.map(amenity -> new ResponseEntity<>(amenity, HttpStatus.OK))
@@ -39,6 +46,7 @@ public class AmenityController {
     }
 
     @DeleteMapping("/deleteAmenityById/{id}")
+    @Amenity_Delete
     public void deleteByID(@PathVariable Long id) {
         if (jpaAmenityService.getAmenityById(id).isPresent()) {
             System.out.println("Deleting amenity " + jpaAmenityService.getAmenityById(id).get().getDescription());

@@ -16,6 +16,4 @@ public class ReservationRequestDTO {
     private Long tenantId;
     private Timestamp startDate;
     private Timestamp endDate;
-
-
 }

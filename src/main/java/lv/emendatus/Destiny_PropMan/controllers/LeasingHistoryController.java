@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.leasing_history_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
@@ -29,23 +30,27 @@ public class LeasingHistoryController {
         this.tenantService = tenantService;
     }
     @PostMapping("/add")
+    @LeasingHistory_Add
     public ResponseEntity<Void> addLeasingHistory(@RequestBody LeasingHistory leasingHistory) {
         service.addLeasingHistory(leasingHistory);
         System.out.println("Added new leasing history with the ID " + leasingHistory.getId());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
     @GetMapping("/getall")
+    @LeasingHistory_GetAll
     public ResponseEntity<List<LeasingHistory>> getAllLeasingHistories() {
         List<LeasingHistory> histories = service.getAllLeasingHistories();
         return new ResponseEntity<>(histories, HttpStatus.OK);
     }
     @GetMapping("/getLeasingHistoryById/{id}")
+    @LeasingHistory_GetByID
     public ResponseEntity<LeasingHistory> getLeasingHistoryById(@PathVariable Long id) {
         Optional<LeasingHistory> result = service.getLeasingHistoryById(id);
         return result.map(history -> new ResponseEntity<>(history, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     @DeleteMapping("/deleteLeasingHistory/{id}")
+    @LeasingHistory_Delete
     public void deleteByID(@PathVariable Long id) {
         if (service.getLeasingHistoryById(id).isPresent()) {
             System.out.println("Deleting leasing history with the ID " + id);
@@ -55,6 +60,7 @@ public class LeasingHistoryController {
         }
     }
     @GetMapping("/getByTime")
+    @LeasingHistory_GetByTimePeriod
     public ResponseEntity<List<LeasingHistory>> getLeasingHistoryByTimePeriod(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
@@ -70,6 +76,7 @@ public class LeasingHistoryController {
     } // http://localhost:8080/leasinghistory/getByTime?start=2020-02-02&end=2020-02-17
 
     @GetMapping("/getByProperty/{prop_id}")
+    @LeasingHistory_GetByProperty
     public ResponseEntity<List<LeasingHistory>> getLeasingHistoryByProperty(@PathVariable Long prop_id) {
         Optional<Property> obtained = propertyService.getPropertyById(prop_id);
         if (obtained.isPresent()) {
@@ -86,6 +93,7 @@ public class LeasingHistoryController {
         }
     }
     @GetMapping("/getByTenant/{ten_id}")
+    @LeasingHistory_GetByTenant
     public ResponseEntity<List<LeasingHistory>> getLeasingHistoryByTenant(@PathVariable Long ten_id) {
         Optional<Tenant> obtained = tenantService.getTenantById(ten_id);
         if (obtained.isPresent()) {

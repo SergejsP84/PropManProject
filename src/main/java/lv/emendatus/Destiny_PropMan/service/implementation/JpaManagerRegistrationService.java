@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.CardUpdateDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
@@ -14,10 +16,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Cipher;
+import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import javax.mail.MessagingException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -32,12 +36,13 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     private final JpaEmailService emailService;
     private final JpaTokenResetService resetService;
     private final JpaAdminAccountsService adminAccountsService;
+    public final JpaNumericDataMappingService numericDataMappingService;
 
     private final Logger LOGGER = LogManager.getLogger(JpaTenantRegistrationService.class);
 
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
 
-    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService, JpaAdminAccountsService adminAccountsService) {
+    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService, JpaAdminAccountsService adminAccountsService, JpaNumericDataMappingService numericDataMappingService) {
         this.managerService = managerService;
         this.tenantService = tenantService;
         this.tokenService = tokenService;
@@ -45,6 +50,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         this.emailService = emailService;
         this.resetService = resetService;
         this.adminAccountsService = adminAccountsService;
+        this.numericDataMappingService = numericDataMappingService;
     }
 
     @Override
@@ -74,10 +80,14 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         manager.setIban(registrationDTO.getIban());
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
-        manager.setPaymentCardNo(registrationDTO.getPaymentCardNo());
+        try {
+            manager.setPaymentCardNo(encryptCardNumber(manager.getId(), UserType.MANAGER, registrationDTO.getPaymentCardNo()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         manager.setCardValidityDate(registrationDTO.getCardValidityDate());
         try {
-            manager.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+            manager.setCvv(encryptCVV(manager.getId(), UserType.MANAGER, registrationDTO.getCvv()).toCharArray());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -90,6 +100,9 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         manager.setKnownIps(knownIPs);
         String confirmationToken = tokenService.generateToken();
         manager.setConfirmationToken(confirmationToken);
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("MANAGER"));
+        manager.setAuthorities(authorities);
         managerService.addManager(manager);
         LOGGER.info("New manager added: ID" + manager.getId() + ", Name: " + manager.getManagerName() + ", Description: " + manager.getDescription());
         try {
@@ -113,13 +126,16 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         }
         Manager manager = managerService.getManagerById(dto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Manager not found with ID: " + dto.getUserId()));
-        manager.setPaymentCardNo(dto.getNewCardNumber());
+        try {
+            manager.setPaymentCardNo(encryptCardNumber(manager.getId(), UserType.MANAGER, dto.getNewCardNumber()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         manager.setCardValidityDate(dto.getNewValidityDate());
         try {
-            String encryptedCvv = encryptCVV(dto.getNewCvv());
-            manager.setCvv(encryptedCvv.toCharArray());
+            manager.setCvv(encryptCVV(manager.getId(), UserType.MANAGER, dto.getNewCvv()).toCharArray());
         } catch (Exception e) {
-            throw new RuntimeException("Error encrypting CVV.", e);
+            throw new RuntimeException(e);
         }
         managerService.addManager(manager);
     }
@@ -190,20 +206,47 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     }
 
     // Encrypt CVV using AES encryption
-    public static String encryptCVV(char[] cvv) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
-        return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+    public String encryptCVV(Long userId, UserType userType, char[] cvv) throws Exception {
+        try {
+            System.out.println("      ---   a) Initiated the encryptCVV method");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            System.out.println("      ---   b) Created a Cipher: " + cipher);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128); // 128-bit key length
+            SecretKey secretKey = keyGenerator.generateKey();
+            byte[] aesKeyBytes = secretKey.getEncoded();
+            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            System.out.println("      ---   d) Cipher.init triggered successfully");
+            byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
+            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+            numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
+            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+            return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        System.out.println("FAILED TO ENCRYPT THE CVV!");
+        return Arrays.toString(cvv);
+    }
+    public String encryptCardNumber(Long userId, UserType userType, String cardNumber) throws Exception {
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128); // 128-bit key length
+            SecretKey secretKey = keyGenerator.generateKey();
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedCardNumberBytes = cipher.doFinal(cardNumber.getBytes());
+            numericDataMappingService.saveCardNumberSecretKey(userId, userType, secretKey);
+            return Base64.getEncoder().encodeToString(encryptedCardNumberBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException | IllegalBlockSizeException e) {
+            System.out.println("Error encrypting card number: " + e.getMessage());
+        }
+        return null;
     }
 
-    // Decrypt CVV using AES decryption
-    public static String decryptCVV(String encryptedCVV) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        byte[] decryptedCVVBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedCVV));
-        return new String(decryptedCVVBytes);
-    }
 }

@@ -42,7 +42,7 @@ public class Admin {
     @Column(name = "known_ips")
     private List<String> knownIps;
 
-    @NotBlank(message = "Email is required")
+   // @NotBlank(message = "Email is required")
     @Column(name = "email")
     private String email;
 

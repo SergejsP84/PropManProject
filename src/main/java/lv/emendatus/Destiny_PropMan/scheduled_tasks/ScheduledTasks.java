@@ -7,7 +7,6 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 import lv.emendatus.Destiny_PropMan.service.implementation.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +34,8 @@ public class ScheduledTasks {
     private final JpaPropertyDiscountService discountService;
     private final JpaEmailService emailService;
     private final JpaLeasingHistoryService leasingHistoryService;
-    public ScheduledTasks(JpaBookingService bookingService, JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaTokenResetService resetterService, JpaEarlyTerminationRequestService terminationRequestService, JpaTenantPaymentService paymentService, JpaNumericalConfigService configService, JpaPayoutService payoutService, JpaPropertyService propertyService, JpaPropertyDiscountService discountService, JpaEmailService emailService, JpaLeasingHistoryService leasingHistoryService) {
+    private final JpaPropertyLockService lockService;
+    public ScheduledTasks(JpaBookingService bookingService, JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaTokenResetService resetterService, JpaEarlyTerminationRequestService terminationRequestService, JpaTenantPaymentService paymentService, JpaNumericalConfigService configService, JpaPayoutService payoutService, JpaPropertyService propertyService, JpaPropertyDiscountService discountService, JpaEmailService emailService, JpaLeasingHistoryService leasingHistoryService, JpaPropertyLockService lockService) {
         this.bookingService = bookingService;
         this.tenantService = tenantService;
         this.managerService = managerService;
@@ -49,6 +49,7 @@ public class ScheduledTasks {
         this.discountService = discountService;
         this.emailService = emailService;
         this.leasingHistoryService = leasingHistoryService;
+        this.lockService = lockService;
     }
 
     @Scheduled(cron = "0 0 1 * * *")
@@ -290,6 +291,25 @@ public class ScheduledTasks {
             }
         }
     }
+
+    @Scheduled(cron = "0 30 3 * * 2")
+    @Transactional
+    public void deleteOutdatedLocksAndStubs() {
+        List<PropertyLock> allLocks = lockService.getAllPropertyLocks();
+        List<Long> iDsForRemoval = allLocks.stream()
+                .map(PropertyLock::getBookingStubId)
+                .map(bookingService::getBookingById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(stub -> stub.getEndDate().before(Timestamp.valueOf(LocalDateTime.now())))
+                .map(Booking::getId)
+                .toList();
+        allLocks.stream()
+                .filter(lock -> iDsForRemoval.contains(lock.getBookingStubId()))
+                .forEach(lock -> lockService.deletePropertyLock(lock.getId()));
+        iDsForRemoval.forEach(bookingService::deleteBooking);
+    }
+
     // AUXILIARY METHODS
     public String createCancellationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";

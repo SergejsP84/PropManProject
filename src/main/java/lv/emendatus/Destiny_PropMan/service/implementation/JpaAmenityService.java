@@ -3,6 +3,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.AmenityRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AmenityService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,11 +23,13 @@ public class JpaAmenityService implements AmenityService {
     public Optional<Amenity> getAmenityById(Long id) {
         return amenityRepository.findById(id);
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Override
     public void addAmenity(Amenity amenity) {
         amenityRepository.save(amenity);
     }
     @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteAmenity(Long id) {
         amenityRepository.deleteById(id);
     }

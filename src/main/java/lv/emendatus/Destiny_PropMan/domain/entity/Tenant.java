@@ -14,10 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -61,11 +58,11 @@ public class Tenant {
     @Column(name = "payment_card_No")
     private String paymentCardNo;
 
-    @NotBlank(message = "Card validity date is required")
+    @NotNull(message = "Card validity date is required")
     @Column(name = "card_validity_date")
     private YearMonth cardValidityDate;
 
-    @NotBlank(message = "CVV is required")
+    @NotNull(message = "CVV is required")
     @Column(name = "cvv")
     private char[] cvv;
 
@@ -83,16 +80,14 @@ public class Tenant {
     @Column(name = "password")
     private String password;
 
-
     @OneToMany
+    @JsonIgnore
     @JoinColumn(name = "leasing_history")
-    @NotNull
-    private List<LeasingHistory> leasingHistories;
+    private List<LeasingHistory> leasingHistories = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "tenant")
-    @NotNull
-    private Set<TenantPayment> tenantPayments;
+    private Set<TenantPayment> tenantPayments = new HashSet<>();
 
     @Column(name = "confirmation_token")
     private String confirmationToken;
@@ -110,8 +105,7 @@ public class Tenant {
     private Collection<? extends GrantedAuthority> authorities;
 
     @Column(name = "known_ips")
-    @NotNull
-    private List<String> knownIps;
+    private List<String> knownIps = new ArrayList<>();
 
     public void removePropertyReference() {
         this.currentProperty = null;
@@ -122,12 +116,31 @@ public class Tenant {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Tenant tenant = (Tenant) o;
-        return isActive == tenant.isActive && Float.compare(tenant.rating, rating) == 0 && Objects.equals(id, tenant.id) && Objects.equals(firstName, tenant.firstName) && Objects.equals(lastName, tenant.lastName) && Objects.equals(currentProperty, tenant.currentProperty) && Objects.equals(phone, tenant.phone) && Objects.equals(email, tenant.email) && Objects.equals(iban, tenant.iban) && Objects.equals(paymentCardNo, tenant.paymentCardNo) && Objects.equals(login, tenant.login) && Objects.equals(password, tenant.password) && Objects.equals(leasingHistories, tenant.leasingHistories) && Objects.equals(tenantPayments, tenant.tenantPayments) && Objects.equals(confirmationToken, tenant.confirmationToken) && Objects.equals(expirationTime, tenant.expirationTime) && Objects.equals(preferredCurrency, tenant.preferredCurrency) && Objects.equals(authorities, tenant.authorities) && Objects.equals(knownIps, tenant.knownIps);
+        return isActive == tenant.isActive &&
+                Float.compare(tenant.rating, rating) == 0 &&
+                Objects.equals(id, tenant.id) &&
+                Objects.equals(firstName, tenant.firstName) &&
+                Objects.equals(lastName, tenant.lastName) &&
+                Objects.equals(phone, tenant.phone) &&
+                Objects.equals(email, tenant.email) &&
+                Objects.equals(iban, tenant.iban) &&
+                Objects.equals(paymentCardNo, tenant.paymentCardNo) &&
+                Objects.equals(cardValidityDate, tenant.cardValidityDate) &&
+                Arrays.equals(cvv, tenant.cvv) &&
+                Objects.equals(login, tenant.login) &&
+                Objects.equals(password, tenant.password) &&
+                Objects.equals(confirmationToken, tenant.confirmationToken) &&
+                Objects.equals(expirationTime, tenant.expirationTime) &&
+                Objects.equals(preferredCurrency, tenant.preferredCurrency) &&
+                Objects.equals(authorities, tenant.authorities) &&
+                Objects.equals(knownIps, tenant.knownIps);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstName, lastName, currentProperty, isActive, phone, email, iban, paymentCardNo, rating, login, password, leasingHistories, tenantPayments, confirmationToken, expirationTime, preferredCurrency, authorities, knownIps);
+        int result = Objects.hash(id, firstName, lastName, isActive, phone, email, iban, paymentCardNo, cardValidityDate, rating, login, password, confirmationToken, expirationTime, preferredCurrency, authorities, knownIps);
+        result = 31 * result + Arrays.hashCode(cvv);
+        return result;
     }
 
     @Override
@@ -142,6 +155,8 @@ public class Tenant {
                 ", email='" + email + '\'' +
                 ", iban='" + iban + '\'' +
                 ", paymentCardNo='" + paymentCardNo + '\'' +
+                ", cardValidityDate=" + cardValidityDate +
+                ", cvv=" + Arrays.toString(cvv) +
                 ", rating=" + rating +
                 ", login='" + login + '\'' +
                 ", password='" + password + '\'' +

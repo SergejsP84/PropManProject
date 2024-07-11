@@ -1,5 +1,8 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.Admin.AdminPayoutDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.Admin.AdminRefundDTO;
@@ -11,10 +14,6 @@ import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationD
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.exceptions.*;
 import lv.emendatus.Destiny_PropMan.mapper.ManagerMapper;
 import lv.emendatus.Destiny_PropMan.mapper.PropertyCreationMapper;
@@ -27,12 +26,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.*;
 import java.util.*;
@@ -52,6 +51,9 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     public final JpaThirdPartyPaymentProviderService paymentProviderService;
     public final JpaPayoutService payoutService;
     public final JpaCurrencyService currencyService;
+    public final JpaNumericDataMappingService numericDataMappingService;
+    public final JpaAmenityService amenityService;
+    public final JpaPropertyAmenityService propertyAmenityService;
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder;
     private final TenantMapper tenantMapper;
@@ -62,7 +64,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
 
-    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
+    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.bookingService = bookingService;
@@ -75,6 +77,9 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         this.paymentProviderService = paymentProviderService;
         this.payoutService = payoutService;
         this.currencyService = currencyService;
+        this.numericDataMappingService = numericDataMappingService;
+        this.amenityService = amenityService;
+        this.propertyAmenityService = propertyAmenityService;
         this.passwordEncoder = passwordEncoder;
         this.tenantMapper = tenantMapper;
         this.managerMapper = managerMapper;
@@ -155,34 +160,63 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             LOGGER.error("A tenant with this e-mail has already been registered");
             throw new EmailAlreadyExistsException("Tenant with this e-mail exists");
         }
+        System.out.println("   ---   1) Initiated the tenant creation process");
         Tenant tenant = new Tenant();
+        System.out.println("   ---   2) New tenant entity created");
         tenant.setFirstName(registrationDTO.getFirstName());
+        System.out.println("   ---   3) First name assigned: " + tenant.getFirstName());
         tenant.setLastName(registrationDTO.getLastName());
+        System.out.println("   ---   4) Last name assigned: " + tenant.getLastName());
         tenant.setPhone(registrationDTO.getPhone());
+        System.out.println("   ---   5) Phone number assigned: " + tenant.getPhone());
         tenant.setEmail(registrationDTO.getEmail());
+        System.out.println("   ---   6) E-mail assigned: " + tenant.getEmail());
         tenant.setIban(registrationDTO.getIban());
+        System.out.println("   ---   7) IBAN assigned: " + tenant.getIban());
         tenant.setLogin(registrationDTO.getLogin());
+        System.out.println("   ---   8) Login assigned: " + tenant.getLogin());
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         tenant.setPassword(encodedPassword);
+        System.out.println("   ---   9) Password assigned: " + tenant.getPassword());
         tenant.setRating(0F);
+        System.out.println("   ---   10) Rating assigned: " + tenant.getRating());
         tenant.setActive(true);
+        System.out.println("   ---   11) Active status assigned: " + tenant.isActive());
         tenant.setTenantPayments(new HashSet<>());
+        System.out.println("   ---   12) Assigned an empty HashSet of TenantPayments");
         tenant.setCurrentProperty(null);
+        System.out.println("   ---   13) Set the Current Property for the Tenant to NULL");
         tenant.setLeasingHistories(new ArrayList<>());
-        tenant.setPaymentCardNo(registrationDTO.getPaymentCardNo());
-        tenant.setCardValidityDate(registrationDTO.getCardValidityDate());
+        System.out.println("   ---   14) Assigned an empty ArrayList of LeasingHistories");
         try {
-            tenant.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+            tenant.setPaymentCardNo(encryptCardNumber(tenant.getId(), UserType.TENANT, registrationDTO.getPaymentCardNo()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        System.out.println("   ---   15) Payment card number assigned: " + tenant.getPaymentCardNo());
+        tenant.setCardValidityDate(registrationDTO.getCardValidityDate());
+        System.out.println("   ---   16) Card validity date assigned: " + tenant.getCardValidityDate());
+        try {
+            tenant.setCvv(encryptCVV(tenant.getId(), UserType.TENANT, registrationDTO.getCvv()).toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("   ---   17) CVV assigned and encrypted to: " + Arrays.toString(tenant.getCvv()));
         tenant.setConfirmationToken("");
+        System.out.println("   ---   18) Confirmation token set to empty, because the Tenant is being created by an Admin");
         tenant.setPreferredCurrency(currencyService.returnBaseCurrency());
+        System.out.println("   ---   19) Preferred currency assigned to: " + tenant.getPreferredCurrency().getDesignation());
         List<String> knownIPs = new ArrayList<>();
         tenant.setKnownIps(knownIPs);
+        System.out.println("   ---   20) Known IP list set to an empty ArrayList");
+        List<GrantedAuthority> authoritiesT = new ArrayList<>();
+        authoritiesT.add(new SimpleGrantedAuthority("TENANT"));
+        tenant.setAuthorities(authoritiesT);
         tenantService.addTenant(tenant);
+        System.out.println("Tenant added to the database");
         LOGGER.info("New tenant added by an Admin: ID" + tenant.getId() + ", First name / surname: " + tenant.getFirstName() + " " + tenant.getLastName());
     }
+
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -212,10 +246,14 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         manager.setIban(registrationDTO.getIban());
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
-        manager.setPaymentCardNo(registrationDTO.getPaymentCardNo());
+        try {
+            manager.setPaymentCardNo(encryptCardNumber(manager.getId(), UserType.MANAGER, registrationDTO.getPaymentCardNo()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         manager.setCardValidityDate(registrationDTO.getCardValidityDate());
         try {
-            manager.setCvv(encryptCVV(registrationDTO.getCvv()).toCharArray());
+            manager.setCvv(encryptCVV(manager.getId(), UserType.MANAGER, registrationDTO.getCvv()).toCharArray());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -227,6 +265,9 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         manager.setConfirmationToken("");
         List<String> knownIPs = new ArrayList<>();
         manager.setKnownIps(knownIPs);
+        List<GrantedAuthority> authoritiesM = new ArrayList<>();
+        authoritiesM.add(new SimpleGrantedAuthority("MANAGER"));
+        manager.setAuthorities(authoritiesM);
         managerService.addManager(manager);
         LOGGER.info("New manager added by an Admin: ID" + manager.getId() + ", Name: " + manager.getManagerName() + ", Description: " + manager.getDescription());
     }
@@ -1102,6 +1143,50 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         }
     }
 
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public void addAmenityToDatabase(String amenityDescription) {
+        boolean alreadyExists = false;
+        for (Amenity existing_one : amenityService.getAllAmenities()) {
+            if (existing_one.getDescription().equals(amenityDescription)) {
+                alreadyExists = true;
+                LOGGER.info("This amenity already exists in the database");
+                System.out.println("This amenity already exists in the database");
+            }
+        }
+        if (!alreadyExists) {
+            Amenity amenity = new Amenity();
+            amenity.setDescription(amenityDescription);
+            amenityService.addAmenity(amenity);
+            LOGGER.info("Amenity {} added to the amenity database", amenityDescription);
+            System.out.println("Amenity " + amenityDescription + " added to the amenity database");
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    public void removeAmenityFromDatabase(Long amenityId) {
+        if (amenityService.getAmenityById(amenityId).isPresent()) {
+            List<Long> relationsToBeRemoved = new ArrayList<>();
+            String removedAmenityDescription = amenityService.getAmenityById(amenityId).get().getDescription();
+            for (PropertyAmenity propertyAmenity : propertyAmenityService.getAllPropertyAmenities()) {
+                if (propertyAmenity.getAmenity_id().equals(amenityId)) relationsToBeRemoved.add(propertyAmenity.getId());
+            }
+            int removalCounter = 0;
+            for (Long id : relationsToBeRemoved) {
+                propertyAmenityService.deletePropertyAmenity(id);
+                removalCounter++;
+            }
+            amenityService.deleteAmenity(amenityId);
+            LOGGER.info("Amenity {} and {} links to properties have been removed", removedAmenityDescription, removalCounter);
+            System.out.println("Amenity " + removedAmenityDescription + " and " + removalCounter + " associated links to properties have been removed");
+        } else {
+            LOGGER.log(Level.ERROR, "No amenity with the {} ID exists in the database.", amenityId);
+            throw new EntityNotFoundException("No amenity found with ID: " + amenityId);
+        }
+    }
+
 
     // AUXILIARY METHODS
     // LUHN LOGIC
@@ -1148,28 +1233,56 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     private boolean isLoginBusy(String login) {
-        return tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null;
+                return !(tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null);
     }
     private boolean isEmailBusy(String email) {
-        return tenantService.getTenantByEmail(email) == null;
+        return !(tenantService.getTenantByEmail(email) == null);
     }
 
-    // Encrypt CVV using AES encryption
-    public static String encryptCVV(char[] cvv) throws Exception {
+    // Encrypt CVV using AES encryption, will also be used for card number encryption
+    public String encryptCVV(Long userId, UserType userType, char[] cvv) throws Exception {
+        try {
+        System.out.println("      ---   a) Initiated the encryptCVV method");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        System.out.println("      ---   b) Created a Cipher: " + cipher);
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(128); // 128-bit key length
+        SecretKey secretKey = keyGenerator.generateKey();
+        byte[] aesKeyBytes = secretKey.getEncoded();
+        System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        System.out.println("      ---   d) Cipher.init triggered successfully");
         byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
+        System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+        // implement logics for saving the secret key alongside the encrypted value
+        numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
+            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
         return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        System.out.println("FAILED TO ENCRYPT THE CVV!");
+        return Arrays.toString(cvv);
     }
 
-    // Decrypt CVV using AES decryption
-    public static String decryptCVV(String encryptedCVV) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        SecretKeySpec secretKey = new SecretKeySpec(AES_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        byte[] decryptedCVVBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedCVV));
-        return new String(decryptedCVVBytes);
+    public String encryptCardNumber(Long userId, UserType userType, String cardNumber) throws Exception {
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128); // 128-bit key length
+            SecretKey secretKey = keyGenerator.generateKey();
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedCardNumberBytes = cipher.doFinal(cardNumber.getBytes());
+            numericDataMappingService.saveCardNumberSecretKey(userId, userType, secretKey);
+            return Base64.getEncoder().encodeToString(encryptedCardNumberBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException | IllegalBlockSizeException e) {
+            System.out.println("Error encrypting card number: " + e.getMessage());
+        }
+        return null;
     }
 
 }

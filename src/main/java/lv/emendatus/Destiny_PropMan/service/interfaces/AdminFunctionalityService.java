@@ -40,4 +40,7 @@ public interface AdminFunctionalityService {
     void addNewCurrency(String designation, Double rateToBase);
     void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies);
     void setNumericalConfigs(SetNumConfigDTO dto);
+    void addAmenityToDatabase(String amenityDescription);
+    void removeAmenityFromDatabase(Long amenityId);
+
 }

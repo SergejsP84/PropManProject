@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.search_controller.SearchProperties;
 import lv.emendatus.Destiny_PropMan.domain.dto.search.PropertySearchResultDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.search.SearchCriteria;
 import lv.emendatus.Destiny_PropMan.service.implementation.PropertySearchService;
@@ -23,6 +24,7 @@ public class SearchController {
         this.propertySearchService = propertySearchService;
     }
     @GetMapping("/properties")
+    @SearchProperties
     public ResponseEntity<List<PropertySearchResultDTO>> searchProperties(@RequestBody SearchCriteria criteria) {
         List<PropertySearchResultDTO> searchResults = propertySearchService.searchProperties(criteria);
         return ResponseEntity.ok(searchResults);
