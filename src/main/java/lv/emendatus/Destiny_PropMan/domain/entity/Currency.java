@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -33,21 +34,27 @@ public class Currency {
     private Double rateToBase;
 
     @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<Bill> bills;
 
     @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<NumericalConfig> numericalConfigs;
 
     @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<Refund> refunds;
 
     @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<Payout> payouts;
 
     @OneToMany(mappedBy = "preferredCurrency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<Tenant> tenants;
 
     @OneToMany(mappedBy = "currency") // not sure if needed, retained for possible further use
+    @JsonIgnore
     private Set<TenantPayment> tenantPayments;
 
     public Currency(Long id, String designation) {

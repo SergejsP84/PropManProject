@@ -795,6 +795,20 @@ public class SampleBaseCreator implements ApplicationRunner {
                     configService.addNumericalConfig(config12);
                     LOGGER.info("Regular cancellation penalty set to 0%");
                     System.out.println("   * Regular cancellation penalty set to 0%");
+                    NumericalConfig config13 = new NumericalConfig();
+                    config13.setName("LastRegisteredTenantID");
+                    config13.setValue(14.0);
+                    config13.setType(NumConfigType.COUNTER);
+                    configService.addNumericalConfig(config13);
+                    LOGGER.info("Last registered Tenant ID set to 14");
+                    System.out.println("   * Last registered Tenant ID set to 14");
+                    NumericalConfig config14 = new NumericalConfig();
+                    config14.setName("LastRegisteredManagerID");
+                    config14.setValue(5.0);
+                    config14.setType(NumConfigType.COUNTER);
+                    configService.addNumericalConfig(config14);
+                    LOGGER.info("Last registered Manager ID set to 5");
+                    System.out.println("   * Last registered Manager ID set to 5");
 
                     // Adding Managers
                     System.out.println();

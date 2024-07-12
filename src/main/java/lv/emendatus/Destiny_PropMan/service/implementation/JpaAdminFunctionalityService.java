@@ -54,6 +54,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     public final JpaNumericDataMappingService numericDataMappingService;
     public final JpaAmenityService amenityService;
     public final JpaPropertyAmenityService propertyAmenityService;
+    public final JpaNumericalConfigService numericalConfigService;
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder;
     private final TenantMapper tenantMapper;
@@ -64,7 +65,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
 
-    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
+    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaNumericalConfigService numericalConfigService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.bookingService = bookingService;
@@ -80,6 +81,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         this.numericDataMappingService = numericDataMappingService;
         this.amenityService = amenityService;
         this.propertyAmenityService = propertyAmenityService;
+        this.numericalConfigService = numericalConfigService;
         this.passwordEncoder = passwordEncoder;
         this.tenantMapper = tenantMapper;
         this.managerMapper = managerMapper;
@@ -87,7 +89,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void toggleTenantStatus(Long tenantId) {
         Optional<Tenant> tenant = tenantService.getTenantById(tenantId);
@@ -101,7 +103,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void toggleManagerStatus(Long managerId) {
         System.out.println("toggleManagerStatus method initiated");
         Optional<Manager> optionalManager = managerService.getManagerById(managerId);
@@ -141,7 +143,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void registerTenantForAdmin(TenantRegistrationDTO registrationDTO) {
         if (!isValidPaymentCardNumber(registrationDTO.getPaymentCardNo())) {
@@ -188,6 +190,8 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         System.out.println("   ---   13) Set the Current Property for the Tenant to NULL");
         tenant.setLeasingHistories(new ArrayList<>());
         System.out.println("   ---   14) Assigned an empty ArrayList of LeasingHistories");
+        Long newTenantID = numericalConfigService.getLastTenantId();
+        tenant.setId(newTenantID + 1);
         try {
             tenant.setPaymentCardNo(encryptCardNumber(tenant.getId(), UserType.TENANT, registrationDTO.getPaymentCardNo()));
         } catch (Exception e) {
@@ -212,14 +216,20 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         List<GrantedAuthority> authoritiesT = new ArrayList<>();
         authoritiesT.add(new SimpleGrantedAuthority("TENANT"));
         tenant.setAuthorities(authoritiesT);
+        tenant.setExpirationTime(LocalDateTime.now());
         tenantService.addTenant(tenant);
+        Optional<NumericalConfig> updatedConfig = numericalConfigService.getNumericalConfigByName("LastRegisteredTenantID");
+        if (updatedConfig.isPresent()) {
+            updatedConfig.get().setValue((newTenantID.doubleValue() + 1));
+            numericalConfigService.updateNumericalConfig(updatedConfig.get().getId(), updatedConfig.get());
+        }
         System.out.println("Tenant added to the database");
         LOGGER.info("New tenant added by an Admin: ID" + tenant.getId() + ", First name / surname: " + tenant.getFirstName() + " " + tenant.getLastName());
     }
 
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void registerManager(ManagerRegistrationDTO registrationDTO) {
         if (!isValidPaymentCardNumber(registrationDTO.getPaymentCardNo())) {
@@ -246,6 +256,8 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         manager.setIban(registrationDTO.getIban());
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
+        Long newManagerID = numericalConfigService.getLastManagerId();
+        manager.setId(newManagerID + 1);
         try {
             manager.setPaymentCardNo(encryptCardNumber(manager.getId(), UserType.MANAGER, registrationDTO.getPaymentCardNo()));
         } catch (Exception e) {
@@ -268,12 +280,19 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         List<GrantedAuthority> authoritiesM = new ArrayList<>();
         authoritiesM.add(new SimpleGrantedAuthority("MANAGER"));
         manager.setAuthorities(authoritiesM);
+        manager.setExpirationTime(LocalDateTime.now());
         managerService.addManager(manager);
+        Optional<NumericalConfig> updatedConfig = numericalConfigService.getNumericalConfigByName("LastRegisteredManagerID");
+        if (updatedConfig.isPresent()) {
+            updatedConfig.get().setValue((newManagerID.doubleValue() + 1));
+            numericalConfigService.updateNumericalConfig(updatedConfig.get().getId(), updatedConfig.get());
+        }
         LOGGER.info("New manager added by an Admin: ID" + manager.getId() + ", Name: " + manager.getManagerName() + ", Description: " + manager.getDescription());
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
     public void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) {
         Optional<Tenant> tenantOptional = tenantService.getTenantById(tenantId);
         if (tenantOptional.isPresent()) {
@@ -302,7 +321,26 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             }
             if (!updatedTenantInfo.getPaymentCardNo().equals(existingTenant.getPaymentCardNo())) {
                 LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
-                System.out.println("Payment card number address changed to: "  + updatedTenantInfo.getPaymentCardNo());
+                System.out.println("Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
+                try {
+                    existingTenant.setPaymentCardNo(encryptUpdatedCardNumber(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getPaymentCardNo()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (!updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
+                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+                existingTenant.setCardValidityDate(updatedTenantInfo.getCardValidityDate());
+            }
+            if (!Arrays.equals(updatedTenantInfo.getCvv(), existingTenant.getCvv())) {
+                LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
+                System.out.println("CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
+                try {
+                    existingTenant.setCvv(encryptUpdatedCVV(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getCvv()).toCharArray());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
             if (updatedTenantInfo.getRating() != existingTenant.getRating()) {
                 LOGGER.log(Level.INFO, "Tenant rating set to: "  + updatedTenantInfo.getRating());
@@ -317,8 +355,10 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         }
     }
 
+
+
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile) {
         Optional<Manager> managerOptional = managerService.getManagerById(managerId);
@@ -345,6 +385,25 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             if (!updatedProfile.getPaymentCardNo().equals(existingManager.getPaymentCardNo())) {
                 LOGGER.log(Level.INFO, "Payment card No. changed to: "  + updatedProfile.getPaymentCardNo());
                 System.out.println("Payment card No. changed to: "  + updatedProfile.getPaymentCardNo());
+                try {
+                    existingManager.setPaymentCardNo(encryptUpdatedCardNumber(existingManager.getId(), UserType.MANAGER, updatedProfile.getPaymentCardNo()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (!updatedProfile.getCardValidityDate().equals(existingManager.getCardValidityDate())) {
+                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedProfile.getCardValidityDate());
+                System.out.println("Card validity date changed to: "  + updatedProfile.getCardValidityDate());
+                existingManager.setCardValidityDate(updatedProfile.getCardValidityDate());
+            }
+            if (!Arrays.equals(updatedProfile.getCvv(), existingManager.getCvv())) {
+                LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
+                System.out.println("CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
+                try {
+                    existingManager.setCvv(encryptUpdatedCVV(existingManager.getId(), UserType.MANAGER, updatedProfile.getCvv()).toCharArray());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
             if (!updatedProfile.getEmail().equals(existingManager.getEmail())) {
                 LOGGER.log(Level.INFO, "Email address changed to: "  + updatedProfile.getEmail());
@@ -359,7 +418,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void removeTenant(Long tenantId) {
         boolean obstaclesPresent = false;
@@ -520,7 +579,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void removeManager(Long managerId) {
         boolean obstaclesPresent = false;
@@ -662,7 +721,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void addProperty(PropertyAdditionDTO propertyDTO) {
         Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
@@ -673,7 +732,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void removeProperty(Long propertyId) {
         Optional<Property> propertyOptional = propertyService.getPropertyById(propertyId);
@@ -716,13 +775,13 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void resolveClaim(Long claimId, String resolution) {
         claimService.resolveClaim(claimId, resolution);
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<AdminRefundDTO> viewPendingRefunds() {
         List<Refund> allRefunds = refundService.getAllRefunds();
         List<AdminRefundDTO> output = new ArrayList<>();
@@ -750,7 +809,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public boolean settleRefund(Refund refund) {
         try {
@@ -791,7 +850,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<AdminPayoutDTO> viewPendingPayouts() {
         List<Payout> allPayouts = payoutService.getAllPayouts();
         List<AdminPayoutDTO> output = new ArrayList<>();
@@ -819,7 +878,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public boolean settlePayout(Payout payout) {
         try {
@@ -858,7 +917,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void createPayout(Long bookingId, Long managerId, Double amount, Long currencyId) {
         Payout payout = new Payout();
@@ -875,7 +934,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void createRefund(Long bookingId, Long tenantId, Double amount, Long currencyId) {
         Refund refund = new Refund();
@@ -892,7 +951,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void addNewCurrency(String designation, Double rateToBase) {
         boolean exists = false;
@@ -911,7 +970,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies) {
         currencyService.setBaseCurrency(newBaseCurrencyId);
@@ -925,7 +984,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void setNumericalConfigs(SetNumConfigDTO dto) {
         // Yeah, I know it's perverted... It's just that the project has evolved FAR from the initially contemplated setup, sorry
@@ -1144,7 +1203,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void addAmenityToDatabase(String amenityDescription) {
         boolean alreadyExists = false;
         for (Amenity existing_one : amenityService.getAllAmenities()) {
@@ -1164,7 +1223,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void removeAmenityFromDatabase(Long amenityId) {
         if (amenityService.getAmenityById(amenityId).isPresent()) {
@@ -1285,4 +1344,48 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         return null;
     }
 
+    public String encryptUpdatedCardNumber(Long userId, UserType userType, String cardNumber) throws Exception {
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128); // 128-bit key length
+            SecretKey secretKey = keyGenerator.generateKey();
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedCardNumberBytes = cipher.doFinal(cardNumber.getBytes());
+            numericDataMappingService.updateCardNumberSecretKey(userId, userType, secretKey);
+            return Base64.getEncoder().encodeToString(encryptedCardNumberBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException | IllegalBlockSizeException e) {
+            System.out.println("Error encrypting card number: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public String encryptUpdatedCVV(Long userId, UserType userType, char[] cvv) throws Exception {
+        try {
+            System.out.println("      ---   a) Initiated the encryptCVV method");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            System.out.println("      ---   b) Created a Cipher: " + cipher);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128); // 128-bit key length
+            SecretKey secretKey = keyGenerator.generateKey();
+            byte[] aesKeyBytes = secretKey.getEncoded();
+            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            System.out.println("      ---   d) Cipher.init triggered successfully");
+            byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
+            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+            // implement logics for saving the secret key alongside the encrypted value
+            numericDataMappingService.updateCVVSecretKey(userId, userType, secretKey);
+            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+            return Base64.getEncoder().encodeToString(encryptedCVVBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        System.out.println("FAILED TO ENCRYPT THE CVV!");
+        return Arrays.toString(cvv);
+    }
 }

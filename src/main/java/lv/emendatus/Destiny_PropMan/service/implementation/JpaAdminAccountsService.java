@@ -44,7 +44,7 @@ public class JpaAdminAccountsService implements AdminAccountsService {
         adminRepository.save(admin);
     }
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
+    @PreAuthorize("hasAuthority('ADMIN') and hasPermission(authentication, null, 'DefaultAdmin')")
     @Transactional
     public void createAdmin(AdminRegistrationDTO dto) {
         if (tenantService.getTenantByLogin(dto.getLogin()) == null && managerService.getManagerByLogin(dto.getLogin()) == null && findByLogin(dto.getLogin()).isEmpty()) {
@@ -65,7 +65,7 @@ public class JpaAdminAccountsService implements AdminAccountsService {
         }
     }
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN') and principal.username == 'DefaultAdmin'")
+    @PreAuthorize("hasAuthority('ADMIN') and hasPermission(authentication, null, 'DefaultAdmin')")
     @Transactional
     public void deleteAdminByLogin(String login) {
         Optional<Admin> admin = findByLogin(login);

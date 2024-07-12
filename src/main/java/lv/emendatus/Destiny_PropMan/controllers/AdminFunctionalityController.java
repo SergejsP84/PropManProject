@@ -36,12 +36,16 @@ public class AdminFunctionalityController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    // http://localhost:8080/admin/toggle_tenant_status/9
+
     @PutMapping("/toggle_manager_status/{manager_id}")
     @AdminFunc_ToggleManagerStatus(path = "/toggle_manager_status/{manager_id}")
     public ResponseEntity<Void> toggleManagerStatus(@PathVariable Long manager_id) {
         adminFunctionalityService.toggleManagerStatus(manager_id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    // http://localhost:8080/admin/toggle_manager_status/1
 
     @PostMapping("/register_tenant")
     @AdminFunc_RegisterTenant(path = "/register_tenant")
@@ -56,6 +60,31 @@ public class AdminFunctionalityController {
         }
     }
 
+    /*
+    http://localhost:8080/admin/register_tenant
+
+    BODY:
+    {
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890",
+  "email": "john.doe@example.com",
+  "iban": "DE89370400440532013000",
+  "paymentCardNo": "4921817336104919",
+  "cardValidityDate": "2025-12",
+  "cvv": "123",
+  "login": "johndoe",
+  "password": "SecurePass123",
+  "reEnterPassword": "SecurePass123",
+  "preferredCurrency": {
+    "id": 1,
+    "designation": "EUR",
+    "isBaseCurrency": true,
+    "rateToBase": 1.0
+  }
+ }
+     */
+
     @PostMapping("/register_manager")
     @AdminFunc_RegisterManager(path = "/register_manager")
     public ResponseEntity<String> registerManager(@RequestBody ManagerRegistrationDTO registrationDTO) {
@@ -69,7 +98,27 @@ public class AdminFunctionalityController {
         }
     }
 
-    @PutMapping("/update-tenant/{tenantId}")
+    /*
+    POST: http://localhost:8080/admin/register_manager
+
+    BODY:
+    {
+    "type": "PRIVATE",
+    "managerName": "John Doe",
+    "description": "Manages several properties in the downtown area",
+    "phone": "+1234567890",
+    "email": "johndoe@example.com",
+    "iban": "DE89370400440532013000",
+    "paymentCardNo": "1234567812345678",
+    "cardValidityDate": "2025-12",
+    "cvv": "123",
+    "login": "johndoe_manager",
+    "password": "Password123",
+    "reEnterPassword": "Password123"
+    }
+     */
+
+    @PutMapping("/update_tenant/{tenantId}")
     @AdminFunc_UpdateTenantProfile
     public ResponseEntity<String> updateTenantInformation(@PathVariable Long tenantId, @RequestBody TenantDTO_Profile updatedTenantInfo) {
         try {
@@ -82,7 +131,7 @@ public class AdminFunctionalityController {
         }
     }
 
-    @PutMapping("/update-manager/{managerId}")
+    @PutMapping("/update_manager/{managerId}")
     @AdminFunc_UpdateManagerProfile
     public ResponseEntity<String> updateManagerInformation(@PathVariable Long managerId, @RequestBody ManagerProfileDTO updatedProfile) {
         try {

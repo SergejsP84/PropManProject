@@ -3,16 +3,21 @@ package lv.emendatus.Destiny_PropMan.config;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserRole;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaLoginService;
 import lv.emendatus.Destiny_PropMan.service.implementation.UserDetailsInnerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.security.access.PermissionEvaluator;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
@@ -32,9 +37,11 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 import org.springframework.security.core.Authentication;
 
 import javax.sql.DataSource;
+import java.io.Serializable;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -45,6 +52,13 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(new CustomPermissionEvaluator());
+        return expressionHandler;
     }
 
     private static final String[] SWAGGER_WHITELIST = {
@@ -81,13 +95,18 @@ public class SecurityConfig {
                 // Временные разрешения - по завершении работы те эндпойнты, которые
                 // не несут пользовательских функций, будут закрыты .denyAll()
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/admin/toggle_manager_status/{id}").permitAll()
                         .requestMatchers("/tenants/getall").permitAll()
                         .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoint
                         .requestMatchers("/tenants/getall").permitAll()
                         .requestMatchers("/property/getPropertyById/{id}").permitAll()
                         .requestMatchers("/property/update_country/{id}").permitAll()
                         .requestMatchers("/admins-control/create").hasAuthority("ADMIN")
+                        .requestMatchers("/admins-control/delete").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/toggle_tenant_status/{tenant_id}").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/toggle_manager_status/{id}").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/register_tenant").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/register_manager").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/update_tenant/{tenantId}").hasAuthority("ADMIN")
                         .requestMatchers("/admin/add_amenity").hasAuthority("ADMIN")
                         .requestMatchers("/managerial/manager/{managerId}/bookings").hasAuthority("MANAGER")
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
@@ -117,6 +136,35 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
+    public class CustomPermissionEvaluator implements PermissionEvaluator {
+
+        private static final Logger logger = LoggerFactory.getLogger(CustomPermissionEvaluator.class);
+
+        @Override
+        public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
+            return hasPermission(authentication, null, null, permission);
+        }
+
+        @Override
+        public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) {
+            logger.info("hasPermission called with targetId: {}, targetType: {}, permission: {}", targetId, targetType, permission);
+
+            if (authentication == null || permission == null) {
+                return false;
+            }
+
+            if (permission.equals("DefaultAdmin")) {
+                boolean isDefaultAdmin = authentication.getName().equals("DefaultAdmin");
+                logger.info("isDefaultAdmin: {}", isDefaultAdmin);
+                return isDefaultAdmin;
+            }
+
+            return false;
+        }
+    }
+
 
 
 //    @Autowired

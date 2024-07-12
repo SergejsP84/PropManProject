@@ -17,5 +17,8 @@ public interface TenantMapper {
     Tenant toEntity(TenantDTO_Profile tenantDTO);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "paymentCardNo", ignore = true) // Ignored for manual handling
+    @Mapping(target = "cvv", ignore = true) // Ignored for manual handling
+    @Mapping(target = "cardValidityDate", ignore = true) // Ignored for manual handling
     void updateTenantFromDTO(@MappingTarget Tenant tenant, TenantDTO_Profile tenantDTO);
 }

@@ -1,5 +1,9 @@
 package lv.emendatus.Destiny_PropMan.domain.dto.registration;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.YearMonthSerializer;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
@@ -39,6 +43,8 @@ public class ManagerRegistrationDTO {
     @Size(min = 16, max = 19, message = "Payment card number must be between 16 and 19 characters")
     private String paymentCardNo;
     @NotNull(message = "Card validity date must be provided")
+    @JsonDeserialize(using = YearMonthDeserializer.class)
+    @JsonSerialize(using = YearMonthSerializer.class)
     private YearMonth cardValidityDate;
     @NotNull(message = "CVV must be provided")
     @Size(min = 3, max = 4, message = "CVV must be between 3 and 4 characters")

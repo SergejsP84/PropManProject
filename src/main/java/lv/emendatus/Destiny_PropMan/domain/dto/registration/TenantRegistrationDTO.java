@@ -1,5 +1,9 @@
 package lv.emendatus.Destiny_PropMan.domain.dto.registration;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.YearMonthSerializer;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,7 +37,10 @@ public class TenantRegistrationDTO {
     @NotNull
     @NotEmpty
     @Size(min = 16, max = 19, message = "Payment card number must be between 16 and 19 characters")
+    // CHECKED FOR LUHN-VALIDITY
     private String paymentCardNo;
+    @JsonDeserialize(using = YearMonthDeserializer.class)
+    @JsonSerialize(using = YearMonthSerializer.class)
     @NotNull(message = "Card validity date must be provided")
     private YearMonth cardValidityDate;
     @NotNull(message = "CVV must be provided")

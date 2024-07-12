@@ -5,5 +5,6 @@ public enum NumConfigType {
     SURCHARGE,
     SYSTEM_SETTING,
     SWITCH,
+    COUNTER,
 
 }

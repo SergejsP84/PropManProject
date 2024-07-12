@@ -2,6 +2,10 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.YearMonthSerializer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -60,6 +64,8 @@ public class Tenant {
 
     @NotNull(message = "Card validity date is required")
     @Column(name = "card_validity_date")
+    @JsonDeserialize(using = YearMonthDeserializer.class)
+    @JsonSerialize(using = YearMonthSerializer.class)
     private YearMonth cardValidityDate;
 
     @NotNull(message = "CVV is required")

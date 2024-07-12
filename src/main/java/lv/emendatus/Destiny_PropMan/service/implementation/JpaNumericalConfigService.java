@@ -3,7 +3,6 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
-import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.NumericalConfigNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.NumericalConfigRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.NumericalConfigService;
@@ -20,9 +19,14 @@ import java.util.Optional;
 @Service
 public class JpaNumericalConfigService implements NumericalConfigService {
     private final NumericalConfigRepository repository;
+
+    private final JpaTenantService tenantService;
+    private final JpaManagerService managerService;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
-    public JpaNumericalConfigService(NumericalConfigRepository repository) {
+    public JpaNumericalConfigService(NumericalConfigRepository repository, JpaTenantService tenantService, JpaManagerService managerService) {
         this.repository = repository;
+        this.tenantService = tenantService;
+        this.managerService = managerService;
     }
     @Override
     public List<NumericalConfig> getAllNumericalConfigs() {
@@ -83,6 +87,43 @@ public class JpaNumericalConfigService implements NumericalConfigService {
             if (config.getName().equals(name)) return Optional.of(config);
         }
         return Optional.empty();
+    }
+
+    // AUXILIARY METHODS
+    public Long getLastTenantId() {
+        Optional<NumericalConfig> fetchedConfig = getNumericalConfigByName("LastRegisteredTenantID");
+        if (fetchedConfig.isPresent()) {
+            return fetchedConfig.get().getValue().longValue();
+        } else {
+            NumericalConfig newConfig = new NumericalConfig();
+            newConfig.setName("LastRegisteredTenantID");
+            newConfig.setType(NumConfigType.COUNTER);
+            if (!tenantService.getAllTenants().isEmpty()) {
+                newConfig.setValue(tenantService.getAllTenants().get(tenantService.getAllTenants().size()-1).getId().doubleValue());
+            } else {
+                newConfig.setValue(1.00);
+            }
+            addNumericalConfig(newConfig);
+            return newConfig.getValue().longValue();
+        }
+    }
+
+    public Long getLastManagerId() {
+        Optional<NumericalConfig> fetchedConfig = getNumericalConfigByName("LastRegisteredManagerID");
+        if (fetchedConfig.isPresent()) {
+            return fetchedConfig.get().getValue().longValue();
+        } else {
+            NumericalConfig newConfig = new NumericalConfig();
+            newConfig.setName("LastRegisteredManagerID");
+            newConfig.setType(NumConfigType.COUNTER);
+            if (!managerService.getAllManagers().isEmpty()) {
+                newConfig.setValue(managerService.getAllManagers().get(managerService.getAllManagers().size() - 1).getId().doubleValue());
+            } else {
+                newConfig.setValue(1.00);
+            }
+            addNumericalConfig(newConfig);
+            return newConfig.getValue().longValue();
+        }
     }
 
 

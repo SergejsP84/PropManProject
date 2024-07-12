@@ -17,6 +17,9 @@ public interface ManagerMapper {
     Manager toEntity(ManagerProfileDTO managerDTO);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "paymentCardNo", ignore = true) // Ignored for manual handling
+    @Mapping(target = "cvv", ignore = true) // Ignored for manual handling
+    @Mapping(target = "cardValidityDate", ignore = true) // Ignored for manual handling
     void updateManagerFromDTO(@MappingTarget Manager manager, ManagerProfileDTO managerDTO);
 
 }
