@@ -23,13 +23,13 @@ public class JpaAmenityService implements AmenityService {
     public Optional<Amenity> getAmenityById(Long id) {
         return amenityRepository.findById(id);
     }
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Override
     public void addAmenity(Amenity amenity) {
         amenityRepository.save(amenity);
     }
     @Override
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteAmenity(Long id) {
         amenityRepository.deleteById(id);
     }

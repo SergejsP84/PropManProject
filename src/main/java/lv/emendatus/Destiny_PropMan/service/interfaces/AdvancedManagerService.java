@@ -8,38 +8,39 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 
 public interface AdvancedManagerService {
-    ManagerProfileDTO getManagerProfile(Long managerId);
-    void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile);
+    PublicManagerProfileDTO getManagerProfile(Long managerId);
+    void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile, Principal principal);
 
     List<ManagerPropertyDTO> getManagerPropertyPortfolio(Long managerId);
 
-    ManagerReservationDTO viewReservationsForManager(Long managerId);
+    ManagerReservationDTO viewReservationsForManager(Long managerId, Principal principal);
 
-    ManagerReservationDTO viewReservationsForProperty(Long propertyId);
+    ManagerReservationDTO viewReservationsForProperty(Long propertyId, Principal principal);
 
-    List<BookingDTO_Reservation> getBookingsForProperty(Long propertyId);
+    List<BookingDTO_Reservation> getBookingsForProperty(Long propertyId, Principal principal);
 
-    List<BookingDTO_Reservation> getBookingsForManager(Long managerId);
+    List<BookingDTO_Reservation> getBookingsForManager(Long managerId, Principal principal);
 
     void submitClaimfromManager(Long bookingId, String description);
 
     void closeBookingByManager(Long bookingId);
 
-    FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId);
+    FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId, Principal principal);
 
-    List<Bill> getUnpaidBillsForProperty(Long propertyId);
+    List<Bill> getUnpaidBillsForProperty(Long propertyId, Principal principal);
 
-    List<Bill> getUnpaidBillsForManager(Long managerId);
+    List<Bill> getUnpaidBillsForManager(Long managerId, Principal principal);
 
     void addProperty(PropertyAdditionDTO propertyDTO);
 
-    PropertyDiscount setDiscountOrSurcharge (PropertyDiscountDTO propertyDiscountDTO);
+    PropertyDiscount setDiscountOrSurcharge (PropertyDiscountDTO propertyDiscountDTO, Principal principal);
 
-    void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
+    void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd, Principal principal);
 
     List<Booking> getBookingsPendingApproval (Long managerId);
 
@@ -62,4 +63,5 @@ public interface AdvancedManagerService {
     void deleteBillFromProperty(Long billId, Long propertyId);
 
     void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating);
+    void updateProperty(Long propertyId, PropertyUpdateDTO propertyDTO, Principal principal);
 }

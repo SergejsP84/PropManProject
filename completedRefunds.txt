@@ -1,0 +1,1 @@
+2024-07-20T15:31:42.121006500 Refund 1 completed: EUR 100.0 paid to Tenant 2, booking ID: 1

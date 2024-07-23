@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,13 +21,13 @@ public class Refund {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank(message = "Tenant ID is required")
+    @NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id")
     private Long tenantId;
-    @NotBlank(message = "Booking ID is required")
+    @NotNull(message = "Booking ID is required")
     @Column(name = "booking_id")
     private Long bookingId;
-    @NotBlank(message = "Amount is required")
+    @NotNull(message = "Amount is required")
     @Column(name = "amount")
     private Double amount;
     @Column(name = "created_at")

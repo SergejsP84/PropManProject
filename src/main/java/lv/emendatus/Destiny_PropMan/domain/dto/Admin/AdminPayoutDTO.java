@@ -1,5 +1,9 @@
 package lv.emendatus.Destiny_PropMan.domain.dto.Admin;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +23,8 @@ public class AdminPayoutDTO {
     private Double amount;
     private Currency currency;
     private Timestamp createdAt;
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate dueDate;
     private String paymentDeadline;
 }

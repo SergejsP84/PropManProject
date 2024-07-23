@@ -500,6 +500,8 @@ public class JpaPropertyService implements PropertyService {
     // AUXILIARY METHOD
     @Override
     public List<Property> getPropertiesByManager(Long managerId) {
-        return getAllProperties().stream().filter(property -> property.getManager().getId().equals(managerId)).toList();
+        return getAllProperties().stream()
+                .filter(property -> property.getManager() != null && property.getManager().getId().equals(managerId))
+                .toList();
     }
 }

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
+import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyUpdateDTO;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -26,26 +26,26 @@ import java.lang.annotation.Target;
         tags = {"MANAGER_FUNCTION"},
         parameters = {
                 @Parameter(
-                        name = "managerId",
-                        description = "ID of the manager whose profile is to be updated",
+                        name = "propertyId",
+                        description = "ID of the property to be updated",
                         required = true,
                         example = "1",
                         schema = @Schema(type = "integer")
                 )
         },
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                description = "Updated manager profile information",
+                description = "Updated property details",
                 required = true,
                 content = @Content(
                         mediaType = "application/json",
-                        schema = @Schema(implementation = ManagerProfileDTO.class),
-                        examples = @ExampleObject(value = "{\"id\":1,\"managerName\":\"John Doe\",\"description\":\"Experienced manager\",\"phone\":\"123-456-7890\",\"email\":\"john.doe@example.com\",\"iban\":\"DE89370400440532013000\",\"paymentCardNo\":\"1234-5678-9012-3456\"}")
+                        schema = @Schema(implementation = PropertyUpdateDTO.class),
+                        examples = @ExampleObject(value = "{\"description\":\"Spacious apartment with sea view\",\"type\":\"Apartment\",\"status\":\"Available\",\"sizeM2\":85,\"address\":\"123 Beach St\",\"settlement\":\"Sunnyville\",\"country\":\"Countryland\",\"pricePerDay\":100,\"pricePerWeek\":600,\"pricePerMonth\":2000}")
                 )
         ),
         responses = {
                 @ApiResponse(
                         responseCode = "200",
-                        description = "Profile updated successfully.",
+                        description = "Property updated successfully.",
                         content = @Content(
                                 mediaType = "application/json",
                                 schema = @Schema(implementation = Void.class)
@@ -53,11 +53,20 @@ import java.lang.annotation.Target;
                 ),
                 @ApiResponse(
                         responseCode = "404",
-                        description = "Manager not found.",
+                        description = "Property not found.",
                         content = @Content(
                                 mediaType = "application/json",
                                 schema = @Schema(implementation = String.class),
-                                examples = @ExampleObject(value = "No manager found with ID: 1")
+                                examples = @ExampleObject(value = "No property found with ID: 1")
+                        )
+                ),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied. You do not have permission to update this property.",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = String.class),
+                                examples = @ExampleObject(value = "You do not have permission to change the details of a Property operated by someone else.")
                         )
                 ),
                 @ApiResponse(
@@ -66,15 +75,15 @@ import java.lang.annotation.Target;
                         content = @Content(
                                 mediaType = "application/json",
                                 schema = @Schema(implementation = String.class),
-                                examples = @ExampleObject(value = "An error occurred while updating manager profile: error message")
+                                examples = @ExampleObject(value = "An error occurred while updating the property: error message")
                         )
                 )
         },
         security = {
-                @SecurityRequirement(name = "Available to a specific Manager only")
+                @SecurityRequirement(name = "Available to the property's Manager only")
         }
 )
-public @interface ManagerFunc_UpdateManagerProfile {
+public @interface ManagerFunc_UpdateProperty {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {};
 }

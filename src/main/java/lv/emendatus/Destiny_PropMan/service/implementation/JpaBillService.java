@@ -40,12 +40,12 @@ public class JpaBillService implements BillService {
         return billRepository.findById(id);
     }
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+//    @PreAuthorize("hasRole('ROLE_MANAGER')")
     public void addBill(Bill bill) {
         billRepository.save(bill);
     }
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+//    @PreAuthorize("hasRole('ROLE_MANAGER')")
     public void deleteBill(Long id) {
         billRepository.deleteById(id);
     }

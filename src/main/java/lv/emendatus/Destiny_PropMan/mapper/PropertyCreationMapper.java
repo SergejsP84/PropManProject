@@ -13,5 +13,11 @@ public interface PropertyCreationMapper {
 
     @Mapping(target = "id", ignore = true) // Since id is assigned automatically
     @Mapping(target = "createdAt", ignore = true) // Optional: Set createdAt in the service layer
+    @Mapping(target = "manager", ignore = true) // Ignore manager as it will be set separately
     Property toEntity(PropertyAdditionDTO propertyDTO);
+
+    @Mapping(target = "id", ignore = true) // Since id is assigned automatically
+    @Mapping(target = "createdAt", ignore = true) // Optional: Set createdAt in the service layer
+    @Mapping(target = "manager", ignore = true) // Ignore manager as it will be set separately
+    Property fromDTO(PropertyAdditionDTO propertyDTO);
 }

@@ -3,6 +3,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,9 +28,12 @@ public class Currency {
     @Column(name = "designation")
     private String designation;
 
+    @NotNull
     @Column(name = "is_base_currency")
     private Boolean isBaseCurrency;
 
+
+    @NotNull
     @Column(name = "rate_to_base")
     private Double rateToBase;
 

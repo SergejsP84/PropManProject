@@ -696,6 +696,7 @@ public class SampleBaseCreator implements ApplicationRunner {
                     currency1.setId(1L);
                     currency1.setDesignation("EUR");
                     currency1.setIsBaseCurrency(true);
+                    currency1.setRateToBase(1.00);
                     currencyService.addCurrency(currency1);
                     System.out.println("   * Currency " + currency1.getId() + ": " + currency1.getDesignation() + " set up and assigned as the base currency.");
                     Currency currency2 = new Currency();
@@ -703,17 +704,20 @@ public class SampleBaseCreator implements ApplicationRunner {
                     currency2.setDesignation("USD");
                     currency2.setIsBaseCurrency(false);
                     currencyService.addCurrency(currency2);
+                    currency2.setRateToBase(1.05);
                     System.out.println("   * Currency " + currency2.getId() + ": " + currency2.getDesignation() + " set up.");
                     Currency currency3 = new Currency();
                     currency3.setId(3L);
                     currency3.setDesignation("THB");
                     currency3.setIsBaseCurrency(false);
+                    currency3.setRateToBase(39.5);
                     currencyService.addCurrency(currency3);
                     System.out.println("   * Currency " + currency3.getId() + ": " + currency3.getDesignation() + " set up.");
                     Currency currency4 = new Currency();
                     currency4.setId(4L);
-                    currency4.setDesignation("CNU");
+                    currency4.setDesignation("CNY");
                     currency4.setIsBaseCurrency(false);
+                    currency4.setRateToBase(7.91);
                     currencyService.addCurrency(currency4);
                     System.out.println("   * Currency " + currency4.getId() + ": " + currency4.getDesignation() + " set up.");
 

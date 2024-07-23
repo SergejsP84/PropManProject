@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import lv.emendatus.Destiny_PropMan.mapper.*;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
@@ -10,10 +11,6 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
 import lv.emendatus.Destiny_PropMan.exceptions.*;
-import lv.emendatus.Destiny_PropMan.mapper.BookingMapper;
-import lv.emendatus.Destiny_PropMan.mapper.ManagerMapper;
-import lv.emendatus.Destiny_PropMan.mapper.ManagerPropertyMapper;
-import lv.emendatus.Destiny_PropMan.mapper.PropertyCreationMapper;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.BookingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
@@ -31,6 +28,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,6 +40,7 @@ import java.util.stream.Collectors;
 import org.springframework.util.StringUtils;
 
 import javax.mail.MessagingException;
+import javax.swing.text.html.Option;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,12 +75,14 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     @Autowired
     private final ManagerPropertyMapper managerPropertyMapper;
     @Autowired
+    private final PublicManagerMapper publicManagerMapper;
+    @Autowired
     private final PropertyCreationMapper propertyCreationMapper;
     @Autowired
     private final JpaTenantRatingService ratingService;
     @Autowired
     private final BookingMapper bookingMapper;
-    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaEmailService emailService, JpaPropertyLockService lockService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PropertyCreationMapper propertyCreationMapper, JpaTenantRatingService ratingService, BookingMapper bookingMapper) {
+    public JpaAdvancedManagerService(ManagerRepository managerRepository, BookingRepository bookingRepository, JpaManagerService managerService, JpaBookingService bookingService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaClaimService claimService, JpaTenantService tenantService, JpaLeasingHistoryService leasingHistoryService, JpaTenantPaymentService tenantPaymentService, JpaBillService billService, JpaPropertyDiscountService discountService, JpaEarlyTerminationRequestService terminationService, JpaRefundService refundService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaEmailService emailService, JpaPropertyLockService lockService, ManagerMapper managerMapper, ManagerPropertyMapper managerPropertyMapper, PublicManagerMapper publicManagerMapper, PropertyCreationMapper propertyCreationMapper, JpaTenantRatingService ratingService, BookingMapper bookingMapper) {
         this.managerRepository = managerRepository;
         this.bookingRepository = bookingRepository;
         this.managerService = managerService;
@@ -102,17 +103,18 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         this.lockService = lockService;
         this.managerMapper = managerMapper;
         this.managerPropertyMapper = managerPropertyMapper;
+        this.publicManagerMapper = publicManagerMapper;
         this.propertyCreationMapper = propertyCreationMapper;
         this.ratingService = ratingService;
         this.bookingMapper = bookingMapper;
     }
 
     @Override
-    public ManagerProfileDTO getManagerProfile(Long managerId) {
+    public PublicManagerProfileDTO getManagerProfile(Long managerId) {
         Optional<Manager> managerOptional = managerRepository.findById(managerId);
         if (managerOptional.isPresent()) {
             Manager manager = managerOptional.get();
-            return managerMapper.INSTANCE.toDTO(manager);
+            return publicManagerMapper.toDTO(manager);
         } else {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
             throw new ManagerNotFoundException("No manager found with ID: " + managerId);
@@ -120,12 +122,19 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
-    public void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile) {
+    public void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile, Principal principal) {
+        String authenticatedUsername = principal.getName();
         Optional<Manager> managerOptional = managerRepository.findById(managerId);
         if (managerOptional.isPresent()) {
             Manager existingManager = managerOptional.get();
+            if (authenticatedUsername.equals(existingManager.getLogin())) {
+                managerMapper.updateManagerFromDTO(existingManager, updatedProfile);
+                managerRepository.save(existingManager);
+            } else {
+                throw new AccessDeniedException("You do not have permission to update this profile.");
+            }
             managerMapper.updateManagerFromDTO(existingManager, updatedProfile);
             managerRepository.save(existingManager);
         } else {
@@ -144,8 +153,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     // USED AS AN AUXILIARY METHOD
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
-    public ManagerReservationDTO viewReservationsForProperty(Long propertyId) {
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public ManagerReservationDTO viewReservationsForProperty(Long propertyId, Principal principal) {
         Optional<Property> property = propertyService.getPropertyById(propertyId);
         if (property.isPresent()) {
             Set<Long> reservationIds = getReservationIdsForProperty(property.get());
@@ -158,8 +167,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     // USED AS AN AUXILIARY METHOD
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
-    public ManagerReservationDTO viewReservationsForManager(Long managerId) {
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
+    public ManagerReservationDTO viewReservationsForManager(Long managerId, Principal principal) {
         Optional<Manager> manager = managerService.getManagerById(managerId);
         if (manager.isPresent()) {
             Set<Long> reservationIds = new HashSet<>();
@@ -175,8 +184,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    public List<BookingDTO_Reservation> getBookingsForProperty(Long propertyId) {
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public List<BookingDTO_Reservation> getBookingsForProperty(Long propertyId, Principal principal) {
         Optional<Property> property = propertyService.getPropertyById(propertyId);
         if (property.isPresent()) {
             String managersLogin = property.get().getManager().getLogin();
@@ -187,7 +196,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                     throw new AccessDeniedException("You do not have permission to access this resource.");
                 }
             }
-            ManagerReservationDTO bunch = viewReservationsForProperty(propertyId);
+            ManagerReservationDTO bunch = viewReservationsForProperty(propertyId, principal);
             List<BookingDTO_Reservation> bookingDTOs = new ArrayList<>();
             for (Long reservationId : bunch.getReservationIds()) {
                 Optional<Booking> booking = bookingService.getBookingById(reservationId);
@@ -202,23 +211,33 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
-    public List<BookingDTO_Reservation> getBookingsForManager(Long managerId) {
-        ManagerReservationDTO bunch = viewReservationsForManager(managerId);
-        List<BookingDTO_Reservation> bookingDTOs = new ArrayList<>();
-        for (Long reservationId : bunch.getReservationIds()) {
-            Optional<Booking> booking = bookingService.getBookingById(reservationId);
-            BookingDTO_Reservation bookingDTO;
-            if (booking.isPresent()) {
-                bookingDTO = bookingMapper.toDTO(booking.get());
-                bookingDTOs.add(bookingDTO);
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public List<BookingDTO_Reservation> getBookingsForManager(Long managerId, Principal principal) {
+        String authenticatedUsername = principal.getName();
+        Optional<Manager> managerOptional = managerRepository.findById(managerId);
+        if (managerOptional.isPresent()) {
+            Manager existingManager = managerOptional.get();
+            if (authenticatedUsername.equals(existingManager.getLogin())) {
+                ManagerReservationDTO bunch = viewReservationsForManager(managerId, principal);
+                List<BookingDTO_Reservation> bookingDTOs = new ArrayList<>();
+                for (Long reservationId : bunch.getReservationIds()) {
+                    Optional<Booking> booking = bookingService.getBookingById(reservationId);
+                    BookingDTO_Reservation bookingDTO;
+                    if (booking.isPresent()) {
+                        bookingDTO = bookingMapper.toDTO(booking.get());
+                        bookingDTOs.add(bookingDTO);
+                    }
+                }
+                return bookingDTOs;
+            } else {
+                throw new AccessDeniedException("You do not have permission to view other Managers' Booking lists.");
             }
         }
-        return bookingDTOs;
+        return null;
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
     public void submitClaimfromManager(Long bookingId, String description) {
         Optional<Booking> booking = bookingService.getBookingById(bookingId);
@@ -272,7 +291,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
     public void closeBookingByManager(Long bookingId) {
         int delaySetOrDefault = 7;
@@ -323,114 +342,131 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
-    public FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId) {
-        List<TenantPayment> completedPaymentsWithinPeriod =
-                tenantPaymentService.getPaymentsByDateRange(periodStart.atStartOfDay(), periodEnd.atStartOfDay())
-                        .stream().filter(tenantPayment -> tenantPayment.getManagerId().equals(managerId)).toList()
-                        .stream().filter(TenantPayment::isFeePaidToManager).toList();
-        FinancialStatementDTO statementDTO = new FinancialStatementDTO();
+    public FinancialStatementDTO generateFinancialStatement(LocalDate periodStart, LocalDate periodEnd, Long managerId, Principal principal) {
+        String authenticatedUsername = principal.getName();
 
-        Map<Long, Double> income = new HashMap<>();
-        for (TenantPayment payment : completedPaymentsWithinPeriod) {
-            Long propertyId = payment.getAssociatedPropertyId();
-            Double paymentAmount = payment.getManagerPayment();
-            if (income.containsKey(propertyId)) {
-                Double totalIncome = income.get(propertyId) + paymentAmount;
-                income.put(propertyId, totalIncome);
-                if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
-                    List<Currency> currencies = statementDTO.getIncomeCurrencies();
-                    currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
-                    statementDTO.setIncomeCurrencies(currencies);
-                }
-            } else {
-                if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
-                    List<Currency> currencies = statementDTO.getIncomeCurrencies();
-                    currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
-                    statementDTO.setIncomeCurrencies(currencies);
-                }
-                income.put(propertyId, paymentAmount);
-            }
-        }
-        statementDTO.setIncome(income);
+        if (managerService.getManagerById(managerId).isPresent() && authenticatedUsername.equals(managerService.getManagerById(managerId).get().getLogin())) {
+            List<TenantPayment> completedPaymentsWithinPeriod =
+                    tenantPaymentService.getPaymentsByDateRange(periodStart.atStartOfDay(), periodEnd.atStartOfDay())
+                            .stream().filter(tenantPayment -> tenantPayment.getManagerId().equals(managerId)).toList()
+                            .stream().filter(TenantPayment::isFeePaidToManager).toList();
+            FinancialStatementDTO statementDTO = new FinancialStatementDTO();
 
-        List<Property> managerProperties = propertyService.getPropertiesByManager(managerId);
-        List<Bill> managersBills = new ArrayList<>();
-        for (Property property : managerProperties) {
-            if (property.getManager().getId().equals(managerId)) {
-                managersBills.addAll(billService.getBillsByProperty(property));
-            }
-        }
-        List<Bill> billsWithinPeriod = managersBills.stream()
-                .filter(bill -> !bill.getDueDate().toLocalDateTime().toLocalDate().isBefore(periodStart)
-                        && !bill.getDueDate().toLocalDateTime().toLocalDate().isAfter(periodEnd)).toList();
-
-        List<Map<String, Double>> expenses = new ArrayList<>();
-        for (Property property : managerProperties) {
-            Map<String, Double> record = new HashMap<>();
-            for (Bill bill : billsWithinPeriod) {
-                String category = "Property " + property.getId() + "(" + bill.getCurrency().getDesignation() + "): " + bill.getExpenseCategory();
-                Double paymentAmount = bill.getAmount();
-                if (record.containsKey(category)) {
-                    Double totalAmount = record.get(category) + paymentAmount;
-                    record.put(category, totalAmount);
+            Map<Long, Double> income = new HashMap<>();
+            for (TenantPayment payment : completedPaymentsWithinPeriod) {
+                Long propertyId = payment.getAssociatedPropertyId();
+                Double paymentAmount = payment.getManagerPayment();
+                if (income.containsKey(propertyId)) {
+                    Double totalIncome = income.get(propertyId) + paymentAmount;
+                    income.put(propertyId, totalIncome);
+                    if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
+                        List<Currency> currencies = statementDTO.getIncomeCurrencies();
+                        currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
+                        statementDTO.setIncomeCurrencies(currencies);
+                    }
                 } else {
-                    record.put(category, paymentAmount);
+                    if (currencyService.getCurrencyById(payment.getCurrency().getId()).isPresent()) {
+                        List<Currency> currencies = statementDTO.getIncomeCurrencies();
+                        currencies.add(currencyService.getCurrencyById(payment.getCurrency().getId()).get());
+                        statementDTO.setIncomeCurrencies(currencies);
+                    }
+                    income.put(propertyId, paymentAmount);
                 }
             }
-            if (!record.isEmpty()) expenses.add(record);
-        }
-        statementDTO.setExpenses(expenses);
+            statementDTO.setIncome(income);
 
-        return statementDTO;
+            List<Property> managerProperties = propertyService.getPropertiesByManager(managerId);
+            List<Bill> managersBills = new ArrayList<>();
+            for (Property property : managerProperties) {
+                if (property.getManager().getId().equals(managerId)) {
+                    managersBills.addAll(billService.getBillsByProperty(property));
+                }
+            }
+            List<Bill> billsWithinPeriod = managersBills.stream()
+                    .filter(bill -> !bill.getDueDate().toLocalDateTime().toLocalDate().isBefore(periodStart)
+                            && !bill.getDueDate().toLocalDateTime().toLocalDate().isAfter(periodEnd)).toList();
+
+            List<Map<String, Double>> expenses = new ArrayList<>();
+            for (Property property : managerProperties) {
+                Map<String, Double> record = new HashMap<>();
+                for (Bill bill : billsWithinPeriod) {
+                    String category = "Property " + property.getId() + "(" + bill.getCurrency().getDesignation() + "): " + bill.getExpenseCategory();
+                    Double paymentAmount = bill.getAmount();
+                    if (record.containsKey(category)) {
+                        Double totalAmount = record.get(category) + paymentAmount;
+                        record.put(category, totalAmount);
+                    } else {
+                        record.put(category, paymentAmount);
+                    }
+                }
+                if (!record.isEmpty()) expenses.add(record);
+            }
+            statementDTO.setExpenses(expenses);
+
+            return statementDTO;
+        } else {
+            throw new AccessDeniedException("You do not have permission to generate financial reports on other Managers.");
+        }
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
-    public List<Bill> getUnpaidBillsForProperty(Long propertyId) {
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public List<Bill> getUnpaidBillsForProperty(Long propertyId, Principal principal) {
+        String authenticatedUsername = principal.getName();
         Optional<Property> property = propertyService.getPropertyById(propertyId);
         if (property.isPresent()) {
-            Long managerId = property.get().getManager().getId();
-            return billService.getBillsByProperty(property.get())
-                    .stream()
-                    .filter(bill -> !bill.isPaid())
-                    .collect(Collectors.toList());
+            if (authenticatedUsername.equals(property.get().getManager().getLogin())) {
+                return billService.getBillsByProperty(property.get())
+                        .stream()
+                        .filter(bill -> !bill.isPaid())
+                        .collect(Collectors.toList());
+            } else {
+                throw new AccessDeniedException("You can only view Bills for your own Properties.");
+            }
         } else {
             throw new PropertyNotFoundException("Could not find the specified property!");
         }
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
-    public List<Bill> getUnpaidBillsForManager(Long managerId) {
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public List<Bill> getUnpaidBillsForManager(Long managerId, Principal principal) {
         List<Property> managerProperties = propertyService.getPropertiesByManager(managerId);
         List<Bill> unpaidBills = new ArrayList<>();
-        for (Property property : managerProperties) {
-            Optional<Property> optionalProperty = propertyService.getPropertyById(property.getId());
-            if (optionalProperty.isPresent()) {
-            List<Bill> propertyBills = billService.getBillsByProperty(optionalProperty.get());
-            for (Bill bill : propertyBills) {
-                if (!bill.isPaid()) {
-                    unpaidBills.add(bill);
+        String authenticatedUsername = principal.getName();
+        if (managerService.getManagerById(managerId).isPresent() && authenticatedUsername.equals(managerService.getManagerById(managerId).get().getLogin())) {
+            for (Property property : managerProperties) {
+                Optional<Property> optionalProperty = propertyService.getPropertyById(property.getId());
+                if (optionalProperty.isPresent()) {
+                    List<Bill> propertyBills = billService.getBillsByProperty(optionalProperty.get());
+                    for (Bill bill : propertyBills) {
+                        if (!bill.isPaid()) {
+                            unpaidBills.add(bill);
+                        }
                     }
                 }
             }
+            return unpaidBills;
+        } else {
+        throw new AccessDeniedException("You do not have permission to view other Managers' Bills.");
         }
-        return unpaidBills;
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
     public void addProperty(PropertyAdditionDTO propertyDTO) {
-        Optional<Manager> optionalManager = managerService.getManagerById(propertyDTO.getManager().getId());
+        Optional<Manager> optionalManager = managerService.getManagerById(propertyDTO.getManagerId());
         if (optionalManager.isPresent()) {
             if (optionalManager.get().isActive()) {
                 Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
+                property.setManager(optionalManager.get());
                 property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
                 property.setBills(new HashSet<>());
                 property.setBookings(new HashSet<>());
+                property.setPhotos(new ArrayList<>());
                 propertyService.addProperty(property);
             } else {
                 LOGGER.warn("Inactive managers cannot add properties.");
@@ -442,42 +478,58 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
-    public PropertyDiscount setDiscountOrSurcharge(PropertyDiscountDTO propertyDiscountDTO) {
-        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyDiscountDTO.getPropertyId());
-        if (optionalProperty.isPresent()) {
-            Property property = optionalProperty.get();
-            if (!propertyDiscountDTO.getManagerId().equals(property.getManager().getId())) {
-                LOGGER.error("Cannot set discounts or surcharges for properties operated by a different manager!");
-                throw new IllegalArgumentException("Cannot set discounts or surcharges for properties operated by a different manager!");
+    public PropertyDiscount setDiscountOrSurcharge(PropertyDiscountDTO propertyDiscountDTO, Principal principal) {
+        Optional<Manager> optionalManager = managerService.getManagerById(propertyDiscountDTO.getManagerId());
+        if (optionalManager.isPresent()) {
+            String authenticatedUsername = principal.getName();
+            if (authenticatedUsername.equals(optionalManager.get().getLogin())) {
+                Optional<Property> optionalProperty = propertyService.getPropertyById(propertyDiscountDTO.getPropertyId());
+                if (optionalProperty.isPresent()) {
+                    Property property = optionalProperty.get();
+                    if (!propertyDiscountDTO.getManagerId().equals(property.getManager().getId())) {
+                        LOGGER.error("Cannot set discounts or surcharges for properties operated by a different manager!");
+                        throw new IllegalArgumentException("Cannot set discounts or surcharges for properties operated by a different manager!");
+                    }
+                    PropertyDiscount propertyDiscount = new PropertyDiscount();
+                    propertyDiscount.setProperty(property);
+                    propertyDiscount.setPercentage(propertyDiscountDTO.getPercentage());
+                    propertyDiscount.setPeriodStart(propertyDiscountDTO.getPeriodStart());
+                    propertyDiscount.setPeriodEnd(propertyDiscountDTO.getPeriodEnd());
+                    propertyDiscount.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+                    discountService.addPropertyDiscount(propertyDiscount);
+                    return propertyDiscount;
+                } else {
+                    LOGGER.error("No property with the specified ID exists in the database.");
+                    throw new PropertyNotFoundException("No property with the specified ID exists in the database.");
+                }
+            } else {
+                throw new AccessDeniedException("You do not have permission to set discounts or surcharges for Properties operated by other Managers.");
             }
-            PropertyDiscount propertyDiscount = new PropertyDiscount();
-            propertyDiscount.setProperty(property);
-            propertyDiscount.setPercentage(propertyDiscountDTO.getPercentage());
-            propertyDiscount.setPeriodStart(propertyDiscountDTO.getPeriodStart());
-            propertyDiscount.setPeriodEnd(propertyDiscountDTO.getPeriodEnd());
-            propertyDiscount.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
-            discountService.addPropertyDiscount(propertyDiscount);
-            return propertyDiscount;
         } else {
-            LOGGER.error("No property with the specified ID exists in the database.");
-            throw new PropertyNotFoundException("No property with the specified ID exists in the database.");
+            LOGGER.error("No manager with the specified ID exists in the database.");
+            throw new ManagerNotFoundException("No manager with the specified ID exists in the database.");
         }
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
-    public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd) {
+    public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd, Principal principal) {
+        String authenticatedUsername = principal.getName();
         Optional<Property> property = propertyService.getPropertyById(propertyId);
+
         if (property.isPresent()) {
-            Long managerId = property.get().getManager().getId();
+            if (authenticatedUsername.equals(property.get().getManager().getLogin())) {
             List<PropertyDiscount> propertyDiscounts = discountService.getDiscountsForPropertyWithinPeriod(propertyId, periodStart, periodEnd);
             for (PropertyDiscount discount : propertyDiscounts) {
                 discountService.deletePropertyDiscount(discount.getId());
             }
             LOGGER.log(Level.INFO, "Deleted " + propertyDiscounts.size() + " discounts and surcharges for property with ID: " + propertyId + " within the period from " + periodStart + " to " + periodEnd);
+            } else {
+                throw new AccessDeniedException("You do not have permission to reset discounts or surcharges for other Managers' Properties.");
+            }
         }
         else {
             throw new PropertyNotFoundException("Could not find the specified property!");
@@ -485,7 +537,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     public List<Booking> getBookingsPendingApproval(Long managerId) {
         if (managerService.getManagerById(managerId).isPresent()) {
             Set <Booking> managersBookings = bookingService.getBookingsByManager(managerService.getManagerById(managerId).get());
@@ -497,7 +549,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void approveBooking(Long bookingId) {
         if (bookingService.getBookingById(bookingId).isPresent()) {
@@ -520,7 +572,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void declineBooking(Long bookingId) {
         if (bookingService.getBookingById(bookingId).isPresent()) {
@@ -545,7 +597,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void acceptEarlyTermination(Long requestId, String reply) {
         Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
@@ -603,7 +655,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void declineEarlyTermination(Long requestId, String reply) {
         Optional<EarlyTerminationRequest> requestOptional = terminationService.getETRequestById(requestId);
@@ -631,7 +683,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void removeProperty(Long propertyId) {
         boolean canRemove = true;
@@ -688,7 +740,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void uploadPhotos(Long propertyId, MultipartFile[] files) throws FileStorageException {
         Property property = propertyService.getPropertyById(propertyId)
@@ -715,7 +767,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void removePhoto(Long propertyId, String photoUrl) throws EntityNotFoundException, FileStorageException {
         Property property = propertyService.getPropertyById(propertyId)
@@ -737,7 +789,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd) {
         Long managerId;
@@ -789,7 +841,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void unlockProperty(Long propertyId) {
         Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
@@ -811,7 +863,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void addBillToProperty(BillAdditionDTO dto, Long propertyId) {
         Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
@@ -837,7 +889,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void deleteBillFromProperty(Long billId, Long propertyId) {
         Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
@@ -860,7 +912,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
     @Transactional
     public void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating) {
         Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
@@ -919,6 +971,34 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         }
     }
 
+    @PreAuthorize("hasAuthority('MANAGER')")
+    @Override
+    public void updateProperty(Long propertyId, PropertyUpdateDTO propertyDTO, Principal principal) {
+        String authenticatedUsername = principal.getName();
+        Optional<Property> optionalProperty = propertyService.getPropertyById(propertyId);
+        if (optionalProperty.isPresent()) {
+            Property property = optionalProperty.get();
+            if (authenticatedUsername.equals(property.getManager().getLogin())) {
+                if (!propertyDTO.getDescription().equals(property.getDescription())) property.setDescription(propertyDTO.getDescription());
+                if (!propertyDTO.getType().equals(property.getType())) property.setType(propertyDTO.getType());
+                if (!propertyDTO.getStatus().equals(property.getStatus())) property.setStatus(propertyDTO.getStatus());
+                if (!propertyDTO.getSizeM2().equals(property.getSizeM2())) property.setSizeM2(propertyDTO.getSizeM2());
+                if (!propertyDTO.getAddress().equals(property.getAddress())) property.setAddress(propertyDTO.getAddress());
+                if (!propertyDTO.getSettlement().equals(property.getSettlement())) property.setSettlement(propertyDTO.getSettlement());
+                if (!propertyDTO.getCountry().equals(property.getCountry())) property.setCountry(propertyDTO.getCountry());
+                if (!propertyDTO.getPricePerDay().equals(property.getPricePerDay())) property.setPricePerDay(propertyDTO.getPricePerDay());
+                if (!propertyDTO.getPricePerWeek().equals(property.getPricePerWeek())) property.setPricePerWeek(propertyDTO.getPricePerWeek());
+                if (!propertyDTO.getPricePerMonth().equals(property.getPricePerMonth())) property.setPricePerMonth(propertyDTO.getPricePerMonth());
+                propertyService.addProperty(property);
+            } else {
+                throw new AccessDeniedException("You do not have permission to change the details of a Property operated by someone else.");
+            }
+        } else {
+            LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
+            throw new PropertyNotFoundException("No property found with ID: " + propertyId);
+        }
+    }
+
     // AUXILIARY METHODS
     public String createConfirmationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
@@ -957,7 +1037,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         String info = "We are sorry to inform you that your early termination request for booking with ID " + request.getBookingId() + " has been declined by the property's manager.\n\n";
         String info2 = "Our current policy does entitle our managers to abstain from granting early termination requests if there is a valid reason for that. Here is the comment submitted by the manager:";
         String managersComment = request.getComment() + "\n\n";
-        String closing = "Please accept our sincere apologies. If you think you request was denied wrongfully, please contact us to appeal against this manager's decision. \n\nBest regards,\n[Your Company Name]";
+        String closing = "Please accept our sincere apologies. If you think your request was denied wrongfully, please contact us to appeal against this manager's decision. \n\nBest regards,\n[Your Company Name]";
         return greeting + info + info2 + managersComment + closing;
     }
 }

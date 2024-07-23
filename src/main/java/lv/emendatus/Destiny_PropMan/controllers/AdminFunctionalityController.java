@@ -143,12 +143,14 @@ public class AdminFunctionalityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating manager information.");
         }
     }
+
+    // http://localhost:8080/admin/delete_tenant/3
     @DeleteMapping("/delete_tenant/{tenantId}")
     @AdminFunc_RemoveTenant
     public ResponseEntity<String> removeTenant(@PathVariable Long tenantId) {
         try {
             adminFunctionalityService.removeTenant(tenantId);
-            return ResponseEntity.ok("Tenant with ID " + tenantId + " has been removed.");
+            return ResponseEntity.ok("Tenant removal method completed.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to remove tenant: " + e.getMessage());
         }
@@ -158,7 +160,7 @@ public class AdminFunctionalityController {
     public ResponseEntity<String> removeManager(@PathVariable Long managerId) {
         try {
             adminFunctionalityService.removeManager(managerId);
-            return ResponseEntity.ok("Manager with ID " + managerId + " has been removed.");
+            return ResponseEntity.ok("Manager removal method completed.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to remove manager: " + e.getMessage());
         }
@@ -259,7 +261,7 @@ public class AdminFunctionalityController {
         return ResponseEntity.ok("Numerical configurations updated successfully.");
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+
     @PostMapping("/add_amenity")
     @AdminFunc_AddAmenityToDatabase
     public ResponseEntity<Void> addAmenityToDatabase(@RequestParam String amenityDescription) {
@@ -267,7 +269,6 @@ public class AdminFunctionalityController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/remove_amenity/{amenityId}")
     @AdminFunc_RemoveAmenity
     public ResponseEntity<Void> removeAmenityFromDatabase(@PathVariable Long amenityId) {

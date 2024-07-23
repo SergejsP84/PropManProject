@@ -1,0 +1,1 @@
+2024-07-20T16:23:04.734667 Payout 1 completed: EUR 324.0 paid to Manager 4, booking ID: 14

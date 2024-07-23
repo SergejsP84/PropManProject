@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -38,6 +40,9 @@ import java.util.*;
 
 @Service
 public class JpaAdminFunctionalityService implements AdminFunctionalityService {
+
+//    @PersistenceContext
+//    private EntityManager entityManager;
 
     public final JpaTenantService tenantService;
     public final JpaManagerService managerService;
@@ -421,15 +426,17 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void removeTenant(Long tenantId) {
+        System.out.println("removeTenant method initiated");
         boolean obstaclesPresent = false;
         if (tenantService.getTenantById(tenantId).isPresent()) {
             Tenant tenant = tenantService.getTenantById(tenantId).get();
+            System.out.println("Tenant found - " + tenant.getFirstName() + tenant.getLastName());
 
             // Processing potentially associated Claims
             List<Claim> claimsByTenant = claimService.getClaimsFiledByTenant(tenantId);
             List<Claim> claimsAgainstTenant = claimService.getClaimsAgainstTenant(tenantId);
-            claimsByTenant.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
-            claimsAgainstTenant.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
+            if (!claimsByTenant.isEmpty()) claimsByTenant.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
+            if (!claimsAgainstTenant.isEmpty()) claimsAgainstTenant.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
             if (!claimsByTenant.isEmpty() || !claimsAgainstTenant.isEmpty()) {
                 StringBuilder sb = new StringBuilder("Tenant removal failed: there are Claims pending from or against the Tenant: \\n");
                 sb.append("Claims filed by Tenant: ");
@@ -451,18 +458,29 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 return;
             }
 
+            System.out.println("Passed the claim check stage");
+
+
             // Processing potentially associated Bookings
             Set<Booking> bookingsByTenant = bookingService.getBookingsByTenant(tenant);
             if (!bookingsByTenant.isEmpty()) {
+                System.out.println("Checking bookings...");
                 for (Booking booking : bookingsByTenant) {
                     if (booking.getStatus().equals(BookingStatus.PENDING_APPROVAL)) {
                         booking.setStatus(BookingStatus.CANCELLED);
                     }
+                    System.out.println("Done with bookings pending approval");
                     if (booking.getStatus().equals(BookingStatus.PENDING_PAYMENT)) {
                         List<TenantPayment> payments = paymentService.getPaymentsByTenant(tenantId);
-                        payments.removeIf(payment -> !payment.isReceivedFromTenant());
-                        if (payments.isEmpty()) booking.setStatus(BookingStatus.CANCELLED);
+                        List<TenantPayment> completedPayments = new ArrayList<>();
+                        for (TenantPayment tenantPayment : payments) {
+                            if (tenantPayment.isReceivedFromTenant()) {
+                                completedPayments.add(tenantPayment);
+                            }
+                        }
+                        if (completedPayments.isEmpty()) booking.setStatus(BookingStatus.CANCELLED);
                     }
+                    System.out.println("Done with bookings pending payment");
                     if (booking.getStatus().equals(BookingStatus.CONFIRMED)) {
                         Refund refund = new Refund();
                         refund.setTenantId(tenantId);
@@ -472,12 +490,14 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         refundService.addRefund(refund);
                         booking.setStatus(BookingStatus.CANCELLED);
                     }
+                    System.out.println("Done with cancelling paid bookings");
                     if (booking.getStatus().equals(BookingStatus.CURRENT)) {
                         LOGGER.log(Level.WARN, "Cannot remove a Tenant currently residing in a Property.");
                         System.out.println("Cannot remove a Tenant currently residing in a Property.");
                         obstaclesPresent = true;
                         return;
                     }
+                    System.out.println("Done with processing current bookings");
                     if (booking.getStatus().equals(BookingStatus.OVER)) {
                         LeasingHistory history = new LeasingHistory();
                         Optional<Tenant> optionalTenant = tenantService.getTenantById(booking.getTenantId());
@@ -494,6 +514,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         }
                         bookingService.deleteBooking(booking.getId());
                     }
+                    System.out.println("Done with removing OVER bookings");
                 }
                 if (!bookingsByTenant.isEmpty()) {
                     Iterator<Booking> iterator = bookingsByTenant.iterator();
@@ -504,6 +525,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                         }
                     }
                 }
+                System.out.println("Removed CANCELLED and OVER bookings from the list");
                 if (!bookingsByTenant.isEmpty()) {
                     StringBuilder sb = new StringBuilder("Tenant removal failed: could not remove all associated bookings. Bookings with the following IDs: \\n");
                     for (Booking booking : bookingsByTenant) {
@@ -519,55 +541,83 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 }
             }
 
+            System.out.println("Passed the booking check stage");
+
             // Checking if there are any refunds pending for the Tenant
             List<Refund> refunds = refundService.getRefundsByTenant(tenantId);
             if (!refunds.isEmpty()) {
-                StringBuilder sb = new StringBuilder("Tenant removal failed: there are refunds due to the Tenant. Refund IDs: \\n");
+                StringBuilder sb = new StringBuilder("Tenant removal failed: there are refunds due to the Tenant. Refund IDs: \n\n");
                 for (int i = 0; i < refunds.size(); i++) {
                     sb.append(refunds.get(i).getId());
                     if (i < refunds.size() - 1) {
                         sb.append(", ");
                     } else {
-                        sb.append(".\n");
+                        sb.append(".");
                     }
                 }
-                sb.append("These refunds must be settled before the Tenant can be removed.");
                 LOGGER.log(Level.WARN, sb.toString());
                 System.out.println(sb.toString());
+                System.out.println("These refunds must be settled before the Tenant can be removed.");
                 obstaclesPresent = true;
                 return;
             }
+
+            System.out.println("Passed the refund check stage");
 
             // Checking and stubbing Tenant Payments
             List<TenantPayment> tenantPayments = paymentService.getPaymentsByTenant(tenantId);
             for (TenantPayment payment : tenantPayments) {
                 if (!payment.isReceivedFromTenant()) {
-                    LOGGER.log(Level.WARN, "Tenant removal failed: payment due from the Tenant has been found. Booking with the ID " + payment.getAssociatedBookingId() + " must be removed first.");
-                    System.out.println("Tenant removal failed: payment due from the Tenant has been found. Booking with the ID " + payment.getAssociatedBookingId() + " must be removed first.");
-                    obstaclesPresent = true;
-                    return;
+                    if (bookingService.getBookingById(payment.getAssociatedBookingId()).isPresent()) {
+                        if (!bookingService.getBookingById(payment.getAssociatedBookingId()).get().getStatus().equals(BookingStatus.CANCELLED)) {
+                            LOGGER.log(Level.WARN, "Tenant removal failed: payment due from the Tenant has been found. Booking with the ID " + payment.getAssociatedBookingId() + " must be removed first.");
+                            System.out.println("Tenant removal failed: payment due from the Tenant has been found. Booking with the ID " + payment.getAssociatedBookingId() + " must be removed first.");
+                            obstaclesPresent = true;
+                            return;
+                        }
+                    }
                 }
             }
-            Tenant stubTenant = new Tenant();
-            stubTenant.setFirstName("Tenant with ID " + tenantId);
-            stubTenant.setLastName(" - REMOVED");
+//            Tenant stubTenant = new Tenant();
+//            stubTenant.setFirstName("Tenant with ID " + tenantId);
+//            stubTenant.setLastName(" - REMOVED");
+//            stubTenant.setLogin("StubTenant");
+//            stubTenant.setPassword("Babababa000");
+//            stubTenant.setCardValidityDate(YearMonth.now());
+//            stubTenant.setPaymentCardNo("4453112311231123");
+//            stubTenant.setCvv(new char[]{0, 0, 0});
+//            stubTenant.setEmail("bonk@bonk.bonk");
             for (TenantPayment payment : tenantPayments) {
-                payment.setTenant(stubTenant);
-                paymentService.addTenantPayment(payment);
+                if (payment.isReceivedFromTenant() && payment.isFeePaidToManager()) {
+                    System.out.println("Removing TenantPayment with ID " + payment.getId());
+                    paymentService.deleteTenantPayment(payment.getId());
+                } else if (!payment.isReceivedFromTenant() && !payment.isFeePaidToManager()) {
+                    System.out.println("Removing TenantPaymentwitd ID " + payment.getId());
+                    paymentService.deleteTenantPayment(payment.getId());
+                } else {
+                    obstaclesPresent = true;
+                    LOGGER.log(Level.WARN, "Cannot remove a Tenant while there are unsettled associated payments");
+                    System.out.println("Cannot remove a Tenant while there are unsettled associated payments");
+                }
             }
 
+            System.out.println("Passed the TenantPayment stubbing stage");
+
             // replacing the Tenant in LeasingHistories with a stub Tenant
+//            entityManager.persist(stubTenant);
             List<LeasingHistory> leasingHistories = leasingHistoryService.getLeasingHistoryByTenant(tenant);
             for (LeasingHistory history : leasingHistories) {
-                history.setTenant(stubTenant);
-                leasingHistoryService.addLeasingHistory(history);
+                leasingHistoryService.deleteLeasingHistory(history.getId());
             }
+
+            System.out.println("Passed the LeasingHistory stubbing stage");
 
             // Removal
             if (!obstaclesPresent) {
                 LOGGER.log(Level.INFO, "Tenant with ID {} has been removed.", tenantId);
-                System.out.println("Tenant with ID" + tenantId + "has been removed.");
+                System.out.println("Tenant with ID" + tenantId + " has been removed.");
                 tenantService.deleteTenant(tenantId);
+                System.out.println("Tenant removal completed");
             } else {
                 LOGGER.log(Level.WARN, "Tenant removal failed: please see the error message above");
                 System.out.println("Tenant removal failed: please see the error message above");
@@ -589,8 +639,8 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             // Processing potentially associated Claims
             List<Claim> claimsByManager = claimService.getClaimsFiledByManager(managerId);
             List<Claim> claimsAgainstManager = claimService.getClaimsAgainstManager(managerId);
-            claimsByManager.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
-            claimsAgainstManager.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
+            if (!claimsByManager.isEmpty()) claimsByManager.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
+            if (!claimsAgainstManager.isEmpty()) claimsAgainstManager.removeIf(claim -> claim.getClaimStatus().equals(ClaimStatus.RESOLVED));
             if (!claimsByManager.isEmpty() || !claimsAgainstManager.isEmpty()) {
                 StringBuilder sb = new StringBuilder("Manager removal failed: there are Claims pending from or against the Manager: \\n");
                 sb.append("Claims filed by Manager: ");
@@ -676,39 +726,42 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 }
             }
 
-            // Checking if there are any payments due to the Manager
+// Checking if there are any payments due to the Manager
             List<TenantPayment> payments = paymentService.getPaymentsByManager(managerId);
             List<Long> outstandingPayoutIDs = new ArrayList<>();
             for (TenantPayment payment : payments) {
-                if (!payment.isFeePaidToManager()) outstandingPayoutIDs.add(payment.getId());
+                if (!payment.isFeePaidToManager()) {
+                    outstandingPayoutIDs.add(payment.getId());
+                }
             }
             if (!outstandingPayoutIDs.isEmpty()) {
-                StringBuilder sb = new StringBuilder("Manager removal failed: there are payouts due to this Manager. Associated Tenant payment IDs: \\n");
-                for (Long index : outstandingPayoutIDs) {
-                    sb.append(index);
-                    if (bookingsByManager.iterator().hasNext()) sb.append(", ");
-                    else sb.append("\\n");
+                StringBuilder sb = new StringBuilder("Manager removal failed: there are payouts due to this Manager. Associated Tenant payment IDs:\n");
+                for (int i = 0; i < outstandingPayoutIDs.size(); i++) {
+                    sb.append(outstandingPayoutIDs.get(i));
+                    if (i < outstandingPayoutIDs.size() - 1) {
+                        sb.append(", ");
+                    }
                 }
-                sb.append("These payouts must be made before the Manager can be removed.");
+                sb.append("\nThese payouts must be made before the Manager can be removed.");
                 LOGGER.log(Level.WARN, sb.toString());
                 System.out.println(sb.toString());
                 obstaclesPresent = true;
             }
 
             // Stubbing the Manager in Properties and deactivating them
-            List<Property> managersProperties = propertyService.getPropertiesByManager(managerId);
-            Manager stubManager = new Manager();
-            stubManager.setManagerName("REMOVED Manager, ID: " + managerId);
-            for (Property property : managersProperties) {
-                property.setManager(stubManager);
-                property.setStatus(PropertyStatus.BLOCKED);
-                propertyService.addProperty(property);
+            if (!obstaclesPresent) {
+                List<Property> managersProperties = propertyService.getPropertiesByManager(managerId);
+                for (Property property : managersProperties) {
+                    property.setManager(null);
+                    property.setStatus(PropertyStatus.BLOCKED);
+                    propertyService.addProperty(property);
+                }
             }
 
             // Removal
             if (!obstaclesPresent) {
                 LOGGER.log(Level.INFO, "Manager with ID {} has been removed.", managerId);
-                System.out.println("Manager with ID" + managerId + "has been removed.");
+                System.out.println("Manager with ID" + managerId + " has been removed.");
                 managerService.deleteManager(managerId);
             } else {
                 LOGGER.log(Level.WARN, "Manager removal failed: please see the error message above");
@@ -724,10 +777,15 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
     public void addProperty(PropertyAdditionDTO propertyDTO) {
-        Property property = PropertyCreationMapper.INSTANCE.toEntity(propertyDTO);
+        Optional<Manager> managerOpt = managerService.getManagerById(propertyDTO.getManagerId());
+        if (managerOpt.isEmpty()) {
+            throw new ManagerNotFoundException("Manager not found with ID: " + propertyDTO.getManagerId());
+        }
+        Property property = PropertyCreationMapper.INSTANCE.fromDTO(propertyDTO);
         property.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
         property.setBills(new HashSet<>());
         property.setBookings(new HashSet<>());
+        property.setManager(managerOpt.get());
         propertyService.addProperty(property);
     }
 
@@ -966,6 +1024,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             currency.setIsBaseCurrency(false);
             currency.setDesignation(designation);
             currency.setRateToBase(rateToBase);
+            currencyService.addCurrency(currency);
         }
     }
 
