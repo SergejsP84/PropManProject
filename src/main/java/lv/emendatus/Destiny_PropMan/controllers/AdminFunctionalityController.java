@@ -109,7 +109,7 @@ public class AdminFunctionalityController {
     "phone": "+1234567890",
     "email": "johndoe@example.com",
     "iban": "DE89370400440532013000",
-    "paymentCardNo": "1234567812345678",
+    "paymentCardNo": "4921817336104919",
     "cardValidityDate": "2025-12",
     "cvv": "123",
     "login": "johndoe_manager",

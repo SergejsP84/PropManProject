@@ -33,7 +33,7 @@ public class Currency {
     private Boolean isBaseCurrency;
 
 
-    @NotNull
+//    @NotNull
     @Column(name = "rate_to_base")
     private Double rateToBase;
 

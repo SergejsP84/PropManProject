@@ -16,6 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -77,7 +82,8 @@ public class DatabasePurgeUtility {
     private TenantRatingRepository tenantRatingRepository;
     @Autowired
     private AdminRepository adminRepository;
-
+    @Autowired
+    private KeyLinkRepository keyLinkRepository;
 
     public DatabasePurgeUtility(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -175,6 +181,9 @@ public class DatabasePurgeUtility {
                 System.out.println("Deleting Property-Amenity Relations...");
                 propertyAmenityRepository.deleteAll();
                 entityManager.createNativeQuery("ALTER TABLE property_amenities AUTO_INCREMENT = 1").executeUpdate();
+                System.out.println("Deleting KeyLinks...");
+                keyLinkRepository.deleteAll();
+                entityManager.createNativeQuery("ALTER TABLE key_links AUTO_INCREMENT = 1").executeUpdate();
                 System.out.println("Deleting Early Termination Requests...");
                 earlyTerminationRequestRepository.deleteAll();
                 entityManager.createNativeQuery("ALTER TABLE early_termination_requests AUTO_INCREMENT = 1").executeUpdate();
@@ -252,6 +261,19 @@ public class DatabasePurgeUtility {
                     adminAccountsService.addAdmin(updatedAdmin);
                 } else {
                     System.out.println("Could not obtain the Default Admin!");
+                }
+                Path directory = Paths.get("./Extrastore");
+                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
+                    for (Path path : directoryStream) {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    System.out.println("Deleted all files from the Extrastore directory.");
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
                 purgeSucceeded = true;
             }

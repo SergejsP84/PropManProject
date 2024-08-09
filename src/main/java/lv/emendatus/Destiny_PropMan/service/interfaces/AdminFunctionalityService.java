@@ -21,7 +21,7 @@ public interface AdminFunctionalityService {
     void registerTenantForAdmin(TenantRegistrationDTO registrationDTO);
     void registerManager(ManagerRegistrationDTO registrationDTO);
 
-    void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo);
+    void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) throws Exception;
     void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile);
     void removeTenant(Long tenantId);
     void removeManager(Long managerId);

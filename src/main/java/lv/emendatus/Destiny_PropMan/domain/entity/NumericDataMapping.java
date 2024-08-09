@@ -32,4 +32,13 @@ public class NumericDataMapping implements Serializable {
     // Level 2 UserType key: type of the user
     // Level 3 Boolean key: true for a Card Number, false for a CVV code
     // SecretKeySpec value: secret key value
+
+
+    @Override
+    public String toString() {
+        return "NumericDataMapping{" +
+                "id=" + id +
+                ", map=" + map +
+                '}';
+    }
 }

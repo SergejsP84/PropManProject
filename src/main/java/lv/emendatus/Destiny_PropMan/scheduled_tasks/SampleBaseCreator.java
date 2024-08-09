@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -85,6 +86,12 @@ public class SampleBaseCreator implements ApplicationRunner {
     private JpaTokenResetService tokenResetService;
     @Autowired
     private DatabasePurgeUtility databasePurgeUtility;
+    @Autowired
+    private JpaCardDataSaverService cardDataSaverService;
+    @Autowired
+    private JpaKeyLinkService keyLinkService;
+    @Autowired
+    private JpaThirdPartyPaymentProviderService thirdPartyPaymentProviderService;
     private final PasswordEncoder passwordEncoder;
 
     public SampleBaseCreator(BCryptPasswordEncoder passwordEncoder) {
@@ -332,6 +339,12 @@ public class SampleBaseCreator implements ApplicationRunner {
                     databaseNotEmpty = true;
                 } else {
                     System.out.println("   * No TokenResetters found");
+                }
+                if (keyLinkService.allKeyLinks().size() > 0) {
+                    System.out.println("   * Found " + keyLinkService.allKeyLinks().size() + " KeyLink(s)");
+                    databaseNotEmpty = true;
+                } else {
+                    System.out.println("   * No KeyLinks found");
                 }
                 boolean goOn = true;
                 if (databaseNotEmpty) {
@@ -703,8 +716,8 @@ public class SampleBaseCreator implements ApplicationRunner {
                     currency2.setId(2L);
                     currency2.setDesignation("USD");
                     currency2.setIsBaseCurrency(false);
-                    currencyService.addCurrency(currency2);
                     currency2.setRateToBase(1.05);
+                    currencyService.addCurrency(currency2);
                     System.out.println("   * Currency " + currency2.getId() + ": " + currency2.getDesignation() + " set up.");
                     Currency currency3 = new Currency();
                     currency3.setId(3L);
@@ -827,6 +840,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     manager1.setIban("DE89370400440532013000");
                     manager1.setLogin("SNettleson");
                     manager1.setDescription("Dedicated to managing your comfort to perfection");
+//                    System.out.println("Trying to access the NumericDataMapping repository before adding Card Number");
+//                    System.out.println(numericDataMappingService.getAllMappings().size());
+//                    System.out.println("Repository accessed successfully before adding Card Number");
 //                    System.out.println("    -----     This is probably where the problem starts");
                     try {
                         manager1.setPaymentCardNo(encryptCardNumber(manager1.getId(), UserType.MANAGER, "4908474399435405"));
@@ -834,11 +850,18 @@ public class SampleBaseCreator implements ApplicationRunner {
                         throw new RuntimeException(e);
                     }
                     manager1.setCardValidityDate(YearMonth.of(2025, 12));
+//                    System.out.println("Trying to access the NumericDataMapping repository before adding CVV code");
+//                    System.out.println(numericDataMappingService.getAllMappings().size());
+//                    System.out.println("Repository accessed successfully before adding CVV");
                     try {
                         manager1.setCvv(encryptCVV(manager1.getId(), UserType.MANAGER, new char[]{9, 0, 6}).toCharArray());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+//                    System.out.println("   --- Payment card and CVV block saved successfully  ---- ");
+//                    System.out.println("Trying to access the NumericDataMapping repository after adding CVV code");
+                    System.out.println(numericDataMappingService.getAllMappings().size());
+//                    System.out.println("Repository accessed successfully after adding CVV");
                     String encodedPassword = passwordEncoder.encode("Ductus");
                     manager1.setPassword(encodedPassword);
 //                    System.out.println(" ??? Set a Password for Manager 1");
@@ -858,6 +881,7 @@ public class SampleBaseCreator implements ApplicationRunner {
                     List<GrantedAuthority> authoritiesM1 = new ArrayList<>();
                     authoritiesM1.add(new SimpleGrantedAuthority("MANAGER"));
                     manager1.setAuthorities(authoritiesM1);
+//                    System.out.println("NumericDataMapping repository size by tbe end of the 1st Manager creation process" + numericDataMappingService.getAllMappings().size());
                     System.out.println("   * Manager created: ID" + manager1.getId() + ", name: " + manager1.getManagerName() + ", Login: SNettleson, Password: Ductus");
 
                     Manager manager2 = new Manager();
@@ -869,12 +893,14 @@ public class SampleBaseCreator implements ApplicationRunner {
                     manager2.setIban("US82WEST12345698765432");
                     manager2.setLogin("SUllman");
                     manager2.setDescription("Proud of managing the matters of our highly esteemed guests on behalf of the majestic Overlook Hotel");
+                    System.out.println("NumericDataMapping repository size by tbe start of adding a Payment Card Number for Manager No. 2" + numericDataMappingService.getAllMappings().size());
                     try {
                         manager2.setPaymentCardNo(encryptCardNumber(manager2.getId(), UserType.MANAGER, "5573672009088222"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     manager2.setCardValidityDate(YearMonth.of(2024, 7));
+                    System.out.println("NumericDataMapping repository size by tbe start of adding a CVV for Manager No. 2" + numericDataMappingService.getAllMappings().size());
                     try {
                         manager2.setCvv(encryptCVV(manager2.getId(), UserType.MANAGER, new char[]{5, 3, 3}).toCharArray());
                     } catch (Exception e) {
@@ -1254,6 +1280,11 @@ public class SampleBaseCreator implements ApplicationRunner {
 //                        propertyIndexForBills++;
 //                    }
 
+
+                    // Clearing the NumericDataMappings left from Managers
+                    System.out.println("   * Removing NumericDataMappings...");
+                    numericDataMappingService.flushEmAll();
+                    System.out.println("   * NumericData removed");
 
                     // Adding Tenants
                     System.out.println();
@@ -3149,6 +3180,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     propertyAmenityService.addPropertyAmenity(new PropertyAmenity(60L, 12L, 31L)); // Indoor Pool
                     propertyAmenityService.addPropertyAmenity(new PropertyAmenity(61L, 12L, 32L)); // Outdoor Pool
                     System.out.println("   * Successfully distributed Amenities across Properties");
+                    System.out.println("   * Removing NumericDataMappings...");
+                    numericDataMappingService.flushEmAll();
+                    System.out.println("   * NumericData removed");
                     System.out.println();
                     System.out.println(" *** TEST DATABASE GENERATION COMPLETE.");
                 }
@@ -3156,6 +3190,9 @@ public class SampleBaseCreator implements ApplicationRunner {
             sc.close();
         } else {
             System.out.println(" *** Sample database creation disabled; to enable, please delete the NumericalConfig named ProposeSampleDatabaseCreation from the database or set its value to 1.00.");
+            // TEST SPACE HERE
+            System.out.println("Test space initialized");
+
         }
     }
 
@@ -3202,7 +3239,7 @@ public class SampleBaseCreator implements ApplicationRunner {
             byte[] encryptedCardNumberBytes = cipher.doFinal(cardNumber.getBytes());
 //            System.out.println("    -----     f) Assigned an encryptedCardNumberBytes array: " + encryptedCardNumberBytes.toString());
             numericDataMappingService.saveCardNumberSecretKey(userId, userType, secretKey);
-//            System.out.println("    -----     п) Saved the secret key for the user's card");
+            //            System.out.println("    -----     п) Saved the secret key for the user's card");
             return Base64.getEncoder().encodeToString(encryptedCardNumberBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
             e.printStackTrace();

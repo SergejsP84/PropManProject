@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 
 @Service
@@ -59,17 +60,36 @@ public class JpaThirdPartyPaymentProviderService implements ThirdPartyPaymentPro
     }
 
     @Override
-    public String decryptCVV(Long userId, UserType userType, String encryptedCVV) throws Exception {
+    public String decryptCVV(Long userId, UserType userType, char[] encryptedCVV) throws Exception {
         try {
+            System.out.println("Starting decryption for userId: " + userId + ", userType: " + userType);
+
+            // Converting char[] to String and then decoding
+            String encryptedCVVString = new String(encryptedCVV);
+            System.out.println("Encrypted CVV (Base64 encoded): " + encryptedCVVString);
+
+            byte[] encryptedCVVBytes = Base64.getDecoder().decode(encryptedCVVString);
+            System.out.println("Encrypted CVV (decoded bytes): " + Arrays.toString(encryptedCVVBytes));
+
+            // Retrieve the secret key
             SecretKey secretKey = numericDataMappingService.returnCVVSecretKeyById(userId, userType);
             if (secretKey == null) {
                 System.out.println("No secret key found for the user");
                 return null;
             }
+            System.out.println("Retrieved secret key: " + secretKey);
+
+            // Decrypt the CVV
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decryptedCVVBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedCVV));
-            return new String(decryptedCVVBytes);
+            byte[] decryptedCVVBytes = cipher.doFinal(encryptedCVVBytes);
+            StringBuilder sb = new StringBuilder();
+            for (byte abyte : decryptedCVVBytes) {
+                sb.append(abyte);
+            }
+            String decryptedCVV = sb.toString();
+//            System.out.println("Decrypted CVV: " + decryptedCVV);
+            return decryptedCVV;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
             e.printStackTrace();
         } catch (BadPaddingException | IllegalBlockSizeException e) {

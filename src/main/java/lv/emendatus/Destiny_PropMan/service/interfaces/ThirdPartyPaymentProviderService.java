@@ -16,5 +16,5 @@ public interface ThirdPartyPaymentProviderService {
     Boolean stub3(Payout payout);
 
     public String decryptCardNumber(Long userId, UserType userType, String encryptedCardNumber) throws Exception;
-    public String decryptCVV(Long userId, UserType userType, String encryptedCVV) throws Exception;
+    public String decryptCVV(Long userId, UserType userType, char[] encryptedCVV) throws Exception;
 }

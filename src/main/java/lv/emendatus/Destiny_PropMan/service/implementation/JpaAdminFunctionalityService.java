@@ -298,7 +298,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
-    public void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) {
+    public void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) throws Exception {
         Optional<Tenant> tenantOptional = tenantService.getTenantById(tenantId);
         if (tenantOptional.isPresent()) {
             Tenant existingTenant = tenantOptional.get();
@@ -324,7 +324,14 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 LOGGER.log(Level.INFO, "IBAN changed to: "  + updatedTenantInfo.getIban());
                 System.out.println("IBAN address changed to: "  + updatedTenantInfo.getIban());
             }
-            if (!updatedTenantInfo.getPaymentCardNo().equals(existingTenant.getPaymentCardNo())) {
+            if (!updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
+                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+                existingTenant.setCardValidityDate(updatedTenantInfo.getCardValidityDate());
+            }
+
+
+            if (!updatedTenantInfo.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo()))) {
                 LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
                 System.out.println("Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
                 try {
@@ -332,11 +339,6 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }
-            if (!updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
-                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
-                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
-                existingTenant.setCardValidityDate(updatedTenantInfo.getCardValidityDate());
             }
             if (!Arrays.equals(updatedTenantInfo.getCvv(), existingTenant.getCvv())) {
                 LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
@@ -347,6 +349,8 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                     throw new RuntimeException(e);
                 }
             }
+
+
             if (updatedTenantInfo.getRating() != existingTenant.getRating()) {
                 LOGGER.log(Level.INFO, "Tenant rating set to: "  + updatedTenantInfo.getRating());
                 System.out.println("Tenant rating set to: "  + updatedTenantInfo.getRating());
@@ -1411,7 +1415,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             byte[] encryptedCardNumberBytes = cipher.doFinal(cardNumber.getBytes());
-            numericDataMappingService.updateCardNumberSecretKey(userId, userType, secretKey);
+            numericDataMappingService.saveCardNumberSecretKey(userId, userType, secretKey);
             return Base64.getEncoder().encodeToString(encryptedCardNumberBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
             e.printStackTrace();
@@ -1436,7 +1440,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
             System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
             // implement logics for saving the secret key alongside the encrypted value
-            numericDataMappingService.updateCVVSecretKey(userId, userType, secretKey);
+            numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
             System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
             return Base64.getEncoder().encodeToString(encryptedCVVBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
