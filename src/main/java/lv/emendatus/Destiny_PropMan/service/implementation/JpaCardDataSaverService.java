@@ -13,6 +13,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JpaCardDataSaverService implements CardDataSaverService {
@@ -78,14 +79,23 @@ public class JpaCardDataSaverService implements CardDataSaverService {
         }
 
         // Creating and saving a KeyLink
-        KeyLink keyLink = new KeyLink();
-        keyLink.setFileNumber(fileIndex + (currentRecordNumber / 100));
-        System.out.println("File Number: " + keyLink.getFileNumber());
-        keyLink.setUserId(mapping.getMap().keySet().stream().toList().get(0));
-        System.out.println("User ID: " + keyLink.getUserId());
-        keyLink.setUserType(mapping.getMap().values().stream().toList().get(0).keySet().stream().toList().get(0));
-        System.out.println("User Type: " + keyLink.getUserType());
-        keyLinkService.addKeyLink(keyLink);
+        Long userId = mapping.getMap().keySet().stream().findFirst().orElse(null);
+        UserType userType = mapping.getMap().get(userId).keySet().stream().findFirst().orElse(null);
+        KeyLink keyLink = keyLinkService.fetchALink(userId, userType);
+        if (keyLink == null) {
+            keyLink = new KeyLink();
+            keyLink.setFileNumber(fileIndex + (currentRecordNumber / 100));
+            System.out.println("File Number: " + keyLink.getFileNumber());
+            keyLink.setUserId(userId);
+            System.out.println("User ID: " + keyLink.getUserId());
+            keyLink.setUserType(userType);
+            System.out.println("User Type: " + keyLink.getUserType());
+            keyLinkService.addKeyLink(keyLink);
+        } else {
+            keyLink.setFileNumber(fileIndex + (currentRecordNumber / 100));
+            keyLinkService.addKeyLink(keyLink); // Assuming addKeyLink updates if it exists
+        }
+
 
         // Convert SecretKeys to Base64 strings and store in an intermediate map
         System.out.println();
@@ -445,7 +455,6 @@ public class JpaCardDataSaverService implements CardDataSaverService {
         } catch (IOException e) {
             throw new IOException("Failed to read the records file", e);
         }
-
         List<Character> soughtRoleTypes = new ArrayList<>();
         if (userType.equals(UserType.TENANT)) {
             for (int i = 1; i < 10; i += 2) soughtRoleTypes.add(Character.forDigit(i, 10));

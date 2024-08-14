@@ -42,9 +42,9 @@ public interface AdvancedManagerService {
 
     void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd, Principal principal);
 
-    List<Booking> getBookingsPendingApproval (Long managerId);
+    List<Booking> getBookingsPendingApproval (Long managerId, Principal principal);
 
-    void approveBooking (Long bookingId);
+    void approveBooking (Long bookingId, Principal principal);
 
     void declineBooking (Long bookingId);
 

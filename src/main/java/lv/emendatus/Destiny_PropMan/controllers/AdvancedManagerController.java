@@ -121,17 +121,17 @@ public class AdvancedManagerController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/bookings/pending-approval")
+    @GetMapping("/bookings/pending-approval/{managerId}")
     @ManagerFunc_GetBookingsPendingApproval
-    public ResponseEntity<List<Booking>> getBookingsPendingApproval(@RequestParam Long managerId) {
-        List<Booking> pendingBookings = service.getBookingsPendingApproval(managerId);
+    public ResponseEntity<List<Booking>> getBookingsPendingApproval(@PathVariable Long managerId, Principal principal) {
+        List<Booking> pendingBookings = service.getBookingsPendingApproval(managerId, principal);
         return ResponseEntity.ok(pendingBookings);
     }
 
-    @PostMapping("/bookings/approve")
+    @PostMapping("/bookings/approve/{bookingId}")
     @ManagerFunc_ApproveBooking
-    public ResponseEntity<Void> approveBooking(@RequestParam Long bookingId) {
-        service.approveBooking(bookingId);
+    public ResponseEntity<Void> approveBooking(@PathVariable Long bookingId, Principal principal) {
+        service.approveBooking(bookingId, principal);
         return ResponseEntity.ok().build();
     }
 

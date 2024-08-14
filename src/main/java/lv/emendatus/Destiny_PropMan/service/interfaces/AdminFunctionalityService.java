@@ -22,7 +22,7 @@ public interface AdminFunctionalityService {
     void registerManager(ManagerRegistrationDTO registrationDTO);
 
     void updateTenantInformation(Long tenantId, TenantDTO_Profile updatedTenantInfo) throws Exception;
-    void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile);
+    void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile) throws Exception;
     void removeTenant(Long tenantId);
     void removeManager(Long managerId);
 

@@ -1,7 +1,5 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -60,6 +58,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     public final JpaAmenityService amenityService;
     public final JpaPropertyAmenityService propertyAmenityService;
     public final JpaNumericalConfigService numericalConfigService;
+    public final JpaCardDataSaverService cardDataSaverService;
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder;
     private final TenantMapper tenantMapper;
@@ -70,7 +69,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
 
-    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaNumericalConfigService numericalConfigService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
+    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaNumericalConfigService numericalConfigService, JpaCardDataSaverService cardDataSaverService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.bookingService = bookingService;
@@ -87,6 +86,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         this.amenityService = amenityService;
         this.propertyAmenityService = propertyAmenityService;
         this.numericalConfigService = numericalConfigService;
+        this.cardDataSaverService = cardDataSaverService;
         this.passwordEncoder = passwordEncoder;
         this.tenantMapper = tenantMapper;
         this.managerMapper = managerMapper;
@@ -324,32 +324,34 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 LOGGER.log(Level.INFO, "IBAN changed to: "  + updatedTenantInfo.getIban());
                 System.out.println("IBAN address changed to: "  + updatedTenantInfo.getIban());
             }
-            if (!updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
-                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
-                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
-                existingTenant.setCardValidityDate(updatedTenantInfo.getCardValidityDate());
-            }
 
-
-            if (!updatedTenantInfo.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo()))) {
+            if (!updatedTenantInfo.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo()))
+                    || !updatedTenantInfo.getCvv().equals(paymentProviderService.decryptCVV(tenantId, UserType.TENANT, existingTenant.getCvv()))
+                    || !updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
                 LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
                 System.out.println("Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
-                try {
-                    existingTenant.setPaymentCardNo(encryptUpdatedCardNumber(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getPaymentCardNo()));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            if (!Arrays.equals(updatedTenantInfo.getCvv(), existingTenant.getCvv())) {
                 LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
                 System.out.println("CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
+                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
                 try {
-                    existingTenant.setCvv(encryptUpdatedCVV(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getCvv()).toCharArray());
+                    cardDataSaverService.removeNDMRecordFromFile(UserType.TENANT, tenantId);
+//                    System.out.println("Removed an NDM record from file for Tenant 3");
+                    numericDataMappingService.flushEmAll();
+                    existingTenant.setPaymentCardNo(encryptCardNumber(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getPaymentCardNo()));
+                    existingTenant.setCvv(encryptCVV(existingTenant.getId(), UserType.TENANT, updatedTenantInfo.getCvv()).toCharArray());
+                    existingTenant.setCardValidityDate(updatedTenantInfo.getCardValidityDate());
+                    List<Long> nDMIdsToBeDeleted = new ArrayList<>();
+                    for (NumericDataMapping mapping : numericDataMappingService.getAllMappings()) {
+                        nDMIdsToBeDeleted.add(mapping.getId());
+                    }
+                    for (Long id : nDMIdsToBeDeleted) {
+                        numericDataMappingService.deleteNumericDataMappingById(id);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
-
 
             if (updatedTenantInfo.getRating() != existingTenant.getRating()) {
                 LOGGER.log(Level.INFO, "Tenant rating set to: "  + updatedTenantInfo.getRating());
@@ -369,7 +371,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
-    public void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile) {
+    public void updateManagerInformation(Long managerId, ManagerProfileDTO updatedProfile) throws Exception {
         Optional<Manager> managerOptional = managerService.getManagerById(managerId);
         if (managerOptional.isPresent()) {
             Manager existingManager = managerOptional.get();
@@ -391,29 +393,35 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 LOGGER.log(Level.INFO, "IBAN changed to: "  + updatedProfile.getIban());
                 System.out.println("IBAN changed to: "  + updatedProfile.getIban());
             }
-            if (!updatedProfile.getPaymentCardNo().equals(existingManager.getPaymentCardNo())) {
-                LOGGER.log(Level.INFO, "Payment card No. changed to: "  + updatedProfile.getPaymentCardNo());
-                System.out.println("Payment card No. changed to: "  + updatedProfile.getPaymentCardNo());
-                try {
-                    existingManager.setPaymentCardNo(encryptUpdatedCardNumber(existingManager.getId(), UserType.MANAGER, updatedProfile.getPaymentCardNo()));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            if (!updatedProfile.getCardValidityDate().equals(existingManager.getCardValidityDate())) {
-                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedProfile.getCardValidityDate());
-                System.out.println("Card validity date changed to: "  + updatedProfile.getCardValidityDate());
-                existingManager.setCardValidityDate(updatedProfile.getCardValidityDate());
-            }
-            if (!Arrays.equals(updatedProfile.getCvv(), existingManager.getCvv())) {
+
+            if (!updatedProfile.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(managerId, UserType.MANAGER, existingManager.getPaymentCardNo()))
+                    || !updatedProfile.getCvv().equals(paymentProviderService.decryptCVV(managerId, UserType.MANAGER, existingManager.getCvv()))
+                    || !updatedProfile.getCardValidityDate().equals(existingManager.getCardValidityDate())) {
+                LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedProfile.getPaymentCardNo());
+                System.out.println("Payment card number changed to: "  + updatedProfile.getPaymentCardNo());
                 LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
                 System.out.println("CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
+                LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedProfile.getCardValidityDate());
+                System.out.println("Card validity date changed to: "  + updatedProfile.getCardValidityDate());
                 try {
-                    existingManager.setCvv(encryptUpdatedCVV(existingManager.getId(), UserType.MANAGER, updatedProfile.getCvv()).toCharArray());
+                    cardDataSaverService.removeNDMRecordFromFile(UserType.MANAGER, managerId);
+                    numericDataMappingService.flushEmAll();
+                    existingManager.setPaymentCardNo(encryptCardNumber(existingManager.getId(), UserType.MANAGER, updatedProfile.getPaymentCardNo()));
+                    existingManager.setCvv(encryptCVV(existingManager.getId(), UserType.MANAGER, updatedProfile.getCvv()).toCharArray());
+                    existingManager.setCardValidityDate(updatedProfile.getCardValidityDate());
+                    cardDataSaverService.writeNDMToFile(numericDataMappingService.getAllMappings().get(0));
+                    List<Long> nDMIdsToBeDeleted = new ArrayList<>();
+                    for (NumericDataMapping mapping : numericDataMappingService.getAllMappings()) {
+                        nDMIdsToBeDeleted.add(mapping.getId());
+                    }
+                    for (Long id : nDMIdsToBeDeleted) {
+                        numericDataMappingService.deleteNumericDataMappingById(id);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
+
             if (!updatedProfile.getEmail().equals(existingManager.getEmail())) {
                 LOGGER.log(Level.INFO, "Email address changed to: "  + updatedProfile.getEmail());
                 System.out.println("Email address changed to: "  + updatedProfile.getEmail());

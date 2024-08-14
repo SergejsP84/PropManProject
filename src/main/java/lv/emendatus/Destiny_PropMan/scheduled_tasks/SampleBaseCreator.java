@@ -13,6 +13,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -3191,8 +3192,13 @@ public class SampleBaseCreator implements ApplicationRunner {
         } else {
             System.out.println(" *** Sample database creation disabled; to enable, please delete the NumericalConfig named ProposeSampleDatabaseCreation from the database or set its value to 1.00.");
             // TEST SPACE HERE
-            System.out.println("Test space initialized");
-
+//            System.out.println("Test space initialized");
+//            System.out.println("Decrypted card number for Tenant 1: " + thirdPartyPaymentProviderService.decryptCardNumber(1L, UserType.TENANT, tenantService.getTenantById(1L).get().getPaymentCardNo()));
+//            System.out.println("Decrypted CVV for Tenant 1: " + thirdPartyPaymentProviderService.decryptCVV(1L, UserType.TENANT, tenantService.getTenantById(1L).get().getCvv()));
+//            System.out.println("Decrypted card number for Tenant 3: " + thirdPartyPaymentProviderService.decryptCardNumber(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getPaymentCardNo()));
+//            System.out.println("Decrypted CVV for Tenant 3: " + thirdPartyPaymentProviderService.decryptCVV(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getCvv()));
+//            System.out.println("Decrypted card number for Manager 1: " + thirdPartyPaymentProviderService.decryptCardNumber(1L, UserType.MANAGER, managerService.getManagerById(1L).get().getPaymentCardNo()));
+//            System.out.println("Decrypted CVV for Manager 1: " + thirdPartyPaymentProviderService.decryptCVV(1L, UserType.MANAGER, managerService.getManagerById(1L).get().getCvv()));
         }
     }
 

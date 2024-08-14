@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.mapper.*;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
@@ -519,7 +520,6 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     public void resetDiscountsAndSurcharges(Long propertyId, LocalDate periodStart, LocalDate periodEnd, Principal principal) {
         String authenticatedUsername = principal.getName();
         Optional<Property> property = propertyService.getPropertyById(propertyId);
-
         if (property.isPresent()) {
             if (authenticatedUsername.equals(property.get().getManager().getLogin())) {
             List<PropertyDiscount> propertyDiscounts = discountService.getDiscountsForPropertyWithinPeriod(propertyId, periodStart, periodEnd);
@@ -537,11 +537,16 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
-    public List<Booking> getBookingsPendingApproval(Long managerId) {
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public List<Booking> getBookingsPendingApproval(Long managerId, Principal principal) {
+        String authenticatedUsername = principal.getName();
         if (managerService.getManagerById(managerId).isPresent()) {
-            Set <Booking> managersBookings = bookingService.getBookingsByManager(managerService.getManagerById(managerId).get());
-            return managersBookings.stream().filter(booking -> booking.getStatus().equals(BookingStatus.PENDING_APPROVAL)).toList();
+            if (authenticatedUsername.equals(managerService.getManagerById(managerId).get().getLogin())) {
+                Set <Booking> managersBookings = bookingService.getBookingsByManager(managerService.getManagerById(managerId).get());
+                return managersBookings.stream().filter(booking -> booking.getStatus().equals(BookingStatus.PENDING_APPROVAL)).toList();
+            } else {
+                throw new AccessDeniedException("You do not have permission to get Bookings for other Managers' Properties.");
+            }
         } else {
             LOGGER.error("No manager with the specified ID exists in the database.");
             throw new ManagerNotFoundException("No manager with the specified ID exists in the database.");
@@ -549,21 +554,25 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
-    public void approveBooking(Long bookingId) {
+    public void approveBooking(Long bookingId, Principal principal) {
+        String authenticatedUsername = principal.getName();
         if (bookingService.getBookingById(bookingId).isPresent()) {
-            Long managerId = bookingService.getBookingById(bookingId).get().getProperty().getManager().getId();
-            bookingService.updateBookingStatus(bookingId, BookingStatus.PENDING_PAYMENT);
-            if (tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).isPresent()) {
-                Tenant tenant = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get();
-                try {
-                    emailService.sendEmail(tenant.getEmail(),
-                            "Booking at [Platform Name] confirmed!",
-                            createConfirmationLetterToTenant(tenant.getFirstName(), tenant.getLastName(), bookingService.getBookingById(bookingId).get()));
-                } catch (MessagingException e) {
-                    e.printStackTrace();
+            if (authenticatedUsername.equals(bookingService.getBookingById(bookingId).get().getProperty().getManager().getLogin())) {
+                bookingService.updateBookingStatus(bookingId, BookingStatus.PENDING_PAYMENT);
+                if (tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).isPresent()) {
+                    Tenant tenant = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get();
+                    try {
+                        emailService.sendEmail(tenant.getEmail(),
+                                "Booking at [Platform Name] confirmed!",
+                                createConfirmationLetterToTenant(tenant.getFirstName(), tenant.getLastName(), bookingService.getBookingById(bookingId).get()));
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } else {
+                throw new AccessDeniedException("You do not have permission to approve Bookings for other Managers' Properties.");
             }
         } else {
             LOGGER.error("No booking with the specified ID exists in the database.");

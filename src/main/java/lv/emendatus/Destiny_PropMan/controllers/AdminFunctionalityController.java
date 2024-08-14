@@ -144,7 +144,6 @@ public class AdminFunctionalityController {
         }
     }
 
-    // http://localhost:8080/admin/delete_tenant/3
     @DeleteMapping("/delete_tenant/{tenantId}")
     @AdminFunc_RemoveTenant
     public ResponseEntity<String> removeTenant(@PathVariable Long tenantId) {
