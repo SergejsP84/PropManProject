@@ -41,8 +41,6 @@ public class UserDetailsInnerService implements UserDetailsService {
     }
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-
         if (tenantLoginFound(tenantService.getAllTenants(), username)) {
             return User.builder()
                     .username(username)

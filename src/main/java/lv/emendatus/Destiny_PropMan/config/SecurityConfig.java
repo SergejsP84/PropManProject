@@ -80,7 +80,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("!!! - securityFilterChain method INVOKED!");
+//        System.out.println("!!! - securityFilterChain method INVOKED!");
         http
                 // CSRF configuration
 //              HOW DO I GET THE THING IN WORKING ORDER AFTER I RE-ENABLE CSRF PROTECTION?
@@ -95,9 +95,8 @@ public class SecurityConfig {
                 // Временные разрешения - по завершении работы те эндпойнты, которые
                 // не несут пользовательских функций, будут закрыты .denyAll()
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/tenants/getall").permitAll()
-                        .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoint
-                        .requestMatchers("/tenants/getall").permitAll()
+                        .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoints
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/property/getPropertyById/{id}").permitAll()
                         .requestMatchers("/property/update_country/{id}").permitAll()
                         .requestMatchers("/admins-control/create").hasAuthority("ADMIN")
@@ -146,8 +145,33 @@ public class SecurityConfig {
                         .requestMatchers("/managerial/property/unavailable").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/unlock_property/{propertyId}").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/property/{propertyId}/addBill").hasAuthority("MANAGER")
-                        .requestMatchers("/managerial/property/{propertyId}/bill/{billId}").hasAuthority("MANAGER")
+                        .requestMatchers("/managerial/property/{propertyId}/remove_bill/{billId}").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/rate_tenant/{tenant_id}/{manager_id}/{booking_id}/{rating}").hasAuthority("MANAGER")
+                        .requestMatchers("/tenant/property/details/{propertyId}").permitAll()
+                        .requestMatchers("/tenant/getProfile/{tenantId}").hasAuthority("TENANT")
+                        .requestMatchers("/ten/confirm-email-change").permitAll()
+                        .requestMatchers("/man/confirm-email-change").permitAll()
+                        .requestMatchers("/tenant/updateProfile/{tenantId}").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/getHistory/{tenantId}").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/saveFavoriteProperty").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/getFavoriteProperties/{tenantId}").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/removeFavoriteProperty/{tenantId}/{propertyId}").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/completed-payments").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/outstanding-payments").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/current-bookings").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/requestEarlyTermination").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/processPayment/payment_id").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/rate_property").hasAuthority("TENANT")
+                        .requestMatchers("/tenant/submit_claim").hasAuthority("TENANT")
+                        .requestMatchers("/amenities/**").denyAll()
+                        .requestMatchers("/registration/tenants/**").denyAll()
+                        .requestMatchers("/registration/manager/**").denyAll()
+                        .requestMatchers("/auth/register/tenant").permitAll()
+                        .requestMatchers("/confirm-registration").permitAll()
+                        .requestMatchers("/auth/register/manager").permitAll()
+                        .requestMatchers("/auth/verify-otp-tenant").permitAll()
+                        .requestMatchers("/auth/verify-otp-manager").permitAll()
+                        .requestMatchers("/auth/verify-otp-admin").permitAll()
 
 
 
@@ -157,16 +181,17 @@ public class SecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults())
                 // Form login configuration
-                .formLogin(formLogin ->
-                        formLogin
-                                .loginProcessingUrl("/auth/admin-login")
-                                .permitAll()
-                )
-                .formLogin(formLogin ->
-                        formLogin
-                                .loginProcessingUrl("/auth/login")
-                                .permitAll()
-                )
+//                .formLogin(formLogin ->
+//                        formLogin
+//                                .loginProcessingUrl("/auth/admin-login")
+//                                .permitAll()
+//                )
+//                .formLogin(formLogin ->
+//                        formLogin
+//                                .loginProcessingUrl("/auth/login")
+//                                .permitAll()
+//                )
+                .formLogin(AbstractHttpConfigurer::disable)
                 // Logout configuration
                 .logout(logout ->
                         logout

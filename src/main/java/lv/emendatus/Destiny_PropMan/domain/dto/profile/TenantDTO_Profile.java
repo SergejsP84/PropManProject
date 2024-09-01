@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.YearMonthSerializer;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,11 @@ import java.time.YearMonth;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TenantDTO_Profile {
-    private Long tenantId;
+//    private Long tenantId;
     private String firstName;
     private String lastName;
     private String phone;
+    @Email
     private String email;
     private String iban;
     private String paymentCardNo;

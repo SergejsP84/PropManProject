@@ -101,6 +101,9 @@ public class Manager {
     @Column(name = "known_ips")
     private List<String> knownIps = new ArrayList<>();
 
+    @Column(name = "temporary_email")
+    private String temporaryEmail;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

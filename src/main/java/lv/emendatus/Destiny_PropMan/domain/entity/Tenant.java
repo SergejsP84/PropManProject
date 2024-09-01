@@ -113,6 +113,9 @@ public class Tenant {
     @Column(name = "known_ips")
     private List<String> knownIps = new ArrayList<>();
 
+    @Column(name = "temporary_email")
+    private String temporaryEmail;
+
     public void removePropertyReference() {
         this.currentProperty = null;
     }

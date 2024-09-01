@@ -3191,10 +3191,11 @@ public class SampleBaseCreator implements ApplicationRunner {
             sc.close();
         } else {
             System.out.println(" *** Sample database creation disabled; to enable, please delete the NumericalConfig named ProposeSampleDatabaseCreation from the database or set its value to 1.00.");
+            System.out.println(" *** System ready for operation");
             // TEST SPACE HERE
 //            System.out.println("Test space initialized");
-//            System.out.println("Decrypted card number for Tenant 1: " + thirdPartyPaymentProviderService.decryptCardNumber(1L, UserType.TENANT, tenantService.getTenantById(1L).get().getPaymentCardNo()));
-//            System.out.println("Decrypted CVV for Tenant 1: " + thirdPartyPaymentProviderService.decryptCVV(1L, UserType.TENANT, tenantService.getTenantById(1L).get().getCvv()));
+//            System.out.println("Decrypted card number for Tenant 7: " + thirdPartyPaymentProviderService.decryptCardNumber(7L, UserType.TENANT, tenantService.getTenantById(7L).get().getPaymentCardNo()));
+//            System.out.println("Decrypted CVV for Tenant 7: " + thirdPartyPaymentProviderService.decryptCVV(7L, UserType.TENANT, tenantService.getTenantById(7L).get().getCvv()));
 //            System.out.println("Decrypted card number for Tenant 3: " + thirdPartyPaymentProviderService.decryptCardNumber(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getPaymentCardNo()));
 //            System.out.println("Decrypted CVV for Tenant 3: " + thirdPartyPaymentProviderService.decryptCVV(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getCvv()));
 //            System.out.println("Decrypted card number for Manager 1: " + thirdPartyPaymentProviderService.decryptCardNumber(1L, UserType.MANAGER, managerService.getManagerById(1L).get().getPaymentCardNo()));

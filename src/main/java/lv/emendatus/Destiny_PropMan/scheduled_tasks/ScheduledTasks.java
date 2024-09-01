@@ -253,7 +253,7 @@ public class ScheduledTasks {
             if (tenant.getCardValidityDate().isBefore(YearMonth.now()))
                 try {
                     emailService.sendEmail(tenant.getEmail(),
-                            "Your payment card has expired [Platform Name]!",
+                            "Your payment card has expired - [Platform Name]!",
                             createCardExpiryLetterToUser(tenant.getFirstName(), tenant.getLastName(), tenant.getPaymentCardNo()));
                 } catch (MessagingException e) {
                     e.printStackTrace();
@@ -263,7 +263,7 @@ public class ScheduledTasks {
             if (manager.getCardValidityDate().isBefore(YearMonth.now()))
                 try {
                     emailService.sendEmail(manager.getEmail(),
-                            "Your payment card has expired [Platform Name]!",
+                            "Your payment card has expired - [Platform Name]!",
                             createCardExpiryLetterToUser(manager.getManagerName(), "", manager.getPaymentCardNo()));
                 } catch (MessagingException e) {
                     e.printStackTrace();

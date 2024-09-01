@@ -889,7 +889,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                     LOGGER.error("Refund processing failed for refund with ID {} due to the expiration of the tenant's payment card.", refund.getId());
                 } else{
                     // Add third-party payment processing mechanism in the service
-                    paymentSuccessful = paymentProviderService.stub2(refund);
+                    paymentSuccessful = paymentProviderService.stub2(refund, tenantService.getTenantById(refund.getTenantId()).get().getPaymentCardNo(), tenantService.getTenantById(refund.getTenantId()).get().getCvv());
                 }
             }
             if (paymentSuccessful) {
@@ -958,7 +958,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                     LOGGER.error("Payout processing failed for payout with ID {} due to the expiration of the manager's payment card.", payout.getId());
                 } else{
                     // Add third-party payment processing mechanism in the service
-                    paymentSuccessful = paymentProviderService.stub3(payout);
+                    paymentSuccessful = paymentProviderService.stub3(payout, managerService.getManagerById(payout.getManagerId()).get().getPaymentCardNo(), managerService.getManagerById(payout.getManagerId()).get().getCvv());
                 }
             }
             if (paymentSuccessful) {

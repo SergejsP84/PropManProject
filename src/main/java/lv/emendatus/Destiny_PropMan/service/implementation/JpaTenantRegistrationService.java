@@ -3,6 +3,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.CardUpdateDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
+import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.domain.entity.TokenResetter;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
@@ -35,10 +36,11 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
     private final JpaCurrencyService currencyService;
     private final JpaAdminAccountsService adminAccountsService;
     public final JpaNumericDataMappingService numericDataMappingService;
+    public final JpaNumericalConfigService configService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final Logger LOGGER = LogManager.getLogger(JpaTenantRegistrationService.class);
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
-    public JpaTenantRegistrationService(JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaEmailService emailService, JpaTokenResetService resetService, JpaCurrencyService currencyService, JpaAdminAccountsService adminAccountsService, JpaNumericDataMappingService numericDataMappingService, BCryptPasswordEncoder passwordEncoder) {
+    public JpaTenantRegistrationService(JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaEmailService emailService, JpaTokenResetService resetService, JpaCurrencyService currencyService, JpaAdminAccountsService adminAccountsService, JpaNumericDataMappingService numericDataMappingService, JpaNumericalConfigService configService, BCryptPasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.tokenService = tokenService;
@@ -47,6 +49,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         this.currencyService = currencyService;
         this.adminAccountsService = adminAccountsService;
         this.numericDataMappingService = numericDataMappingService;
+        this.configService = configService;
         this.passwordEncoder = passwordEncoder;
     }
     @Override
@@ -82,15 +85,24 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         tenant.setTenantPayments(new HashSet<>());
         tenant.setCurrentProperty(null);
         tenant.setLeasingHistories(new ArrayList<>());
+        Optional<NumericalConfig> optionalConfig = configService.getNumericalConfigByName("LastRegisteredTenantID");
+        Long tenantId = 1L;
+        if (optionalConfig.isPresent()) {
+            NumericalConfig config = optionalConfig.get();
+            tenantId = config.getValue().longValue() + 1;
+            Long configId = config.getId();
+            config.setValue(Double.valueOf(tenantId));
+            configService.updateNumericalConfig(configId, config);
+            System.out.println("Set the new Tenant ID to " + tenantId);
+        }
         try {
-            tenant.setPaymentCardNo(encryptCardNumber(tenant.getId(), UserType.TENANT, registrationDTO.getPaymentCardNo()));
+            tenant.setPaymentCardNo(encryptCardNumber(tenantId, UserType.TENANT, registrationDTO.getPaymentCardNo()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        tenant.setPaymentCardNo(registrationDTO.getPaymentCardNo());
         tenant.setCardValidityDate(registrationDTO.getCardValidityDate());
         try {
-            tenant.setCvv(encryptCVV(tenant.getId(), UserType.TENANT, registrationDTO.getCvv()).toCharArray());
+            tenant.setCvv(encryptCVV(tenantId, UserType.TENANT, registrationDTO.getCvv()).toCharArray());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -103,13 +115,14 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         }
         String confirmationToken = tokenService.generateToken();
         tenant.setConfirmationToken(confirmationToken);
+        tenant.setExpirationTime(LocalDateTime.now().plusMinutes(5));
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("TENANT"));
         tenant.setAuthorities(authorities);
         tenantService.addTenant(tenant);
         LOGGER.info("New tenant added: ID" + tenant.getId() + ", First name / surname: " + tenant.getFirstName() + " " + tenant.getLastName());
         try {
-            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for", createConfirmationEmailBody(registrationDTO.getFirstName(), registrationDTO.getLastName(), confirmationToken));
+            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for [Platform Name]", createConfirmationEmailBody(registrationDTO.getFirstName(), registrationDTO.getLastName(), confirmationToken));
         } catch (MessagingException e) {
             e.printStackTrace();
         }
@@ -120,6 +133,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         resetService.addResetter(resetter);
     }
 
+    // REDUNDANT - NOT USED IN THE FINAL SETUP
     @Override
     @PreAuthorize("hasRole('ROLE_TENANT') and #dto.userId == principal.id")
     @Transactional
@@ -188,10 +202,10 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
     }
 
     private boolean isLoginBusy(String login) {
-        return tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null && adminAccountsService.findByLogin(login).isEmpty();
+        return !(tenantService.getTenantByLogin(login) == null && managerService.getManagerByLogin(login) == null && adminAccountsService.findByLogin(login).isEmpty());
     }
     private boolean isEmailBusy(String email) {
-        return tenantService.getTenantByEmail(email) == null;
+        return !(tenantService.getTenantByEmail(email) == null);
     }
 
     public String createConfirmationEmailBody(String firstName, String lastName, String confirmationLink) {

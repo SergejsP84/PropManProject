@@ -47,73 +47,101 @@ public class JpaLoginService implements LoginService {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
+//    @Override
+//    public Tenant authenticateTenant(LoginDTO loginDTO, HttpServletRequest request) {
+//        System.out.println("JpaLoginService authenticateTenant method invoked");
+//        String clientIpAddress = request.getRemoteAddr();
+//        Tenant tenant = tenantService.getTenantByLogin(loginDTO.getUsername());
+//        if (tenant != null && passwordEncoder.matches(loginDTO.getPassword(), tenant.getPassword())) {
+//            System.out.println("JpaLoginService: Tenant is NOT null, and the password is correct");
+//            if (tenant.getKnownIps().contains(clientIpAddress)) {
+//                System.out.println("The IP is on the Tenant's list, loading user details");
+//                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getUsername());
+//                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.TENANT);
+//                tenant.setAuthorities(authorities);
+//                LOGGER.info("Successful login attempt for Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
+//                return tenant;
+//            } else {
+//                System.out.println("The IP is NOT on the Tenant's list, initiating 2FA");
+//                initiateTwoFactorAuthentication(tenant.getEmail());
+//                LOGGER.info("Two-factor identification requested from Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
+//                System.out.println("New IP " + clientIpAddress + " detected for tenant " + tenant.getId());
+//                return null;
+//            }
+//        }
+//        LOGGER.warn("Failed login attempt for Tenant with username: " + loginDTO.getUsername() + " at " + LocalDateTime.now());
+//        throw new AuthenticationFailedException("Authentication failed for the provided credentials");
+//    }
+
     @Override
-    public Tenant authenticateTenant(LoginDTO loginDTO, HttpServletRequest request) {
+    public UserDetails authenticateTenant(LoginDTO loginDTO, HttpServletRequest request) {
+        System.out.println("JpaLoginService authenticateTenant method invoked");
         String clientIpAddress = request.getRemoteAddr();
-        Tenant tenant = tenantService.getTenantByLogin(loginDTO.getLogin());
+        Tenant tenant = tenantService.getTenantByLogin(loginDTO.getUsername());
         if (tenant != null && passwordEncoder.matches(loginDTO.getPassword(), tenant.getPassword())) {
+            System.out.println("JpaLoginService: Tenant is NOT null, and the password is correct");
             if (tenant.getKnownIps().contains(clientIpAddress)) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
-                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.TENANT);
-                tenant.setAuthorities(authorities);
-                LOGGER.info("Successful login attempt for Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
-                return tenant;
+                System.out.println("The IP is on the Tenant's list, loading user details");
+                return userDetailsService.loadUserByUsername(loginDTO.getUsername());
             } else {
-                initiateTwoFactorAuthentication(tenant.getEmail());
+                System.out.println("The IP is NOT on the Tenant's list, initiating 2FA");
+                initiateTwoFactorAuthentication(tenant.getEmail(), tenant.getLogin());
                 LOGGER.info("Two-factor identification requested from Tenant: " + tenant.getLogin() + " at " + LocalDateTime.now());
-                System.out.println("New IP " + clientIpAddress + " detected for tenant " + tenant.getId());
                 return null;
             }
         }
-        LOGGER.warn("Failed login attempt for Tenant with username: " + loginDTO.getLogin() + " at " + LocalDateTime.now());
+        LOGGER.warn("Failed login attempt for Tenant with username: " + loginDTO.getUsername() + " at " + LocalDateTime.now());
         throw new AuthenticationFailedException("Authentication failed for the provided credentials");
     }
+
     @Override
-    public Manager authenticateManager(LoginDTO loginDTO, HttpServletRequest request) {
+    public UserDetails authenticateManager(LoginDTO loginDTO, HttpServletRequest request) {
+        System.out.println("JpaLoginService authenticateManager method invoked");
         String clientIpAddress = request.getRemoteAddr();
-        Manager manager = managerService.getManagerByLogin(loginDTO.getLogin());
+        Manager manager = managerService.getManagerByLogin(loginDTO.getUsername());
         if (manager != null && passwordEncoder.matches(loginDTO.getPassword(), manager.getPassword())) {
+            System.out.println("JpaLoginService: Manager is NOT null, and the password is correct");
             if (manager.getKnownIps().contains(clientIpAddress)) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
-                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.MANAGER);
-                manager.setAuthorities(authorities);
+                System.out.println("The IP is on the Manager's list, loading user details");
+//                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.MANAGER);
+//                manager.setAuthorities(authorities);
                 LOGGER.info("Successful login attempt for Manager: " + manager.getLogin() + " at " + LocalDateTime.now());
-                return manager;
+                return userDetailsService.loadUserByUsername(loginDTO.getUsername());
             } else {
-                initiateTwoFactorAuthentication(manager.getEmail());
+                System.out.println("The IP is NOT on the Manager's list, initiating 2FA");
+                initiateTwoFactorAuthentication(manager.getEmail(), manager.getLogin());
                 LOGGER.info("Two-factor identification requested from Manager: " + manager.getLogin() + " at " + LocalDateTime.now());
                 System.out.println("New IP " + clientIpAddress + " detected for manager " + manager.getId());
                 return null;
             }
         }
-        LOGGER.warn("Failed login attempt for Manager with username: " + loginDTO.getLogin() + " at " + LocalDateTime.now());
+        LOGGER.warn("Failed login attempt for Manager with username: " + loginDTO.getUsername() + " at " + LocalDateTime.now());
         throw new AuthenticationFailedException("Authentication failed for the provided credentials");
     }
     @Override
-    public Admin authenticateAdmin(LoginDTO loginDTO, HttpServletRequest request) {
+    public UserDetails authenticateAdmin(LoginDTO loginDTO, HttpServletRequest request) {
         String clientIpAddress = request.getRemoteAddr();
-        Admin admin = adminService.findByLogin(loginDTO.getLogin()).orElse(null);
+        Admin admin = adminService.findByLogin(loginDTO.getUsername()).orElse(null);
         if (admin != null && passwordEncoder.matches(loginDTO.getPassword(), admin.getPassword())) {
             if (admin.getKnownIps().contains(clientIpAddress)) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getLogin());
-                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.ADMIN);
-                admin.setAuthorities(authorities);
+//                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.ADMIN);
+//                admin.setAuthorities(authorities);
                 LOGGER.info("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
                 System.out.println("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
-                return admin;
+                return userDetailsService.loadUserByUsername(loginDTO.getUsername());
             } else {
                 if (!admin.getName().equals("DefaultAdmin")) {
-                initiateTwoFactorAuthentication(admin.getEmail());
+                initiateTwoFactorAuthentication(admin.getEmail(), admin.getLogin());
                 LOGGER.info("Two-factor identification requested from Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
                     System.out.println("New IP " + clientIpAddress + " detected for admin " + admin.getId());
                 return null;
                 } else {
                     System.out.println("Successful login attempt for DefaultAdmin at " + LocalDateTime.now());
-                    return admin;
+                    return userDetailsService.loadUserByUsername(loginDTO.getUsername());
                 }
             }
         }
-        LOGGER.warn("Failed login attempt for Admin with username: " + loginDTO.getLogin() + " at " + LocalDateTime.now());
+        LOGGER.warn("Failed login attempt for Admin with username: " + loginDTO.getUsername() + " at " + LocalDateTime.now());
         throw new AuthenticationFailedException("Authentication failed for the provided credentials");
     }
 
@@ -132,13 +160,13 @@ public class JpaLoginService implements LoginService {
     }
 
     // AUXILIARY METHODS FOR 2FA
-    private void initiateTwoFactorAuthentication(String userEmail) {
+    private void initiateTwoFactorAuthentication(String userEmail, String login) {
         // Generate a random one-time code (OTP)
         String otp = generateRandomOtp();
         // Send the OTP to the user via their preferred communication channel
         sendOtpToUser(otp, userEmail);
         // Store the OTP in a secure location (e.g., session, database) for verification later
-        storeOtpForVerification(otp);
+        storeOtpForVerification(otp, login);
     }
 
     private String generateRandomOtp() {
@@ -160,15 +188,33 @@ public class JpaLoginService implements LoginService {
         }
     }
 
-    private void storeOtpForVerification(String otp) {
+//    private void storeOtpForVerification(String otp) {
+//        // Retrieve the current authentication object
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        // Check if the authentication object is not null and is authenticated
+//        if (authentication != null && authentication.isAuthenticated()) {
+//            // Get the user details from the authentication object
+//            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//            // Store the OTP in the user's session
+//            ((HttpSession) RequestContextHolder.currentRequestAttributes().resolveReference(RequestAttributes.REFERENCE_SESSION)).setAttribute("otp", otp);
+//        }
+//    }
+    private void storeOtpForVerification(String otp, String username) {
         // Retrieve the current authentication object
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         // Check if the authentication object is not null and is authenticated
         if (authentication != null && authentication.isAuthenticated()) {
-            // Get the user details from the authentication object
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            // Store the OTP in the user's session
-            ((HttpSession) RequestContextHolder.currentRequestAttributes().resolveReference(RequestAttributes.REFERENCE_SESSION)).setAttribute("otp", otp);
+            // Store the OTP in the user's session directly
+            HttpSession session = ((HttpSession) RequestContextHolder.currentRequestAttributes()
+                    .resolveReference(RequestAttributes.REFERENCE_SESSION));
+            session.setAttribute("otp", otp);
+            session.setAttribute("otpExpiry", System.currentTimeMillis() + 300000); // OTP expires in 5 minutes
+            session.setAttribute("otpAttempts", 0); // Initialize the attempts counter
+            session.setAttribute("username", username); // Store username for later use
+        } else {
+            // Handle cases where authentication is null or not authenticated if needed
+            throw new IllegalStateException("No authenticated user found for storing OTP.");
         }
     }
 

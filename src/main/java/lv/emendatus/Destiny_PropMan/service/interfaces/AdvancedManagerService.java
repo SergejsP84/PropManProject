@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface AdvancedManagerService {
     PublicManagerProfileDTO getManagerProfile(Long managerId);
-    void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile, Principal principal);
+    void updateManagerProfile(Long managerId, ManagerProfileDTO updatedProfile, Principal principal) throws Exception;
 
     List<ManagerPropertyDTO> getManagerPropertyPortfolio(Long managerId);
 
@@ -26,7 +26,7 @@ public interface AdvancedManagerService {
 
     List<BookingDTO_Reservation> getBookingsForManager(Long managerId, Principal principal);
 
-    void submitClaimfromManager(Long bookingId, String description);
+    void submitClaimfromManager(Long bookingId, String description, Principal principal);
 
     void closeBookingByManager(Long bookingId);
 
@@ -46,22 +46,23 @@ public interface AdvancedManagerService {
 
     void approveBooking (Long bookingId, Principal principal);
 
-    void declineBooking (Long bookingId);
+    void declineBooking (Long bookingId, Principal principal);
 
     void acceptEarlyTermination(Long requestId, String reply);
 
     void declineEarlyTermination(Long requestId, String reply);
 
-    void removeProperty (Long propertyId);
-    void uploadPhotos(Long propertyId, MultipartFile[] files);
-    void removePhoto(Long propertyId, String photoUrl);
+    void removeProperty (Long propertyId, Principal principal);
+    void uploadPhotos(Long propertyId, MultipartFile[] files, Principal principal);
+    void removePhoto(Long propertyId, String photoUrl, Principal principal);
 
-    void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd);
-    void unlockProperty(Long propertyId);
+    void makePropertyUnavailable(Long propertyId, LocalDate periodStart, LocalDate periodEnd, Principal principal);
+    void unlockProperty(Long propertyId, Principal principal);
 
-    void addBillToProperty(BillAdditionDTO dto, Long propertyId);
-    void deleteBillFromProperty(Long billId, Long propertyId);
+    void addBillToProperty(BillAdditionDTO dto, Long propertyId, Principal principal);
+    void deleteBillFromProperty(Long billId, Long propertyId, Principal principal);
 
-    void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating);
+    void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating, Principal principal);
     void updateProperty(Long propertyId, PropertyUpdateDTO propertyDTO, Principal principal);
+
 }

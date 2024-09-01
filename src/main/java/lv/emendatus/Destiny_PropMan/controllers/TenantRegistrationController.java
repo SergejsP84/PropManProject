@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
+    // THE ENTIRE CLASS HAS BEEN MADE REDUNDANT AS A PART OF AN EARLIER SETUP, ENDPOINTS CLOSED
+
 @RestController
 @RequestMapping("/registration/tenants")
 public class TenantRegistrationController {

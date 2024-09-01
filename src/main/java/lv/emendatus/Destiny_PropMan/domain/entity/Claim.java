@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,15 +25,15 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Booking ID is required")
+    @NotNull(message = "Booking ID is required")
     @Column(name = "booking_id")
     private Long bookingId;
 
-    @NotBlank(message = "Description is required")
+    @NotNull(message = "Description is required")
     @Column(name = "description")
     private String description;
 
-    @NotBlank(message = "Claimant type is required")
+    @NotNull(message = "Claimant type is required")
     @Column(name = "claimant")
     @Enumerated(EnumType.STRING)
     private ClaimantType claimantType;

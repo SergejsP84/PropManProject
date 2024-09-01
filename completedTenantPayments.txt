@@ -1,0 +1,2 @@
+2024-08-21T20:31:03.932381700 Payment from Tenant 5 processed successfully. Amount: EUR 4300.0, booking ID: 5
+2024-08-21T21:03:01.534966200 Payment from Tenant 4 processed successfully. Amount: EUR 4000.0, booking ID: 4

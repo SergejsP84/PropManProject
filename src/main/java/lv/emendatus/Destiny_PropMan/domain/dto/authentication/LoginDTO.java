@@ -16,7 +16,7 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 public class LoginDTO {
     @NotNull
     @NotEmpty
-    private String login;
+    private String username;
     @NotNull
     @NotEmpty
     private String password;

@@ -11,9 +11,9 @@ public interface ThirdPartyPaymentProviderService {
     // This class is a stub - left for integrating a third party service for the processing of payments.
     // Due alterations shall have to be made depending on the input data required by such service provider
 
-    Boolean stub(TenantPayment tenantPayment);
-    Boolean stub2(Refund refund);
-    Boolean stub3(Payout payout);
+    Boolean stub(TenantPayment tenantPayment, String cardNumber, char[] cvv);
+    Boolean stub2(Refund refund, String cardNumber, char[] cvv);
+    Boolean stub3(Payout payout, String cardNumber, char[] cvv);
 
     public String decryptCardNumber(Long userId, UserType userType, String encryptedCardNumber) throws Exception;
     public String decryptCVV(Long userId, UserType userType, char[] encryptedCVV) throws Exception;

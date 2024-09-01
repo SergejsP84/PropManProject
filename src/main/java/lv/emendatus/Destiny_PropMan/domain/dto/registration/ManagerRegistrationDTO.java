@@ -20,7 +20,6 @@ import java.time.YearMonth;
 @NoArgsConstructor
 public class ManagerRegistrationDTO {
     @NotNull
-    @NotEmpty
     private ManagerType type;
     @NotNull
     @NotEmpty

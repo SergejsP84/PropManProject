@@ -1,5 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
+import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
 import javax.mail.MessagingException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -37,12 +36,13 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     private final JpaTokenResetService resetService;
     private final JpaAdminAccountsService adminAccountsService;
     public final JpaNumericDataMappingService numericDataMappingService;
+    public final JpaNumericalConfigService configService;
 
     private final Logger LOGGER = LogManager.getLogger(JpaTenantRegistrationService.class);
 
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
 
-    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService, JpaAdminAccountsService adminAccountsService, JpaNumericDataMappingService numericDataMappingService) {
+    public JpaManagerRegistrationService(JpaManagerService managerService, JpaTenantService tenantService, JpaTokenService tokenService, BCryptPasswordEncoder passwordEncoder, JpaEmailService emailService, JpaTokenResetService resetService, JpaAdminAccountsService adminAccountsService, JpaNumericDataMappingService numericDataMappingService, JpaNumericalConfigService configService) {
         this.managerService = managerService;
         this.tenantService = tenantService;
         this.tokenService = tokenService;
@@ -51,6 +51,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         this.resetService = resetService;
         this.adminAccountsService = adminAccountsService;
         this.numericDataMappingService = numericDataMappingService;
+        this.configService = configService;
     }
 
     @Override
@@ -80,14 +81,24 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         manager.setIban(registrationDTO.getIban());
         manager.setLogin(registrationDTO.getLogin());
         manager.setDescription(registrationDTO.getDescription());
+        Optional<NumericalConfig> optionalConfig = configService.getNumericalConfigByName("LastRegisteredManagerID");
+        Long managerId = 1L;
+        if (optionalConfig.isPresent()) {
+            NumericalConfig config = optionalConfig.get();
+            managerId = config.getValue().longValue() + 1;
+            Long configId = config.getId();
+            config.setValue(Double.valueOf(managerId));
+            configService.updateNumericalConfig(configId, config);
+            System.out.println("Set the new Manager ID to " + managerId);
+        }
         try {
-            manager.setPaymentCardNo(encryptCardNumber(manager.getId(), UserType.MANAGER, registrationDTO.getPaymentCardNo()));
+            manager.setPaymentCardNo(encryptCardNumber(managerId, UserType.MANAGER, registrationDTO.getPaymentCardNo()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         manager.setCardValidityDate(registrationDTO.getCardValidityDate());
         try {
-            manager.setCvv(encryptCVV(manager.getId(), UserType.MANAGER, registrationDTO.getCvv()).toCharArray());
+            manager.setCvv(encryptCVV(managerId, UserType.MANAGER, registrationDTO.getCvv()).toCharArray());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -103,6 +114,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("MANAGER"));
         manager.setAuthorities(authorities);
+        manager.setExpirationTime(LocalDateTime.now().plusMinutes(5));
         managerService.addManager(manager);
         LOGGER.info("New manager added: ID" + manager.getId() + ", Name: " + manager.getManagerName() + ", Description: " + manager.getDescription());
         try {
@@ -117,6 +129,8 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         resetService.addResetter(resetter);
     }
 
+
+    // REDUNDANT - NOT USED IN THE FINAL SETUP
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER') and #dto.userId == principal.id")
     @Transactional

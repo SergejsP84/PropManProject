@@ -47,7 +47,7 @@ public class AdvancedManagerController {
     @ManagerFunc_UpdateManagerProfile(path = "/updateProfile/{managerId}")
     public ResponseEntity<Void> updateManagerProfile(@PathVariable Long managerId,
                                                     @RequestBody ManagerProfileDTO updatedManagerInfo,
-                                                     Principal principal) {
+                                                     Principal principal) throws Exception {
         service.updateManagerProfile(managerId, updatedManagerInfo, principal);
         return ResponseEntity.ok().build();
     }
@@ -135,26 +135,26 @@ public class AdvancedManagerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/bookings/decline")
+    @PostMapping("/bookings/decline/{bookingId}")
     @ManagerFunc_DeclineBooking
-    public ResponseEntity<Void> declineBooking(@RequestParam Long bookingId) {
-        service.declineBooking(bookingId);
+    public ResponseEntity<Void> declineBooking(@PathVariable Long bookingId, Principal principal) {
+        service.declineBooking(bookingId, principal);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete_property/{propertyId}")
     @ManagerFunc_RemoveProperty
-    public ResponseEntity<String> removeProperty(@PathVariable Long propertyId) {
-        service.removeProperty(propertyId);
+    public ResponseEntity<String> removeProperty(@PathVariable Long propertyId, Principal principal) {
+        service.removeProperty(propertyId, principal);
         return ResponseEntity.ok("Property removed successfully.");
     }
 
     @PostMapping("/addPhotos/{propertyId}")
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_UploadPhotos
-    public ResponseEntity<String> uploadPhotos(@PathVariable Long propertyId, @RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<String> uploadPhotos(@PathVariable Long propertyId, @RequestParam("files") MultipartFile[] files, Principal principal) {
         try {
-            service.uploadPhotos(propertyId, files);
+            service.uploadPhotos(propertyId, files, principal);
             return ResponseEntity.ok("Photos uploaded successfully.");
         } catch (FileStorageException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload photos: " + e.getMessage());
@@ -162,11 +162,11 @@ public class AdvancedManagerController {
     }
 
     @DeleteMapping("/removePhoto/{propertyId}")
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_RemovePhoto
-    public ResponseEntity<String> removePhoto(@PathVariable Long propertyId, @RequestParam String photoUrl) {
+    public ResponseEntity<String> removePhoto(@PathVariable Long propertyId, @RequestParam String photoUrl, Principal principal) {
         try {
-            service.removePhoto(propertyId, photoUrl);
+            service.removePhoto(propertyId, photoUrl, principal);
             return ResponseEntity.ok("Photo removed successfully.");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -180,7 +180,8 @@ public class AdvancedManagerController {
     @ManagerFunc_AcceptEarlyTermination
     public ResponseEntity<Void> acceptEarlyTermination(
             @RequestParam Long requestId,
-            @RequestParam String reply
+            @RequestParam String reply,
+            Principal principal
     ) {
         service.acceptEarlyTermination(requestId, reply);
         return ResponseEntity.ok().build();
@@ -198,37 +199,40 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/property/unavailable")
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_MakePropertyUnavailable
     public ResponseEntity<Void> makePropertyUnavailable(
             @RequestParam Long propertyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodStart,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodEnd
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodEnd,
+            Principal principal
     ) {
-        service.makePropertyUnavailable(propertyId, periodStart, periodEnd);
+        service.makePropertyUnavailable(propertyId, periodStart, periodEnd, principal);
         return ResponseEntity.ok().build();
     }
 
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @PutMapping("/unlock_property/{propertyId}")
     @ManagerFunc_UnlockProperty
-    public ResponseEntity<Void> unlockProperty(@PathVariable Long propertyId) {
-        service.unlockProperty(propertyId);
+    public ResponseEntity<Void> unlockProperty(@PathVariable Long propertyId, Principal principal) {
+        service.unlockProperty(propertyId, principal);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PutMapping("/property/{propertyId}/addBill")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_AddBillToProperty
     public ResponseEntity<Void> addBillToProperty(@PathVariable Long propertyId,
-                                                  @RequestBody BillAdditionDTO dto) {
-        service.addBillToProperty(dto, propertyId);
+                                                  @RequestBody BillAdditionDTO dto,
+                                                  Principal principal) {
+        service.addBillToProperty(dto, propertyId, principal);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/property/{propertyId}/bill/{billId}")
+    @DeleteMapping("/property/{propertyId}/remove_bill/{billId}")
     @ManagerFunc_DeleteBillFromProperty
-    public ResponseEntity<Void> deleteBillFromProperty(@PathVariable Long propertyId, @PathVariable Long billId) {
-        service.deleteBillFromProperty(billId, propertyId);
+    public ResponseEntity<Void> deleteBillFromProperty(@PathVariable Long propertyId, @PathVariable Long billId, Principal principal) {
+        service.deleteBillFromProperty(billId, propertyId, principal);
         return ResponseEntity.ok().build();
     }
 
@@ -238,8 +242,8 @@ public class AdvancedManagerController {
             @PathVariable("tenant_id") Long tenantId,
             @PathVariable("manager_id") Long managerId,
             @PathVariable("booking_id") Long bookingId,
-            @PathVariable("rating") Integer rating) {
-        service.rateATenant(tenantId, managerId, bookingId, rating);
+            @PathVariable("rating") Integer rating, Principal principal) {
+        service.rateATenant(tenantId, managerId, bookingId, rating, principal);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -251,5 +255,15 @@ public class AdvancedManagerController {
                                                Principal principal) {
         service.updateProperty(propertyId, propertyDTO, principal);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/submitClaim")
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public ResponseEntity<Void> submitClaim(
+            @RequestParam Long bookingId,
+            @RequestParam String description,
+            Principal principal) {
+        service.submitClaimfromManager(bookingId, description, principal);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

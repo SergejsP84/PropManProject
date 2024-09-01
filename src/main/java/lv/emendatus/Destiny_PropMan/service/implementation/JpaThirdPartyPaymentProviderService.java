@@ -27,16 +27,20 @@ public class JpaThirdPartyPaymentProviderService implements ThirdPartyPaymentPro
     }
 
     @Override
-    public Boolean stub(TenantPayment tenantPayment) {
+    public Boolean stub(TenantPayment tenantPayment, String cardNumber, char[] cvv)
+    {
+        // That's a stub, the connection to a third-party payment service is to be implemented here
         return true;
     }
     @Override
-    public Boolean stub2(Refund refund) {
+    public Boolean stub2(Refund refund, String cardNumber, char[] cvv) {
+        // That's a stub, the connection to a third-party payment service is to be implemented here
         return true;
     }
 
     @Override
-    public Boolean stub3(Payout payout) {
+    public Boolean stub3(Payout payout, String cardNumber, char[] cvv) {
+        // That's a stub, the connection to a third-party payment service is to be implemented here
         return true;
     }
 

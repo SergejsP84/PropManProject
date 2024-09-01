@@ -7,6 +7,7 @@ import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerRegistratio
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantRegistrationService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantService;
+import org.springframework.beans.factory.support.ManagedArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +43,44 @@ public class ConfirmationController {
             } else model.addAttribute("error", "Invalid or expired token. Please try again.");
         } else model.addAttribute("error", "Invalid or expired token. Please try again.");
 
-        return "confirmation";
+        return "registration_confirmation"; // This should map to a confirmation page view
+    }
+
+    @GetMapping("/ten/confirm-email-change")
+//    @ConfirmEmailChange - ADD SWAGGER ANNOTATION
+    public String confirmEmailChangeTenant(@RequestParam("token") String token, Model model) {
+        Tenant tenant = tenantService.getTenantByConfirmationToken(token);
+            if (tenant != null) {
+                if (tenantService.isTokenValid(tenant, token)) {
+                    tenant.setEmail(tenant.getTemporaryEmail());
+                    System.out.println("Set the user's email to the new address: " + tenant.getTemporaryEmail());
+                    tenant.setTemporaryEmail(null);
+                    tenant.setConfirmationToken(null);
+                    tenantService.addTenant(tenant);
+                    model.addAttribute("message", "Your email address has been successfully updated!");
+                } else {
+                    model.addAttribute("error", "Invalid or expired token. Please try again.");
+                }
+
+            }
+                return "email_change_confirmation";
+    }
+    @GetMapping("/man/confirm-email-change")
+//    @ConfirmEmailChange - ADD SWAGGER ANNOTATION
+    public String confirmEmailChangeManager(@RequestParam("token") String token, Model model) {
+        Manager manager = managerService.getManagerByConfirmationToken(token);
+        if (manager != null) {
+            if (managerService.isTokenValid(manager, token)) {
+                manager.setEmail(manager.getTemporaryEmail());
+                System.out.println("Set the user's email to the new address: " + manager.getTemporaryEmail());
+                manager.setTemporaryEmail(null);
+                manager.setConfirmationToken(null);
+                managerService.addManager(manager);
+                model.addAttribute("message", "Your email address has been successfully updated!");
+            } else {
+                model.addAttribute("error", "Invalid or expired token. Please try again.");
+            }
+        }
+        return "email_change_confirmation";
     }
 }
