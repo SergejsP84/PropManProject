@@ -116,6 +116,9 @@ public class Tenant {
     @Column(name = "temporary_email")
     private String temporaryEmail;
 
+    @Column(name = "temporary_password")
+    private String temporaryPassword;
+
     public void removePropertyReference() {
         this.currentProperty = null;
     }

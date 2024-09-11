@@ -524,7 +524,7 @@ public class SampleBaseCreator implements ApplicationRunner {
                     property6.setSettlement("Koh Phangan");
                     property6.setCountry("Thailand");
                     property6.setSizeM2(18.0F);
-                    property6.setRating(0F);
+                    property6.setRating(4.0F);
                     property6.setPricePerDay(40.00);
                     property6.setPricePerWeek(180.00);
                     property6.setPricePerMonth(500.00);
@@ -629,7 +629,7 @@ public class SampleBaseCreator implements ApplicationRunner {
                     property11.setSettlement("Pattaya");
                     property11.setCountry("Thailand");
                     property11.setSizeM2(184.8F);
-                    property11.setRating(0F);
+                    property11.setRating(5.0F);
                     property11.setPricePerDay(500.00);
                     property11.setPricePerWeek(1000.00);
                     property11.setPricePerMonth(3000.00);
@@ -1673,7 +1673,7 @@ public class SampleBaseCreator implements ApplicationRunner {
                     tenant11.setFirstName("Bebe");
                     tenant11.setLastName("Stevens");
                     tenant11.setPhone("+1800111120");
-                    tenant11.setEmail("propman_testmail1@inbox.lv");
+                    tenant11.setEmail("propman_testmail2@inbox.lv");
                     tenant11.setIban("FR7630006000011234567890189");
                     tenant11.setLogin("BebeS");
                     encodedPassword = passwordEncoder.encode("BestFriend");
@@ -3027,6 +3027,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message1.setContent("Hi Mr. Ullman, I'm really excited about my stay at the Overlook Hotel! Can you tell me more about the Presidential Suite?");
                     message1.setSenderId(tenant1.getId());
                     message1.setReceiverId(manager2.getId());
+                    message1.setRead(false);
+                    message1.setReceiverType(UserType.MANAGER);
+                    message1.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(51));
                     messageService.addMessage(message1);
 
                     Message message2 = new Message();
@@ -3034,6 +3037,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message2.setContent("Hello Kenny, we're glad to... have you! The Presidential Suite is our finest room, with luxurious amenities and a breathtaking view. If you find it a little too spacious, we can also offer a nice alternative... Room 217.");
                     message2.setSenderId(manager2.getId());
                     message2.setReceiverId(tenant1.getId());
+                    message2.setRead(false);
+                    message2.setReceiverType(UserType.TENANT);
+                    message2.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(41));
                     messageService.addMessage(message2);
 
                     Message message3 = new Message();
@@ -3041,6 +3047,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message3.setContent("Room 217? Why, what's in there?");
                     message3.setSenderId(tenant1.getId());
                     message3.setReceiverId(manager2.getId());
+                    message3.setRead(false);
+                    message3.setReceiverType(UserType.MANAGER);
+                    message3.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(31));
                     messageService.addMessage(message3);
 
                     Message message4 = new Message();
@@ -3048,6 +3057,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message4.setContent("Oh, nothing to worry about. Just an old story we like to tell our guests. Enjoy your stay!");
                     message4.setSenderId(manager2.getId());
                     message4.setReceiverId(tenant1.getId());
+                    message4.setRead(false);
+                    message4.setReceiverType(UserType.TENANT);
+                    message4.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(21));
                     messageService.addMessage(message4);
 
                     Message message5 = new Message();
@@ -3055,6 +3067,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message5.setContent("Alright, I can't wait to check in! See you soon!");
                     message5.setSenderId(tenant1.getId());
                     message5.setReceiverId(manager2.getId());
+                    message5.setRead(false);
+                    message5.setReceiverType(UserType.MANAGER);
+                    message5.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(11));
                     messageService.addMessage(message5);
 
                     Message message6 = new Message();
@@ -3062,6 +3077,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message6.setContent("Looking forward to it, Kenny. Make sure you have a safe trip! The Hotel... it is waiting for you.");
                     message6.setSenderId(manager2.getId());
                     message6.setReceiverId(tenant1.getId());
+                    message6.setRead(false);
+                    message6.setReceiverType(UserType.TENANT);
+                    message6.setSentAt(LocalDateTime.now().minusDays(3).minusHours(2).minusMinutes(1));
                     messageService.addMessage(message6);
 
                     System.out.println("   * Created a conversation between Tenant1 and Manager2");
@@ -3071,6 +3089,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message7.setContent("Hi Ms. Lita, I'm really looking forward to my stay at the house in Pattaya. It looks fantastic!");
                     message7.setSenderId(tenant10.getId());
                     message7.setReceiverId(manager5.getId());
+                    message7.setRead(false);
+                    message7.setReceiverType(UserType.MANAGER);
+                    message7.setSentAt(LocalDateTime.now().minusDays(7).minusHours(3).minusMinutes(53));
                     messageService.addMessage(message7);
 
                     Message message8 = new Message();
@@ -3078,6 +3099,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message8.setContent("Hello Gregory, we are delighted to have you stay with us. The house is perfect for a relaxing getaway. Enjoy your time in Pattaya!");
                     message8.setSenderId(manager5.getId());
                     message8.setReceiverId(tenant10.getId());
+                    message8.setRead(false);
+                    message8.setReceiverType(UserType.TENANT);
+                    message8.setSentAt(LocalDateTime.now().minusDays(7).minusHours(3).minusMinutes(43));
                     messageService.addMessage(message8);
 
                     Message message9 = new Message();
@@ -3085,6 +3109,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message9.setContent("Thanks, Ms. Lita! Just one question - is there a good place nearby to get some authentic Thai food?");
                     message9.setSenderId(tenant10.getId());
                     message9.setReceiverId(manager5.getId());
+                    message9.setRead(false);
+                    message9.setReceiverType(UserType.MANAGER);
+                    message9.setSentAt(LocalDateTime.now().minusDays(7).minusHours(3).minusMinutes(33));
                     messageService.addMessage(message9);
 
                     Message message10 = new Message();
@@ -3092,6 +3119,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message10.setContent("Absolutely, Gregory! There is a great restaurant called 'Sukhumvit Soi 5' just a few minutes away. They have the best Pad Thai in town!");
                     message10.setSenderId(manager5.getId());
                     message10.setReceiverId(tenant10.getId());
+                    message10.setRead(false);
+                    message10.setReceiverType(UserType.TENANT);
+                    message10.setSentAt(LocalDateTime.now().minusDays(7).minusHours(3).minusMinutes(23));
                     messageService.addMessage(message10);
 
                     Message message11 = new Message();
@@ -3099,6 +3129,9 @@ public class SampleBaseCreator implements ApplicationRunner {
                     message11.setContent("Perfect! I can't wait to try it out. Thanks for the tip, Ms. Lita!");
                     message11.setSenderId(tenant10.getId());
                     message11.setReceiverId(manager5.getId());
+                    message11.setRead(false);
+                    message11.setReceiverType(UserType.MANAGER);
+                    message11.setSentAt(LocalDateTime.now().minusDays(7).minusHours(3).minusMinutes(13));
                     messageService.addMessage(message11);
 
                     System.out.println("   * Created a conversation between Tenant10 and Manager5");
@@ -3184,6 +3217,201 @@ public class SampleBaseCreator implements ApplicationRunner {
                     System.out.println("   * Removing NumericDataMappings...");
                     numericDataMappingService.flushEmAll();
                     System.out.println("   * NumericData removed");
+
+                    System.out.println("   * Creating dependent entities...");
+//                    System.out.println("   * Creating Messages...");
+
+//                    Message message1a1 = new Message();
+//                    message1a1.setId(1L);
+//                    message1a1.setSenderId(3L);
+//                    message1a1.setReceiverId(1L);
+//                    message1a1.setContent("Hello! My name is Kyle Broflowski; I booked one of your properties recently for my upcoming stay, and wanted to ask a question before I proceed.");
+//                    messageService.addMessage(message1a1);
+//                    Message message1b1 = new Message();
+//                    message1b1.setId(2L);
+//                    message1b1.setSenderId(1L);
+//                    message1b1.setReceiverId(3L);
+//                    message1b1.setContent("Greetings! Sydney Nettleson, at your service. What would you like to ask, Mr. Broflowski?");
+//                    messageService.addMessage(message1b1);
+//                    Message message1a2 = new Message();
+//                    message1a2.setId(3L);
+//                    message1a2.setSenderId(3L);
+//                    message1a2.setReceiverId(1L);
+//                    message1a2.setContent("Wonderful! My family will be visiting me for a couple of days - is the apartment spacious enough in fact to accommodate my parents and my Canadian half-brother Ike?");
+//                    messageService.addMessage(message1a2);
+//                    Message message1b2 = new Message();
+//                    message1b2.setId(4L);
+//                    message1b2.setSenderId(1L);
+//                    message1b2.setReceiverId(3L);
+//                    message1b2.setContent("Sure, there are three bedrooms, so your entire family can stay with proper comfort.");
+//                    messageService.addMessage(message1b2);
+//                    Message message1a3 = new Message();
+//                    message1a3.setId(5L);
+//                    message1a3.setSenderId(3L);
+//                    message1a3.setReceiverId(1L);
+//                    message1a3.setContent("Ah, thank you! Just wanted to be sure.");
+//                    messageService.addMessage(message1a3);
+//                    Message message1b3 = new Message();
+//                    message1b3.setId(6L);
+//                    message1b3.setSenderId(1L);
+//                    message1b3.setReceiverId(3L);
+//                    message1b3.setContent("Great! Looking forward to meeting you in Riga.");
+//                    messageService.addMessage(message1b3);
+//
+//                    Message message2a1 = new Message();
+//                    message2a1.setId(7L);
+//                    message2a1.setSenderId(2L);
+//                    message2a1.setReceiverId(1L);
+//                    message2a1.setContent("Hello, Mr, McCormick. Stewart Ullman here, I am the Manager at Hotel Overlook. It has occurred to me that you inquired about the possibility of visiting Overlook next season; I would like to express my sincere gratitude for your interest in the Hotel. In view of that, if you do not mind, I would like to have some minor questions clarified, so that your stay with us would ultimately be completely up to, and even in excess of your expectations.");
+//                    messageService.addMessage(message2a1);
+//                    Message message2b1 = new Message();
+//                    message2b1.setId(8L);
+//                    message2b1.setSenderId(1L);
+//                    message2b1.setReceiverId(2L);
+//                    message2b1.setContent("Hi, Mr. Ullman! Sure, ask away!");
+//                    messageService.addMessage(message2b1);
+//                    Message message2a2 = new Message();
+//                    message2a2.setId(9L);
+//                    message2a2.setSenderId(2L);
+//                    message2a2.setReceiverId(1L);
+//                    message2a2.setContent("Great, great. So, Mr. McCormick, did you have any specific room in mind? All our premises offer exquisite accommodation experience, but there are... peculiar features to some of them, if I might say so.");
+//                    messageService.addMessage(message2a2);
+//                    Message message2b2 = new Message();
+//                    message2b2.setId(10L);
+//                    message2b2.setSenderId(1L);
+//                    message2b2.setReceiverId(2L);
+//                    message2b2.setContent("Yes, in fact - a lady I had a conversation with suggested I choose Room 217 if possible, she said she really liked it there!");
+//                    messageService.addMessage(message2b2);
+//                    Message message2a3 = new Message();
+//                    message2a3.setId(11L);
+//                    message2a3.setSenderId(2L);
+//                    message2a3.setReceiverId(1L);
+//                    message2a3.setContent("Ah yes, 217... Let me see... Yes, it has not been booked yet, and... I do agree, quite a few ladies liked their stay here... Some wouldn't even leave, he-he... Oh, pardon me. Yes, I can have it booked in your name, it is just that... Excuse my question, Mr. McCormick, but do you often take late-night baths?");
+//                    messageService.addMessage(message2a3);
+//                    Message message2b3 = new Message();
+//                    message2b3.setId(12L);
+//                    message2b3.setSenderId(1L);
+//                    message2b3.setReceiverId(2L);
+//                    message2b3.setContent("Erm, well... occasionally, but not too often, not at all.");
+//                    messageService.addMessage(message2b3);
+//                    Message message2a4 = new Message();
+//                    message2a4.setId(13L);
+//                    message2a4.setSenderId(2L);
+//                    message2a4.setReceiverId(1L);
+//                    message2a4.setContent("Oh. In that case, I suppose this room will do just fine. Pleasure doing business with you, Mr. McCormick.");
+//                    messageService.addMessage(message2a4);
+//                    Message message2b4 = new Message();
+//                    message2b4.setId(12L);
+//                    message2b4.setSenderId(1L);
+//                    message2b4.setReceiverId(2L);
+//                    message2b4.setContent("Thanks! I am sure this is going to be a wonderful and safe stay!");
+//                    messageService.addMessage(message2b3);
+
+                    System.out.println("   * Creating Claims...");
+                    Claim claim1 = new Claim();
+                    claim1.setId(1L);
+                    claim1.setClaimantType(ClaimantType.TENANT);
+                    claim1.setClaimStatus(ClaimStatus.OPEN);
+                    claim1.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusDays(3)));
+                    claim1.setAdmitted(false);
+                    claim1.setBookingId(15L);
+                    claim1.setDescription("I would like to request a partial refund, as my stay at the Presidential Suite at Hotel Overlook was less than luxurious, in fact. While I do admit that the suite itself is a really exquisite one, and the view from the panoramic window is nothing short of amazing, I had been experiencing certain discomfort due to those Mafia ghosts with shotguns and axes appearing in the morning. Even while a bit of a thrill is somewhat refreshing, I got killed three times during my stay, which is definitely a little bit too much.");
+                    claimService.addClaim(claim1);
+
+                    Claim claim2 = new Claim();
+                    claim2.setId(2L);
+                    claim2.setClaimantType(ClaimantType.MANAGER);
+                    claim2.setClaimStatus(ClaimStatus.OPEN);
+                    claim2.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusHours(4)));
+                    claim2.setAdmitted(false);
+                    claim2.setBookingId(9L);
+                    claim2.setDescription("As delightful it has been for us to accommodate Mr. Tweak at our hotel, unfortunately, we have no choice but to seek reimbursement for the damage done to the room. There are coffee stains all over, not to mention that Mr. Tweak has consumed our entire monthly supply of coffee, having thus caused discomfort to a number of our other guests.");
+                    claimService.addClaim(claim2);
+
+                    Claim claim3 = new Claim();
+                    claim3.setId(3L);
+                    claim3.setClaimantType(ClaimantType.TENANT);
+                    claim3.setClaimStatus(ClaimStatus.RESOLVED);
+                    claim3.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusDays(1)));
+                    claim3.setAdmitted(true);
+                    claim3.setBookingId(8L);
+                    claim3.setDescription("I jost moved into Room 804 at Santa Monica Boulevard, and I am somewhat disappointed. I mean, when you move into a condo named Sheepless Arms, you actually expect to see no sheep there. Nevertheless, the building management uses SHEEP to move their lawns!!!");
+                    claim3.setResolvedAt(Timestamp.valueOf(LocalDateTime.now().minusMinutes(35)));
+                    claim3.setResolution("The manager of the property has admitted the claim; lawn-moving sheep will be replaced with goats as soon as practicable. The manager has also provided a refund of 20% to the tenant to compensate for any potential sheep-related inconveniences");
+                    claimService.addClaim(claim3);
+
+                    System.out.println("   * Creating a Refund...");
+                    Refund refund = new Refund();
+                    TenantPayment payment = payment8;
+                    Double amount = payment.getAmount() * 0.2;
+                    refund.setId(1L);
+                    refund.setAmount(amount8);
+                    refund.setBookingId(8L);
+                    refund.setTenantId(8L);
+                    refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusMinutes(34)));
+                    refund.setCurrency(currency1);
+                    refundService.addRefund(refund);
+                    payment.setAmount(amount8 - amount);
+                    payment.setManagerPayment(amount8 - (amount8 / 100 * interestChargedByTheSystemSetOrDefault));
+                    paymentService.addTenantPayment(payment);
+
+                    System.out.println("   * Creating Payouts...");
+                    Payout payout1 = new Payout();
+                    // random data for parameters, unassociated with a real set of entities - for testing purposes only
+                    payout1.setManagerId(4L);
+                    payout1.setBookingId(1L);
+                    payout1.setAmount(2500.0);
+                    payout1.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusDays(10)));
+                    payout1.setCurrency(currency1);
+                    payoutService.addPayout(payout1);
+                    // same-same
+                    Payout payout2 = new Payout();
+                    payout2.setManagerId(5L);
+                    payout2.setBookingId(2L);
+                    payout2.setAmount(3750.0);
+                    payout2.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusDays(5)));
+                    payout2.setCurrency(currency1);
+                    payoutService.addPayout(payout2);
+
+                    System.out.println("   * Creating EarlyTerminationRequests...");
+                    EarlyTerminationRequest request = new EarlyTerminationRequest();
+                    request.setId(1L);
+                    request.setBookingId(10L);
+                    request.setStatus(ETRequestStatus.PENDING);
+                    request.setTenantId(10L);
+                    request.setComment("Greetings, it's Gregory. I am afraid I will have to move out a couple of days earlier than expected, otherwise I will be in danger of meeting the relatives of the girl I promised to marry here. Please sympathize and assist :/");
+                    request.setTerminationDate(LocalDateTime.now().plusDays(2));
+                    request.setManagersResponse("");
+                    earlyTerminationRequestService.addETRequest(request);
+
+                    EarlyTerminationRequest request2 = new EarlyTerminationRequest();
+                    request2.setId(2L);
+                    request2.setBookingId(8L);
+                    request2.setStatus(ETRequestStatus.PENDING);
+                    request2.setTenantId(8L);
+                    request2.setComment("Craig Tucker here again. I am sorry, but I would like to leave a day earlier - I really appreciated the way Sheepless Arms gor tid of the lawnmower sheep at my request, but it turns out to be that I am allergic to goats, which replaced sheep as lawn mowing utensils.");
+                    request2.setTerminationDate(LocalDateTime.now().plusDays(2));
+                    request2.setManagersResponse("");
+                    earlyTerminationRequestService.addETRequest(request2);
+
+
+                    System.out.println("   * Creating Reviews...");
+                    Review review1 = new Review();
+                    review1.setId(1L);
+                    review1.setPropertyId(11L);
+                    review1.setTenantId(13L);
+                    review1.setRating(5);
+                    review1.setText("An astonishingly lucrative commercial venue - we held a week-long introductory Java course here, and thousands of Pattaya Farang punters came in to take a look! Maybe some of them would even decide to learn Java themselves soon. Also, the Manager, Lita, was always there to help us with whatever questions we had - good job!");
+                    reviewService.addReview(review1);
+
+                    Review review2 = new Review();
+                    review2.setId(2L);
+                    review2.setPropertyId(6L);
+                    review2.setTenantId(14L);
+                    review2.setRating(4);
+                    review2.setText("Very nice overall, but the air conditioning unit broke down while I was there. The manager was quick to fix it, but I did spend two nights in Thai heat. Overall, if not for this accident, the place is definitely great for a Farang spending his Thai vacation! Unfortunately, me being a lady, I could not get the full out of that ;)");
+                    reviewService.addReview(review2);
+
                     System.out.println();
                     System.out.println(" *** TEST DATABASE GENERATION COMPLETE.");
                 }

@@ -37,5 +37,4 @@ public class Payout {
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
-
 }

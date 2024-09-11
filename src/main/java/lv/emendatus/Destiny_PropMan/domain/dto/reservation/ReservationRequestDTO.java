@@ -13,7 +13,6 @@ import java.sql.Timestamp;
 
 public class ReservationRequestDTO {
     private Long propertyId;
-    private Long tenantId;
     private Timestamp startDate;
     private Timestamp endDate;
 }

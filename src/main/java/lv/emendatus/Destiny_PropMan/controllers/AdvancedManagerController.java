@@ -11,6 +11,7 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.FileStorageException;
+import lv.emendatus.Destiny_PropMan.exceptions.PropertyNotFoundException;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdvancedManagerService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
@@ -18,6 +19,7 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/managerial")
@@ -44,6 +47,7 @@ public class AdvancedManagerController {
     }
 
     @PutMapping("/updateProfile/{managerId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_UpdateManagerProfile(path = "/updateProfile/{managerId}")
     public ResponseEntity<Void> updateManagerProfile(@PathVariable Long managerId,
                                                     @RequestBody ManagerProfileDTO updatedManagerInfo,
@@ -60,6 +64,7 @@ public class AdvancedManagerController {
     }
 
     @GetMapping("/property/{propertyId}/bookings")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_GetBookingsForProperty
     public ResponseEntity<List<BookingDTO_Reservation>> getBookingsForProperty(@PathVariable Long propertyId, Principal principal) {
         List<BookingDTO_Reservation> bookings = service.getBookingsForProperty(propertyId, principal);
@@ -67,6 +72,7 @@ public class AdvancedManagerController {
     }
 
     @GetMapping("/manager/{managerId}/bookings")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_GetBookingsForManager
     public ResponseEntity<List<BookingDTO_Reservation>> getBookingsForManager(@PathVariable Long managerId, Principal principal) {
         List<BookingDTO_Reservation> bookings = service.getBookingsForManager(managerId, principal);
@@ -74,6 +80,7 @@ public class AdvancedManagerController {
     }
 
     @GetMapping("/properties/{propertyId}/unpaid-bills")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_ViewUnpaidBillsForProperty
     public ResponseEntity<List<Bill>> viewUnpaidBillsForProperty(@PathVariable Long propertyId, Principal principal) {
         List<Bill> unpaidBills = service.getUnpaidBillsForProperty(propertyId, principal);
@@ -108,6 +115,7 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/discount")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_SetDiscountOrSurcharge
     public ResponseEntity<PropertyDiscount> setDiscountOrSurcharge(@RequestBody PropertyDiscountDTO propertyDiscountDTO, Principal principal) {
         PropertyDiscount propertyDiscount = service.setDiscountOrSurcharge(propertyDiscountDTO, principal);
@@ -115,6 +123,7 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/discount/reset")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_ResetDiscountsAndSurcharges
     public ResponseEntity<Void> resetDiscountsAndSurcharges(@RequestParam Long propertyId, @RequestParam LocalDate periodStart, @RequestParam LocalDate periodEnd, Principal principal) {
         service.resetDiscountsAndSurcharges(propertyId, periodStart, periodEnd, principal);
@@ -122,6 +131,7 @@ public class AdvancedManagerController {
     }
 
     @GetMapping("/bookings/pending-approval/{managerId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_GetBookingsPendingApproval
     public ResponseEntity<List<Booking>> getBookingsPendingApproval(@PathVariable Long managerId, Principal principal) {
         List<Booking> pendingBookings = service.getBookingsPendingApproval(managerId, principal);
@@ -129,6 +139,7 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/bookings/approve/{bookingId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_ApproveBooking
     public ResponseEntity<Void> approveBooking(@PathVariable Long bookingId, Principal principal) {
         service.approveBooking(bookingId, principal);
@@ -136,6 +147,7 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/bookings/decline/{bookingId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_DeclineBooking
     public ResponseEntity<Void> declineBooking(@PathVariable Long bookingId, Principal principal) {
         service.declineBooking(bookingId, principal);
@@ -143,6 +155,7 @@ public class AdvancedManagerController {
     }
 
     @DeleteMapping("/delete_property/{propertyId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_RemoveProperty
     public ResponseEntity<String> removeProperty(@PathVariable Long propertyId, Principal principal) {
         service.removeProperty(propertyId, principal);
@@ -176,25 +189,26 @@ public class AdvancedManagerController {
     }
 
     @PostMapping("/early-termination/accept")
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_AcceptEarlyTermination
     public ResponseEntity<Void> acceptEarlyTermination(
             @RequestParam Long requestId,
             @RequestParam String reply,
             Principal principal
     ) {
-        service.acceptEarlyTermination(requestId, reply);
+        service.acceptEarlyTermination(requestId, reply, principal);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/early-termination/decline")
-//    @PreAuthorize("hasAuthority('MANAGER')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_DeclineEarlyTermination
     public ResponseEntity<Void> declineEarlyTermination(
             @RequestParam Long requestId,
-            @RequestParam String reply
+            @RequestParam String reply,
+            Principal principal
     ) {
-        service.declineEarlyTermination(requestId, reply);
+        service.declineEarlyTermination(requestId, reply, principal);
         return ResponseEntity.ok().build();
     }
 
@@ -230,6 +244,7 @@ public class AdvancedManagerController {
     }
 
     @DeleteMapping("/property/{propertyId}/remove_bill/{billId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @ManagerFunc_DeleteBillFromProperty
     public ResponseEntity<Void> deleteBillFromProperty(@PathVariable Long propertyId, @PathVariable Long billId, Principal principal) {
         service.deleteBillFromProperty(billId, propertyId, principal);
@@ -238,6 +253,7 @@ public class AdvancedManagerController {
 
     @PostMapping("/rate_tenant/{tenant_id}/{manager_id}/{booking_id}/{rating}")
     @ManagerFunc_RateTenant
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<Void> rateTenant(
             @PathVariable("tenant_id") Long tenantId,
             @PathVariable("manager_id") Long managerId,
@@ -265,5 +281,28 @@ public class AdvancedManagerController {
             Principal principal) {
         service.submitClaimfromManager(bookingId, description, principal);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PutMapping("/amenities/{propertyId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
+    @ManagerFunc_ManageAmenities
+    public ResponseEntity<?> manageAmenities(
+            @RequestBody ManageAmenitiesRequestDTO dto,
+            Principal principal) {
+        List<Long> amenityIds = dto.getAmenityIds();
+        Long propertyId = dto.getPropertyId();
+        service.manageAmenities(propertyId, amenityIds, principal);
+        return ResponseEntity.ok("Amenities updated successfully");
+    }
+
+    @GetMapping("/tenant-profile/{bookingId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
+    @ManagerFunc_ViewBookingTenant
+    public ResponseEntity<TenantDTOForManagers> viewBookingTenant(
+            @PathVariable("bookingId") Long bookingId,
+            Principal principal) {
+
+        TenantDTOForManagers tenantDTO = service.viewBookingTenant(bookingId, principal);
+        return ResponseEntity.ok(tenantDTO);
     }
 }

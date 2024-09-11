@@ -11,6 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PasswordResetConfirmationDTO {
         private String token;
-        private String newPassword;
-        private String reEnterNewPassword;
+//        private String newPassword;
+//        private String reEnterNewPassword;
 }

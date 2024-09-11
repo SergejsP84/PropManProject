@@ -391,17 +391,26 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
 
     @Override
     @PreAuthorize("hasAuthority('TENANT')")
-    public List<PaymentsViewDTO> viewCompletedPayments(Long tenantId) {
-        List<TenantPayment> allPaidPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
-                .stream().filter(TenantPayment::isReceivedFromTenant).toList();
-        List<Property> paidProperties = new ArrayList<>();
-        for (TenantPayment payment : allPaidPaymentsOfTenant) {
-            if (propertyService.getPropertyById(payment.getAssociatedPropertyId()).isPresent()) {
-                paidProperties.add(propertyService.getPropertyById(payment.getAssociatedPropertyId()).get());
-
+    public List<PaymentsViewDTO> viewCompletedPayments(Long tenantId, Principal principal) {
+        String authenticatedUsername = principal.getName();
+        Tenant tenant = tenantService.getTenantByLogin(authenticatedUsername);
+        if (tenant != null) {
+            if (tenant.getId().equals(tenantId)) {
+                List<TenantPayment> allPaidPaymentsOfTenant = paymentService.getPaymentsByTenant(tenantId)
+                        .stream().filter(TenantPayment::isReceivedFromTenant).toList();
+                List<Property> paidProperties = new ArrayList<>();
+                for (TenantPayment payment : allPaidPaymentsOfTenant) {
+                    if (propertyService.getPropertyById(payment.getAssociatedPropertyId()).isPresent()) {
+                        paidProperties.add(propertyService.getPropertyById(payment.getAssociatedPropertyId()).get());
+                    }
+                }
+                return paymentsViewMapper.toDTOList(allPaidPaymentsOfTenant, paidProperties);
+            } else {
+                throw new AccessDeniedException("Users can only see their own payments");
             }
+        } else {
+            throw new EntityNotFoundException("User not found");
         }
-        return paymentsViewMapper.toDTOList(allPaidPaymentsOfTenant, paidProperties);
     }
 
     @Override

@@ -48,9 +48,9 @@ public interface AdvancedManagerService {
 
     void declineBooking (Long bookingId, Principal principal);
 
-    void acceptEarlyTermination(Long requestId, String reply);
+    void acceptEarlyTermination(Long requestId, String reply, Principal principal);
 
-    void declineEarlyTermination(Long requestId, String reply);
+    void declineEarlyTermination(Long requestId, String reply, Principal principal);
 
     void removeProperty (Long propertyId, Principal principal);
     void uploadPhotos(Long propertyId, MultipartFile[] files, Principal principal);
@@ -64,5 +64,9 @@ public interface AdvancedManagerService {
 
     void rateATenant(Long tenantId, Long managerId, Long bookingId, Integer rating, Principal principal);
     void updateProperty(Long propertyId, PropertyUpdateDTO propertyDTO, Principal principal);
+
+    void manageAmenities(Long propertyId, List<Long> amenityIDs, Principal principal);
+
+    TenantDTOForManagers viewBookingTenant (Long bookingId, Principal principal);
 
 }

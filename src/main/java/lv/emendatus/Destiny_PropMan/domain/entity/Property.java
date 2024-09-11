@@ -57,7 +57,7 @@ public class Property {
     @Column(name = "size_m2")
     private Float sizeM2;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 9000)
     private String description;
 
     @Column(name = "rating")

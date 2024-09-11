@@ -7,7 +7,10 @@ import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationCancellati
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationRequestDTO;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaReservationService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/reservation")
@@ -18,14 +21,16 @@ public class ReservationController {
         this.service = service;
     }
     @PostMapping("/book")
+    @PreAuthorize("hasAuthority('TENANT')")
     @MakeReservation
-    public ResponseEntity<ConfirmationDTO> makeReservation(@RequestBody ReservationRequestDTO request) {
-        ConfirmationDTO outcome = service.makeReservation(request);
+    public ResponseEntity<ConfirmationDTO> makeReservation(@RequestBody ReservationRequestDTO request, Principal principal) {
+        ConfirmationDTO outcome = service.makeReservation(request, principal);
         return ResponseEntity.ok(outcome);
     }
     @PostMapping("/cancel")
+    @PreAuthorize("hasAuthority('TENANT')")
     @CancelReservation
-    public ResponseEntity<String> cancelReservation(@RequestBody ReservationCancellationDTO cancellationRequest) {
-        return service.cancelReservation(cancellationRequest);
+    public ResponseEntity<String> cancelReservation(@RequestBody ReservationCancellationDTO cancellationRequest, Principal principal) {
+        return service.cancelReservation(cancellationRequest, principal);
     }
 }

@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
+import org.apache.poi.sl.draw.geom.GuideIf;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.*;
+import javax.swing.text.html.Option;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -59,6 +61,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     public final JpaPropertyAmenityService propertyAmenityService;
     public final JpaNumericalConfigService numericalConfigService;
     public final JpaCardDataSaverService cardDataSaverService;
+    public final JpaReviewService reviewService;
     private static final String AES_SECRET_KEY = System.getenv("AES_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder;
     private final TenantMapper tenantMapper;
@@ -69,7 +72,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
 
 
-    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaNumericalConfigService numericalConfigService, JpaCardDataSaverService cardDataSaverService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
+    public JpaAdminFunctionalityService(JpaTenantService tenantService, JpaManagerService managerService, JpaBookingService bookingService, JpaRefundService refundService, JpaTenantPaymentService paymentService, JpaLeasingHistoryService leasingHistoryService, JpaClaimService claimService, JpaPropertyService propertyService, JpaNumericalConfigService configService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaPayoutService payoutService, JpaCurrencyService currencyService, JpaNumericDataMappingService numericDataMappingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaNumericalConfigService numericalConfigService, JpaCardDataSaverService cardDataSaverService, JpaReviewService reviewService, BCryptPasswordEncoder passwordEncoder, TenantMapper tenantMapper, ManagerMapper managerMapper) {
         this.tenantService = tenantService;
         this.managerService = managerService;
         this.bookingService = bookingService;
@@ -87,6 +90,7 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         this.propertyAmenityService = propertyAmenityService;
         this.numericalConfigService = numericalConfigService;
         this.cardDataSaverService = cardDataSaverService;
+        this.reviewService = reviewService;
         this.passwordEncoder = passwordEncoder;
         this.tenantMapper = tenantMapper;
         this.managerMapper = managerMapper;
@@ -1008,16 +1012,30 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     @Transactional
     public void createRefund(Long bookingId, Long tenantId, Double amount, Long currencyId) {
         Refund refund = new Refund();
-        refund.setAmount(amount);
-        refund.setBookingId(bookingId);
-        refund.setTenantId(tenantId);
-        refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
-        if (currencyService.getCurrencyById(currencyId).isPresent()) {
-            refund.setCurrency(currencyService.getCurrencyById(currencyId).get());
+        TenantPayment payment = paymentService.getPaymentByBooking(bookingId);
+        if (amount > payment.getAmount()) {
+            LOGGER.warn("The amount of a Refund cannot exceed the amount of the Payment made for the associated Booking.");
+            System.out.println("The amount of a Refund cannot exceed the amount of the Payment made for the associated Booking.");
         } else {
-            refund.setCurrency(currencyService.returnBaseCurrency());
+            refund.setAmount(amount);
+            refund.setBookingId(bookingId);
+            refund.setTenantId(tenantId);
+            refund.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            if (currencyService.getCurrencyById(currencyId).isPresent()) {
+                refund.setCurrency(currencyService.getCurrencyById(currencyId).get());
+            } else {
+                refund.setCurrency(currencyService.returnBaseCurrency());
+            }
+            refundService.addRefund(refund);
+            int interestChargedByTheSystemSetOrDefault = 10;
+            if (numericalConfigService.getNumericalConfigByName("SystemInterestRate").isPresent()) {
+                interestChargedByTheSystemSetOrDefault = numericalConfigService.getNumericalConfigByName("interestChargedByTheSystemSetOrDefault").get().getValue().intValue();
+            }
+            payment.setAmount(payment.getAmount() - amount);
+            payment.setManagerPayment(payment.getAmount() - (payment.getAmount() / 100 * interestChargedByTheSystemSetOrDefault));
+            paymentService.addTenantPayment(payment);
         }
-        refundService.addRefund(refund);
+
     }
 
     @Override
@@ -1040,17 +1058,62 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         }
     }
 
+//    @Override
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @Transactional
+//    public void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies) {
+//        currencyService.setBaseCurrency(newBaseCurrencyId);
+//        int listIndex = 0;
+//
+//        for (Currency currency : currencyService.getAllCurrencies()) {
+//            if (!currency.getIsBaseCurrency()) {
+//                currency.setRateToBase(ratesForOtherCurrencies.get(listIndex));
+//                listIndex++;
+//            }
+//        }
+//    }
+
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
-    public void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies) {
+    public void setNewBaseCurrency(Long newBaseCurrencyId) {
+        Currency currentBaseCurrency = currencyService.returnBaseCurrency();
         currencyService.setBaseCurrency(newBaseCurrencyId);
-        int listIndex = 0;
-        for (Currency currency : currencyService.getAllCurrencies()) {
-            if (!currency.getIsBaseCurrency()) {
-                currency.setRateToBase(ratesForOtherCurrencies.get(listIndex));
-                listIndex++;
+        Optional<Currency> optional = currencyService.getCurrencyById(newBaseCurrencyId);
+        if (optional.isPresent()) {
+            Currency newBaseCurrency = optional.get();
+            // Ensure new base currency is not the same as the current one
+            if (newBaseCurrency.getId().equals(currentBaseCurrency.getId())) {
+                throw new IllegalArgumentException("New base currency must be different from the current base currency.");
             }
+            // Calculate the conversion rate between the current and new base currency
+            double conversionRate = 1 / newBaseCurrency.getRateToBase();
+            // Set the new base currency's rate to 1.0 and mark it as base
+            newBaseCurrency.setRateToBase(1.0);
+            newBaseCurrency.setIsBaseCurrency(true);
+            // Update other currencies
+            for (Currency currency : currencyService.getAllCurrencies()) {
+                if (!currency.getId().equals(newBaseCurrencyId)) {
+                    // Calculate new rate based on the conversion rate
+                    double newRateToBase = currency.getRateToBase() * conversionRate;
+                    currency.setRateToBase(newRateToBase);
+                    currencyService.addCurrency(currency);
+                } else {
+                    // Set the current base currency's base flag to false
+                    currentBaseCurrency.setIsBaseCurrency(false);
+                    currencyService.addCurrency(currentBaseCurrency);
+                }
+            }
+            List<Property> allProperties = propertyService.getAllProperties();
+            for (Property property : allProperties) {
+                property.setPricePerDay(property.getPricePerDay() / conversionRate);
+                property.setPricePerWeek(property.getPricePerWeek() / conversionRate);
+                property.setPricePerMonth(property.getPricePerMonth() / conversionRate);
+                propertyService.addProperty(property);
+            }
+
+        } else {
+            LOGGER.error("Could not extract a Currency with ID: " + newBaseCurrencyId);
         }
     }
 
@@ -1317,6 +1380,43 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         }
     }
 
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
+    public void deleteReview(Long reviewId) {
+        Optional<Review> optionalReview = reviewService.getReviewById(reviewId);
+        if (optionalReview.isPresent()) {
+            Long id = optionalReview.get().getId();
+            reviewService.deleteReview(id);
+        } else {
+            LOGGER.log(Level.ERROR, "No review with the {} ID exists in the database.", reviewId);
+            throw new EntityNotFoundException("No review found with ID: " + reviewId);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<Claim> viewClaims() {
+        return claimService.getAllClaims();
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void updateCurrencyRate(Long currencyId, Double newRateToBase) {
+        Optional<Currency> optionalCurrency = currencyService.getCurrencyById(currencyId);
+        if (optionalCurrency.isPresent()) {
+            Currency currency = optionalCurrency.get();
+            if (currency.getIsBaseCurrency().equals(true)) {
+                LOGGER.log(Level.WARN, "Currency {} is the system's base currency, thus its rate is always 1.00.", currencyId);
+            } else {
+                currency.setRateToBase(newRateToBase);
+                currencyService.addCurrency(currency);
+            }
+        } else {
+            LOGGER.log(Level.ERROR, "No currency with the {} ID exists in the database.", currencyId);
+            throw new EntityNotFoundException("No currency found with ID: " + currencyId);
+        }
+    }
 
     // AUXILIARY METHODS
     // LUHN LOGIC

@@ -30,7 +30,7 @@ public class Claim {
     private Long bookingId;
 
     @NotNull(message = "Description is required")
-    @Column(name = "description")
+    @Column(name = "description", length = 9000)
     private String description;
 
     @NotNull(message = "Claimant type is required")
@@ -51,7 +51,7 @@ public class Claim {
     @Column(name = "resolved_at")
     private Timestamp resolvedAt;
 
-    @Column(name = "resolution")
+    @Column(name = "resolution", length = 9000)
     private String resolution;
 
     @Override

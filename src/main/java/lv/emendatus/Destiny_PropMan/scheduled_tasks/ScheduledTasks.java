@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.scheduled_tasks;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
+import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 import lv.emendatus.Destiny_PropMan.service.implementation.*;
@@ -35,7 +36,9 @@ public class ScheduledTasks {
     private final JpaEmailService emailService;
     private final JpaLeasingHistoryService leasingHistoryService;
     private final JpaPropertyLockService lockService;
-    public ScheduledTasks(JpaBookingService bookingService, JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaTokenResetService resetterService, JpaEarlyTerminationRequestService terminationRequestService, JpaTenantPaymentService paymentService, JpaNumericalConfigService configService, JpaPayoutService payoutService, JpaPropertyService propertyService, JpaPropertyDiscountService discountService, JpaEmailService emailService, JpaLeasingHistoryService leasingHistoryService, JpaPropertyLockService lockService) {
+    private final JpaClaimService claimService;
+
+    public ScheduledTasks(JpaBookingService bookingService, JpaTenantService tenantService, JpaManagerService managerService, JpaTokenService tokenService, JpaTokenResetService resetterService, JpaEarlyTerminationRequestService terminationRequestService, JpaTenantPaymentService paymentService, JpaNumericalConfigService configService, JpaPayoutService payoutService, JpaPropertyService propertyService, JpaPropertyDiscountService discountService, JpaEmailService emailService, JpaLeasingHistoryService leasingHistoryService, JpaPropertyLockService lockService, JpaClaimService claimService) {
         this.bookingService = bookingService;
         this.tenantService = tenantService;
         this.managerService = managerService;
@@ -50,6 +53,7 @@ public class ScheduledTasks {
         this.emailService = emailService;
         this.leasingHistoryService = leasingHistoryService;
         this.lockService = lockService;
+        this.claimService = claimService;
     }
 
     @Scheduled(cron = "0 0 1 * * *")
@@ -69,7 +73,7 @@ public class ScheduledTasks {
                 }
                 LOGGER.info("Booking {} status set to CURRENT along with the start of the rental period.", booking.getId());
             }
-            if (today.isAfter(endDate)) {
+            if (today.isAfter(endDate) && !booking.getStatus().equals(BookingStatus.CANCELLED)) {
                 bookingService.updateBookingStatus(booking.getId(), BookingStatus.OVER);
                 if (tenantService.getTenantById(booking.getTenantId()).isPresent()) {
                     Tenant tenant = tenantService.getTenantById(booking.getTenantId()).get();
@@ -308,6 +312,24 @@ public class ScheduledTasks {
                 .filter(lock -> iDsForRemoval.contains(lock.getBookingStubId()))
                 .forEach(lock -> lockService.deletePropertyLock(lock.getId()));
         iDsForRemoval.forEach(bookingService::deleteBooking);
+    }
+
+    @Scheduled(cron = "0 0 6 * * *")
+    public void removeOldResolvedClaims() {
+        List<Claim> existingClaims = claimService.getAllClaims();
+        List<Long> idsForRemoval = new ArrayList<>();
+        for (Claim claim : existingClaims) {
+            if (claim.getClaimStatus().equals(ClaimStatus.RESOLVED)) {
+                if (claim.getResolvedAt().toLocalDateTime().isBefore(LocalDateTime.now().minusDays(30))) {
+                    idsForRemoval.add(claim.getId());
+                }
+            }
+        }
+        if (!idsForRemoval.isEmpty()) {
+            for (Long id : idsForRemoval) {
+                claimService.deleteClaim(id);
+            }
+        }
     }
 
     // AUXILIARY METHODS

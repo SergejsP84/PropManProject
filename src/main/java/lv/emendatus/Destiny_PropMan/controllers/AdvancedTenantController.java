@@ -51,6 +51,7 @@ public class AdvancedTenantController {
 
     @PutMapping("/updateProfile/{tenantId}")
     @TenantFunc_UpdateProfile
+    @PreAuthorize("hasAuthority('TENANT')")
     public ResponseEntity<Void> updateTenantProfile(@PathVariable Long tenantId,
                                                     @RequestBody TenantDTO_Profile updatedTenantInfo,
                                                     Principal principal) throws Exception {
@@ -59,6 +60,7 @@ public class AdvancedTenantController {
     }
 
     @GetMapping("/getHistory/{tenantId}")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_ViewBookingHistory
     public ResponseEntity<BookingHistoryDTO> viewBookingHistory(@PathVariable Long tenantId, Principal principal) {
         BookingHistoryDTO bookingHistory = service.viewBookingHistory(tenantId, principal);
@@ -66,6 +68,7 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/saveFavoriteProperty")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_SaveFavoriteProperty
     public ResponseEntity<Void> saveFavoriteProperty(@RequestBody FavoritePropertyDTO favoritePropertyDTO, Principal principal) {
         service.saveFavoriteProperty(favoritePropertyDTO, principal);
@@ -73,6 +76,7 @@ public class AdvancedTenantController {
     }
 
     @GetMapping("/getFavoriteProperties/{tenantId}")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_GetFavoriteProperties
     public ResponseEntity<List<FavoritePropertyDTO_Profile>> getFavoriteProperties(@PathVariable Long tenantId, Principal principal) {
         List<FavoritePropertyDTO_Profile> favorites = service.getFavoriteProperties(tenantId, principal);
@@ -80,6 +84,7 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/removeFavoriteProperty/{tenantId}/{propertyId}")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_RemoveFavoriteProperty
     public ResponseEntity<Void> removeFavoriteProperty(@PathVariable Long tenantId, @PathVariable Long propertyId, Principal principal) {
         service.removePropertyFromFavorites(tenantId, propertyId, principal);
@@ -87,13 +92,15 @@ public class AdvancedTenantController {
     }
 
     @GetMapping("/completed-payments")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_ViewCompletedPayments
-    public ResponseEntity<List<PaymentsViewDTO>> viewCompletedPayments(@RequestParam Long tenantId) {
-        List<PaymentsViewDTO> completedPayments = service.viewCompletedPayments(tenantId);
+    public ResponseEntity<List<PaymentsViewDTO>> viewCompletedPayments(@RequestParam Long tenantId, Principal principal) {
+        List<PaymentsViewDTO> completedPayments = service.viewCompletedPayments(tenantId, principal);
         return ResponseEntity.ok(completedPayments);
     }
 
     @GetMapping("/outstanding-payments")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_ViewOutstandingPayments
     public ResponseEntity<List<PaymentsViewDTO>> viewOutstandingPayments(@RequestParam Long tenantId, Principal principal) {
         List<PaymentsViewDTO> outstandingPayments = service.viewOutstandingPayments(tenantId, principal);
@@ -101,6 +108,7 @@ public class AdvancedTenantController {
     }
 
     @GetMapping("/current-bookings")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_ViewTenantsBookings
     public ResponseEntity<List<BookingsViewDTO>> viewTenantsBookings(@RequestParam Long tenantId, Principal principal) {
         List<BookingsViewDTO> tenantBookings = service.viewTenantsBookings(tenantId, principal);
@@ -108,6 +116,7 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/requestEarlyTermination")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_RequestEarlyTermination
     public ResponseEntity<Void> requestEarlyTermination(
             @RequestBody ETRequestDTO requestDTO,
@@ -117,6 +126,7 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/processPayment/{payment_id}")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_ProcessPayment
     public ResponseEntity<Void> processPayment(@PathVariable("payment_id") Long paymentId, Principal principal) {
         service.processPayment(paymentId, principal);
@@ -124,6 +134,7 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/rate_property")
+    @PreAuthorize("hasAuthority('TENANT')")
     @TenantFunc_RateProperty
     public ResponseEntity<Void> rateProperty(
             @RequestBody PropertyRatingDTO dto,
@@ -133,7 +144,8 @@ public class AdvancedTenantController {
     }
 
     @PostMapping("/submit_claim")
-//    ADD A SWAGGER ANNOTATION HERE @TenantFunc_SubmitClaim
+    @PreAuthorize("hasAuthority('TENANT')")
+    @TenantFunc_SubmitClaim
     public ResponseEntity<Void> submitClaim(
             @RequestBody SubmitClaimDTO submitClaimDTO,
             Principal principal) {

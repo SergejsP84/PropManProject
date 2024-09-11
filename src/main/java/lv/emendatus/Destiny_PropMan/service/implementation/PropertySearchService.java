@@ -46,9 +46,14 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
         }
 
         // Converting price ranges to base currency
-        if (!criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
-            if (criteria.getMaxPrice() != null) criteria.setMaxPrice(criteria.getMaxPrice() * criteria.getCurrency().getRateToBase());
-            if (criteria.getMinPrice() != null) criteria.setMinPrice(criteria.getMinPrice() * criteria.getCurrency().getRateToBase());
+
+        if (criteria.getCurrency() != null) {
+            if (!criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
+                if (criteria.getMaxPrice() != null)
+                    criteria.setMaxPrice(criteria.getMaxPrice() * criteria.getCurrency().getRateToBase());
+                if (criteria.getMinPrice() != null)
+                    criteria.setMinPrice(criteria.getMinPrice() * criteria.getCurrency().getRateToBase());
+            }
         }
 
         if (criteria.getMaxPrice() != null || criteria.getMinPrice() != null) {

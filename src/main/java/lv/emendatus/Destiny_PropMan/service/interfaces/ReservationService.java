@@ -6,8 +6,10 @@ import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationCancellati
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationRequestDTO;
 import org.springframework.http.ResponseEntity;
 
-public interface ReservationService {
-    ConfirmationDTO makeReservation(ReservationRequestDTO reservationRequest);
+import java.security.Principal;
 
-    ResponseEntity<String> cancelReservation(ReservationCancellationDTO cancellationRequest);
+public interface ReservationService {
+    ConfirmationDTO makeReservation(ReservationRequestDTO reservationRequest, Principal principal);
+
+    ResponseEntity<String> cancelReservation(ReservationCancellationDTO cancellationRequest, Principal principal);
 }

@@ -6,6 +6,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.registration.AdminRegistrationDTO
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdminAccountsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +21,7 @@ public class AdminAccountsController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminAccounts_Create
     public ResponseEntity<String> createAdmin(@RequestBody AdminRegistrationDTO dto) {
         adminService.createAdmin(dto);
@@ -39,6 +41,7 @@ public class AdminAccountsController {
      */
 
     @DeleteMapping("/delete")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminAccounts_Delete
     public ResponseEntity<String> deleteAdmin(@RequestParam String login) {
         adminService.deleteAdminByLogin(login);

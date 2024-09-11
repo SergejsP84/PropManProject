@@ -103,9 +103,6 @@ public class JpaLoginService implements LoginService {
             System.out.println("JpaLoginService: Manager is NOT null, and the password is correct");
             if (manager.getKnownIps().contains(clientIpAddress)) {
                 System.out.println("The IP is on the Manager's list, loading user details");
-//                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.MANAGER);
-//                manager.setAuthorities(authorities);
-                LOGGER.info("Successful login attempt for Manager: " + manager.getLogin() + " at " + LocalDateTime.now());
                 return userDetailsService.loadUserByUsername(loginDTO.getUsername());
             } else {
                 System.out.println("The IP is NOT on the Manager's list, initiating 2FA");
@@ -118,23 +115,25 @@ public class JpaLoginService implements LoginService {
         LOGGER.warn("Failed login attempt for Manager with username: " + loginDTO.getUsername() + " at " + LocalDateTime.now());
         throw new AuthenticationFailedException("Authentication failed for the provided credentials");
     }
+
     @Override
     public UserDetails authenticateAdmin(LoginDTO loginDTO, HttpServletRequest request) {
+        System.out.println("JpaLoginService authenticateAdmin method invoked");
         String clientIpAddress = request.getRemoteAddr();
         Admin admin = adminService.findByLogin(loginDTO.getUsername()).orElse(null);
         if (admin != null && passwordEncoder.matches(loginDTO.getPassword(), admin.getPassword())) {
+            System.out.println("JpaLoginService: Admin is NOT null, and the password is correct");
             if (admin.getKnownIps().contains(clientIpAddress)) {
-//                Collection<? extends GrantedAuthority> authorities = getAuthoritiesForUser(UserRole.ADMIN);
-//                admin.setAuthorities(authorities);
+                System.out.println("The IP is on the Admin's list, loading user details");
                 LOGGER.info("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
-                System.out.println("Successful login attempt for Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
                 return userDetailsService.loadUserByUsername(loginDTO.getUsername());
             } else {
                 if (!admin.getName().equals("DefaultAdmin")) {
-                initiateTwoFactorAuthentication(admin.getEmail(), admin.getLogin());
-                LOGGER.info("Two-factor identification requested from Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
+                    System.out.println("The IP is NOT on the Admin's list, initiating 2FA");
+                    initiateTwoFactorAuthentication(admin.getEmail(), admin.getLogin());
+                    LOGGER.info("Two-factor identification requested from Admin: " + admin.getLogin() + " at " + LocalDateTime.now());
                     System.out.println("New IP " + clientIpAddress + " detected for admin " + admin.getId());
-                return null;
+                    return null;
                 } else {
                     System.out.println("Successful login attempt for DefaultAdmin at " + LocalDateTime.now());
                     return userDetailsService.loadUserByUsername(loginDTO.getUsername());

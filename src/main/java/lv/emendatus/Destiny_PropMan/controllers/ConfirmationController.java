@@ -1,5 +1,7 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
+import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmEmailChangeManager;
+import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmEmailChangeTenant;
 import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmRegistration;
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
@@ -47,7 +49,7 @@ public class ConfirmationController {
     }
 
     @GetMapping("/ten/confirm-email-change")
-//    @ConfirmEmailChange - ADD SWAGGER ANNOTATION
+    @ConfirmEmailChangeTenant
     public String confirmEmailChangeTenant(@RequestParam("token") String token, Model model) {
         Tenant tenant = tenantService.getTenantByConfirmationToken(token);
             if (tenant != null) {
@@ -66,7 +68,7 @@ public class ConfirmationController {
                 return "email_change_confirmation";
     }
     @GetMapping("/man/confirm-email-change")
-//    @ConfirmEmailChange - ADD SWAGGER ANNOTATION
+    @ConfirmEmailChangeManager
     public String confirmEmailChangeManager(@RequestParam("token") String token, Model model) {
         Manager manager = managerService.getManagerByConfirmationToken(token);
         if (manager != null) {

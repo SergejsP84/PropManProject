@@ -8,6 +8,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyAdditionDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
+import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
@@ -38,9 +39,12 @@ public interface AdminFunctionalityService {
     void createPayout(Long bookingId, Long ManagerId, Double amount, Long currencyId);
     void createRefund(Long bookingId, Long tenantId, Double amount, Long currencyId);
     void addNewCurrency(String designation, Double rateToBase);
-    void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies);
+//    void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies);
+    void setNewBaseCurrency(Long newBaseCurrencyId);
     void setNumericalConfigs(SetNumConfigDTO dto);
     void addAmenityToDatabase(String amenityDescription);
     void removeAmenityFromDatabase(Long amenityId);
-
+    void deleteReview(Long reviewId);
+    List<Claim> viewClaims();
+    void updateCurrencyRate(Long currencyId, Double newRateToBase);
 }

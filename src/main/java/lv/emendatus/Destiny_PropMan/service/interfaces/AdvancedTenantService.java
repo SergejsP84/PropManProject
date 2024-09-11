@@ -34,7 +34,7 @@ public interface AdvancedTenantService {
     void submitClaimFromTenant(Long bookingId, String description, Principal principal);
 
     // View payments and bookings
-    List<PaymentsViewDTO> viewCompletedPayments(Long tenantId);
+    List<PaymentsViewDTO> viewCompletedPayments(Long tenantId, Principal principal);
     List<PaymentsViewDTO> viewOutstandingPayments(Long tenantId, Principal principal);
     List<BookingsViewDTO> viewTenantsBookings(Long tenantId, Principal principal);
 

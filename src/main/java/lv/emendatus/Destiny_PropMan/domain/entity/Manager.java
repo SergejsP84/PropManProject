@@ -39,7 +39,7 @@ public class Manager {
     @Column(name = "manager_name")
     private String managerName;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 9000)
     private String description;
 
     @Column(name = "is_active")
@@ -103,6 +103,10 @@ public class Manager {
 
     @Column(name = "temporary_email")
     private String temporaryEmail;
+
+    @Column(name = "temporary_password")
+    private String temporaryPassword;
+
 
     @Override
     public boolean equals(Object o) {

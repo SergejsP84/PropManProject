@@ -122,6 +122,12 @@ public class SecurityConfig {
                         .requestMatchers("/admin/set_numerical_configs").hasAuthority("ADMIN")
                         .requestMatchers("/admin/add_amenity").hasAuthority("ADMIN")
                         .requestMatchers("/admin/remove_amenity/{amenityId}").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/delete-review/{reviewId}").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/view-claims").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/view-claims").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/change-rate/**").hasAuthority("ADMIN")
+
+
                         .requestMatchers("/managerial/getProfile/{managerId}").permitAll()
                         .requestMatchers("/managerial/updateProfile/{managerId}").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/getPropertyPortfolio/{managerId}").permitAll()
@@ -147,6 +153,8 @@ public class SecurityConfig {
                         .requestMatchers("/managerial/property/{propertyId}/addBill").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/property/{propertyId}/remove_bill/{billId}").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/rate_tenant/{tenant_id}/{manager_id}/{booking_id}/{rating}").hasAuthority("MANAGER")
+                        .requestMatchers("/managerial/amenities/{property_id}").hasAuthority("MANAGER")
+                        .requestMatchers("/managerial/tenant-profile/{booking_id}}").hasAuthority("MANAGER")
                         .requestMatchers("/tenant/property/details/{propertyId}").permitAll()
                         .requestMatchers("/tenant/getProfile/{tenantId}").hasAuthority("TENANT")
                         .requestMatchers("/ten/confirm-email-change").permitAll()
@@ -172,6 +180,16 @@ public class SecurityConfig {
                         .requestMatchers("/auth/verify-otp-tenant").permitAll()
                         .requestMatchers("/auth/verify-otp-manager").permitAll()
                         .requestMatchers("/auth/verify-otp-admin").permitAll()
+                        .requestMatchers("/communication/**").authenticated()
+                        .requestMatchers("/password/change").authenticated()
+                        .requestMatchers("/password/request-reset").permitAll()
+                        .requestMatchers("/password/complete-reset").permitAll()
+                        .requestMatchers("/review/post").hasAuthority("TENANT")
+                        .requestMatchers("/review/getByProperty/{propertyId}").permitAll()
+                        .requestMatchers("/reservation/book").hasAuthority("TENANT")
+                        .requestMatchers("/reservation/cancel").hasAuthority("TENANT")
+                        .requestMatchers("/search/properties").permitAll()
+
 
 
 

@@ -10,6 +10,8 @@ import lv.emendatus.Destiny_PropMan.service.implementation.JpaPasswordService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/password")
 public class PasswordController {
@@ -20,10 +22,10 @@ public class PasswordController {
     }
     @PostMapping("/change")
     @ChangePassword
-    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO) {
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO, Principal principal) {
         try {
             passwordService.changePassword(passwordChangeDTO.getLogin(), passwordChangeDTO.getUserType(),
-                    passwordChangeDTO.getNewPassword(), passwordChangeDTO.getReEnterNewPassword());
+                    passwordChangeDTO.getNewPassword(), passwordChangeDTO.getReEnterNewPassword(), principal);
             return ResponseEntity.ok("Password changed successfully");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to change password: " + e.getMessage());
@@ -40,11 +42,11 @@ public class PasswordController {
         }
     }
 
-    @PostMapping("/complete-reset")
+    @GetMapping("/complete-reset")
     @CompletePasswordReset
-    public ResponseEntity<String> completePasswordReset(@RequestBody PasswordResetConfirmationDTO requestDTO) {
+    public ResponseEntity<String> completePasswordReset(@RequestParam String token) {
         try {
-            passwordService.completePasswordReset(requestDTO.getToken(), requestDTO.getNewPassword(), requestDTO.getReEnterNewPassword());
+            passwordService.completePasswordReset(token);
             return ResponseEntity.ok("Password reset successfully");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to reset password: " + e.getMessage());

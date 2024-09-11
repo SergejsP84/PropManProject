@@ -7,10 +7,12 @@ import java.util.Collection;
 public class UserResponse {
     private String username;
     private Collection<? extends GrantedAuthority> authorities;
+    private String token; // Add this field for JWT
 
-    public UserResponse(String username, Collection<? extends GrantedAuthority> authorities) {
+    public UserResponse(String username, Collection<? extends GrantedAuthority> authorities, String token) {
         this.username = username;
         this.authorities = authorities;
+        this.token = token;
     }
 
     public String getUsername() {
@@ -19,5 +21,9 @@ public class UserResponse {
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
+    }
+
+    public String getToken() {
+        return token;
     }
 }

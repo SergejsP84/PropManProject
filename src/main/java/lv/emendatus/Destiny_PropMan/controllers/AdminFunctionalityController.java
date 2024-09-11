@@ -9,6 +9,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyAdditionDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
+import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
 import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdminFunctionalityService;
@@ -30,6 +31,7 @@ public class AdminFunctionalityController {
     }
 
     @PutMapping("/toggle_tenant_status/{tenant_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_ToggleTenantStatus(path = "/toggle_tenant_status/{tenant_id}")
     public ResponseEntity<Void> toggleTenantStatus(@PathVariable Long tenant_id) {
         adminFunctionalityService.toggleTenantStatus(tenant_id);
@@ -39,6 +41,7 @@ public class AdminFunctionalityController {
     // http://localhost:8080/admin/toggle_tenant_status/9
 
     @PutMapping("/toggle_manager_status/{manager_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_ToggleManagerStatus(path = "/toggle_manager_status/{manager_id}")
     public ResponseEntity<Void> toggleManagerStatus(@PathVariable Long manager_id) {
         adminFunctionalityService.toggleManagerStatus(manager_id);
@@ -48,6 +51,7 @@ public class AdminFunctionalityController {
     // http://localhost:8080/admin/toggle_manager_status/1
 
     @PostMapping("/register_tenant")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RegisterTenant(path = "/register_tenant")
     public ResponseEntity<String> registerTenantForAdmin(@RequestBody TenantRegistrationDTO registrationDTO) {
         try {
@@ -86,6 +90,7 @@ public class AdminFunctionalityController {
      */
 
     @PostMapping("/register_manager")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RegisterManager(path = "/register_manager")
     public ResponseEntity<String> registerManager(@RequestBody ManagerRegistrationDTO registrationDTO) {
         try {
@@ -119,6 +124,7 @@ public class AdminFunctionalityController {
      */
 
     @PutMapping("/update_tenant/{tenantId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_UpdateTenantProfile
     public ResponseEntity<String> updateTenantInformation(@PathVariable Long tenantId, @RequestBody TenantDTO_Profile updatedTenantInfo) {
         try {
@@ -132,6 +138,7 @@ public class AdminFunctionalityController {
     }
 
     @PutMapping("/update_manager/{managerId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_UpdateManagerProfile
     public ResponseEntity<String> updateManagerInformation(@PathVariable Long managerId, @RequestBody ManagerProfileDTO updatedProfile) {
         try {
@@ -145,6 +152,7 @@ public class AdminFunctionalityController {
     }
 
     @DeleteMapping("/delete_tenant/{tenantId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RemoveTenant
     public ResponseEntity<String> removeTenant(@PathVariable Long tenantId) {
         try {
@@ -155,6 +163,7 @@ public class AdminFunctionalityController {
         }
     }
     @DeleteMapping("/delete_manager/{managerId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RemoveManager
     public ResponseEntity<String> removeManager(@PathVariable Long managerId) {
         try {
@@ -166,6 +175,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/add_property")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_AddProperty
     public ResponseEntity<String> addProperty(@RequestBody PropertyAdditionDTO propertyDTO) {
         adminFunctionalityService.addProperty(propertyDTO);
@@ -173,6 +183,7 @@ public class AdminFunctionalityController {
     }
 
     @DeleteMapping("/delete_property/{propertyId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RemoveProperty
     public ResponseEntity<String> removeProperty(@PathVariable Long propertyId) {
         adminFunctionalityService.removeProperty(propertyId);
@@ -180,6 +191,7 @@ public class AdminFunctionalityController {
     }
 
     @PatchMapping("/resolve_claim/{claimId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_ResolveClaim
     public ResponseEntity<String> resolveClaim(@PathVariable Long claimId, @RequestBody String resolution) {
         adminFunctionalityService.resolveClaim(claimId, resolution);
@@ -187,6 +199,7 @@ public class AdminFunctionalityController {
     }
 
     @GetMapping("/pending_refunds")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_ViewPendingRefunds
     public ResponseEntity<List<AdminRefundDTO>> viewPendingRefunds() {
         List<AdminRefundDTO> pendingRefunds = adminFunctionalityService.viewPendingRefunds();
@@ -194,6 +207,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/settle_refund")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_SettleRefund
     public ResponseEntity<String> settleRefund(@RequestBody Refund refund) {
         boolean settlementSuccess = adminFunctionalityService.settleRefund(refund);
@@ -205,6 +219,7 @@ public class AdminFunctionalityController {
     }
 
     @GetMapping("/pending_payouts")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_ViewPendingPayouts
     public ResponseEntity<List<AdminPayoutDTO>> viewPendingPayouts() {
         List<AdminPayoutDTO> pendingPayouts = adminFunctionalityService.viewPendingPayouts();
@@ -212,6 +227,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/settle_payout")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_SettlePayout
     public ResponseEntity<String> settlePayout(@RequestBody Payout payout) {
         boolean settlementSuccess = adminFunctionalityService.settlePayout(payout);
@@ -223,6 +239,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/new_payout")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_AddNewPayout
     public ResponseEntity<String> addNewPayout(@RequestParam Long bookingId, @RequestParam Long managerId, @RequestParam Double amount, @RequestParam Long currencyId) {
         adminFunctionalityService.createPayout(bookingId, managerId, amount, currencyId);
@@ -230,6 +247,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/new_refund")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_AddNewRefund
     public ResponseEntity<String> addNewRefund(@RequestParam Long bookingId, @RequestParam Long tenantId, @RequestParam Double amount, @RequestParam Long currencyId) {
         adminFunctionalityService.createRefund(bookingId, tenantId, amount, currencyId);
@@ -237,6 +255,7 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/add_currency")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_AddNewCurrency
     public ResponseEntity<String> addNewCurrency(@RequestParam String designation, @RequestParam Double rateToBase) {
         adminFunctionalityService.addNewCurrency(designation, rateToBase);
@@ -245,15 +264,16 @@ public class AdminFunctionalityController {
 
 
     @PostMapping("/set_new_base_currency")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_SetNewBaseCurrency
     public ResponseEntity<String> setNewBaseCurrency(
-            @RequestParam Long newBaseCurrencyId,
-            @RequestParam List<Double> ratesForOtherCurrencies) {
-        adminFunctionalityService.setNewBaseCurrency(newBaseCurrencyId, ratesForOtherCurrencies);
-        return ResponseEntity.ok("Base currency and exchange rates updated successfully.");
+            @RequestParam Long newBaseCurrencyId) {
+        adminFunctionalityService.setNewBaseCurrency(newBaseCurrencyId);
+        return ResponseEntity.ok("Base currency, exchange rates and property rental prices updated successfully.");
     }
 
     @PostMapping("/set_numerical_configs")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_SetNumericalConfigs
     public ResponseEntity<String> setNumericalConfigs(@RequestBody SetNumConfigDTO dto) {
         adminFunctionalityService.setNumericalConfigs(dto);
@@ -262,6 +282,7 @@ public class AdminFunctionalityController {
 
 
     @PostMapping("/add_amenity")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_AddAmenityToDatabase
     public ResponseEntity<Void> addAmenityToDatabase(@RequestParam String amenityDescription) {
         adminFunctionalityService.addAmenityToDatabase(amenityDescription);
@@ -269,10 +290,34 @@ public class AdminFunctionalityController {
     }
 
     @PostMapping("/remove_amenity/{amenityId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RemoveAmenity
     public ResponseEntity<Void> removeAmenityFromDatabase(@PathVariable Long amenityId) {
         adminFunctionalityService.removeAmenityFromDatabase(amenityId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @DeleteMapping("/delete-review/{reviewId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @AdminFunc_DeleteReview
+    public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
+        adminFunctionalityService.deleteReview(reviewId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/view-claims")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @AdminFunc_ViewClaims
+    public ResponseEntity<List<Claim>> viewClaims() {
+        List<Claim> claims = adminFunctionalityService.viewClaims();
+        return ResponseEntity.ok(claims);
+    }
+
+    @PutMapping("/change-rate/{currencyId}/{newRate}")
+    @AdminFunc_UpdateCurrencyRate
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> changeCurrencyExchangeRate(@PathVariable Long currencyId, @PathVariable Double newRate) {
+        adminFunctionalityService.updateCurrencyRate(currencyId, newRate);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

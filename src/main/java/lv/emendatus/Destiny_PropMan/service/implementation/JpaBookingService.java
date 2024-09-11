@@ -201,7 +201,7 @@ public class JpaBookingService implements BookingService {
         LocalDate currentDate = currentInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate();
         Instant endInstant = endDate.toInstant();
         LocalDate endDateLocalDate = endInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate();
-        long difference = ChronoUnit.DAYS.between(endDateLocalDate, currentDate);
+        long difference = ChronoUnit.DAYS.between(currentDate, endDateLocalDate);
         return (int) difference;
     }
 

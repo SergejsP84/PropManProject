@@ -7,6 +7,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationD
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerRegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 // THE ENTIRE CLASS IS REDUNDANT AS A PART OF AN EARLIER SETUP, ENDPOINTS CLOSED
@@ -26,6 +27,7 @@ public class ManagerRegistrationController {
     }
 
     @PostMapping("/card-update/{managerId}")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @UpdateManagerCard
     public ResponseEntity<Void> updateManagerPaymentCard(@PathVariable Long managerId, @RequestBody CardUpdateDTO dto) {
         dto.setUserId(managerId);

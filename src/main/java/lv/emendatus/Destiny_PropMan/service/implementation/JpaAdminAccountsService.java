@@ -114,7 +114,7 @@ public class JpaAdminAccountsService implements AdminAccountsService {
 
     // AUXILIARY METHOD
     public void addAnIpForAdmin(String login, String newIP) {
-        if (findByLogin(login).isPresent()) {
+        if (!findByLogin(login).isPresent()) {
             throw new RuntimeException("Error fetching the admin credentials");
         } else {
             Admin admin = findByLogin(login).get();
