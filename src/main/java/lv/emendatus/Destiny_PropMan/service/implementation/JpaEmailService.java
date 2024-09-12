@@ -13,22 +13,25 @@ public class JpaEmailService implements EmailService {
     @Override
     public void sendEmail(String to, String subject, String body) throws MessagingException {
 // Set mail server properties
+        String emailHost = System.getenv("PROPMAN_MAIL_HOST");
+        String emailPort = System.getenv("PROPMAN_MAIL_PORT");
+        String emailUsername = System.getenv("PROPMAN_MAIL_USERNAME");
+        String emailPassword = System.getenv("SPRING_MAIL_PASSWORD");
         Properties properties = new Properties();
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");
-        properties.put("mail.smtp.host", "mail.infobank.cloud");
-        properties.put("mail.smtp.port", "587");
-        String emailPassword = System.getenv("SPRING_MAIL_PASSWORD");
+        properties.put("mail.smtp.host", emailHost);
+        properties.put("mail.smtp.port", emailPort);
         // Authenticate sender's email and password
         Session session = Session.getInstance(properties, new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("projects@emendatus.lv", emailPassword);
+                return new PasswordAuthentication(emailUsername, emailPassword);
             }
         });
 
         // Create a new email message
         Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress("projects@emendatus.lv"));
+        message.setFrom(new InternetAddress(emailUsername));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
         message.setSubject(subject);
         message.setText(body);

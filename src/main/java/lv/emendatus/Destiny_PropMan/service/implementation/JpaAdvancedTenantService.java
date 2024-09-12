@@ -4,6 +4,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ETRequestDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
 import lv.emendatus.Destiny_PropMan.exceptions.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,11 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     private final JpaCardDataSaverService cardDataSaverService;
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
     private static final String COMPLETED_PAYMENTS_FILE_PATH = "completedTenantPayments.txt";
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
+    @Value("${PROPMAN_MAIL_USERNAME}")
+    private String platformMail;
 
     public JpaAdvancedTenantService(PropertyRepository propertyRepository, PropertyViewMapper propertyMapper, PaymentsViewMapper paymentsViewMapper, TenantRepository tenantRepository, TenantMapper tenantMapper, LeasingHistoryMapper leasingHistoryMapper, JpaLeasingHistoryService leasingHistoryService, JpaTenantFavoritesService favoritesService, JpaClaimService claimService, JpaBookingService bookingService, JpaTenantService tenantService, JpaNumericalConfigService configService, JpaTenantPaymentService paymentService, JpaPropertyService propertyService, JpaEarlyTerminationRequestService terminationService, JpaThirdPartyPaymentProviderService paymentProviderService, JpaCurrencyService currencyService, JpaEmailService emailService, JpaPropertyRatingService ratingService, JpaAmenityService amenityService, JpaPropertyAmenityService propertyAmenityService, JpaReviewService reviewService, JpaThirdPartyPaymentProviderService thirdPartyPaymentProviderService, JpaNumericDataMappingService numericDataMappingService, JpaTokenService tokenService, JpaTokenResetService resetService, JpaCardDataSaverService cardDataSaverService) {
         this.propertyRepository = propertyRepository;
@@ -208,7 +214,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
                         existingTenant.setConfirmationToken(confirmationToken);
                         tenantRepository.save(existingTenant);
                         try {
-                            emailService.sendEmail(updatedTenantInfo.getEmail(), "E-mail confirmation link for [Platform Name]", createConfirmationEmailBody(updatedTenantInfo.getFirstName(), updatedTenantInfo.getLastName(), confirmationToken));
+                            emailService.sendEmail(updatedTenantInfo.getEmail(), "E-mail confirmation link for " + platformName, createConfirmationEmailBody(updatedTenantInfo.getFirstName(), updatedTenantInfo.getLastName(), confirmationToken));
                         } catch (MessagingException e) {
                             e.printStackTrace();
                         }
@@ -489,7 +495,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
                     terminationService.addETRequest(request);
                     try {
                         emailService.sendEmail(booking.getProperty().getManager().getEmail(),
-                                "Early cancellation request at [Platform Name]!",
+                                "Early cancellation request at " + platformName,
                                 createEarlyTerminationLetterToManager(booking.getProperty().getManager().getManagerName(), request));
                     } catch (MessagingException e) {
                         e.printStackTrace();
@@ -657,7 +663,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
     public String createPaymentConfirmationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
         String info = "We are happy to inform you that your payment for booking #" + booking.getId() + " has been received.\n\n";
-        String closing = "Your manager will be happy to see you in " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + "!\n\nBest regards,\n[Your Company Name]";
+        String closing = "Your manager will be happy to see you in " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + "!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
@@ -675,7 +681,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
         String payment = "We will remit this amount less our service commission to you within "
                 + payoutPeriodSetOrDefault
                 + " days of expiration of the booking period and the respective claim period, which should be about " + booking.getEndDate().toLocalDateTime().plusDays(delaySetOrDefault).plusDays(payoutPeriodSetOrDefault) + ".";
-        String closing = "Make sure you arrange a warm welcome for our tenant at your place!\n\nBest regards,\n[Your Company Name]";
+        String closing = "Make sure you arrange a warm welcome for our tenant at your place!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
@@ -684,7 +690,7 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
         String info = "Unfortunately, your tenant with booking ID #" + request.getBookingId() + " seems to have encountered a major change of plans for some reason, and thus he/she requests his/her current booking to be terminated earlier than expected, on " + request.getTerminationDate() + ". The reason stated by the tenant is as follows:\n\n";
         String reason = request.getComment() + "\n\n";
         String instructions = "While you do retain the right to decline this cancellation request, we kindly ask you to log in to our platform and consider whether you can be of even more help to your tenant and have his or her request granted. All relevant details are displayed in the respective notification at the site.\n\n";
-        String closing = "We do apologize for this unfortunate turn of events, and hope that the situation will be resolved with as little inconvenience to you as possible.\n\nBest regards,\n[Your Company Name]";
+        String closing = "We do apologize for this unfortunate turn of events, and hope that the situation will be resolved with as little inconvenience to you as possible.\n\nBest regards,\n" + platformName + " team";
         return greeting + info + reason + instructions + closing;
     }
 
@@ -733,8 +739,8 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
         String explanation = "We have received your request for a change of your email address. To confirm the change of your email, please click the following link:\n\n";
         String link = "http://localhost:8080/ten/confirm-email-change?token=" + confirmationLink + "\n\n";
         String expiration = "The confirmation link is going to expire in five minutes; should this be the case, please initiate the change of your email address once more.";
-        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at [company email].\n\n";
-        String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
+        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at " + platformMail + ".\n\n";
+        String closing = "Thank you for choosing our service.\n\nBest regards,\n" + platformName + " team";
 
         return greeting + explanation + link + expiration + instructions + closing;
     }

@@ -2,6 +2,7 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
 import lv.emendatus.Destiny_PropMan.mapper.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
@@ -127,6 +128,12 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         this.bookingMapper = bookingMapper;
     }
 
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
+    @Value("${PROPMAN_MAIL_USERNAME}")
+    private String platformMail;
+
     @Override
     public PublicManagerProfileDTO getManagerProfile(Long managerId) {
         Optional<Manager> managerOptional = managerRepository.findById(managerId);
@@ -179,7 +186,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                         existingManager.setConfirmationToken(confirmationToken);
                         managerRepository.save(existingManager);
                         try {
-                            emailService.sendEmail(updatedProfile.getEmail(), "E-mail confirmation link for [Platform Name]", createConfirmationEmailBody(updatedProfile.getManagerName(), confirmationToken));
+                            emailService.sendEmail(updatedProfile.getEmail(), "E-mail confirmation link for " + platformName, createConfirmationEmailBody(updatedProfile.getManagerName(), confirmationToken));
                         } catch (MessagingException e) {
                             e.printStackTrace();
                         }
@@ -259,7 +266,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
 
     // USED AS AN AUXILIARY METHOD
     @Override
-    @PreAuthorize("hasAuthority('MANAGER') and #managerId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ManagerReservationDTO viewReservationsForManager(Long managerId, Principal principal) {
         Optional<Manager> manager = managerService.getManagerById(managerId);
         if (manager.isPresent()) {
@@ -348,14 +355,6 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                     LOGGER.log(Level.WARN, "Sorry, the claiming period for booking {} has expired.", bookingId);
                     System.out.println("Cannot create claim, claiming period expired for this booking");
                 } else {
-//                    String managersLogin = booking.get().getProperty().getManager().getLogin();
-//                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//                    if (!(authentication instanceof AnonymousAuthenticationToken)) {
-//                        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//                        if (!userDetails.getUsername().equals(managersLogin)) {
-//                            throw new AccessDeniedException("You do not have permission to access this resource.");
-//                        }
-//                    } else {
                         Claim claim = new Claim();
                         claim.setBookingId(bookingId);
                         claim.setClaimStatus(ClaimStatus.OPEN);
@@ -369,12 +368,10 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                         claimService.addClaim(claim);
                         LOGGER.log(Level.INFO, "Your claim in regard to booking {} has been filed.", bookingId);
                         System.out.println("Claim lodged successfully");
-//                    }
                 }
             } else {
                 throw new AccessDeniedException("Cannot submit claims in respect of Bookings managed by other Managers.");
             }
-
         }
     }
 
@@ -662,7 +659,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                     Tenant tenant = tenantService.getTenantById(bookingService.getBookingById(bookingId).get().getTenantId()).get();
                     try {
                         emailService.sendEmail(tenant.getEmail(),
-                                "Booking at [Platform Name] confirmed!",
+                                "Booking at " + platformName + " confirmed!",
                                 createConfirmationLetterToTenant(tenant.getFirstName(), tenant.getLastName(), bookingService.getBookingById(bookingId).get()));
                     } catch (MessagingException e) {
                         e.printStackTrace();
@@ -1200,7 +1197,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
                         System.out.println("Invalid rating specified: the rating must be between 1 and 5 inclusive");
                     }
                 } else {
-                    throw new AccessDeniedException("You do not have rate Tenants that haven't made any current relevant Bookings at your Properties.");
+                    throw new AccessDeniedException("You do not have permission to rate Tenants that haven't made any current relevant Bookings at your Properties.");
                 }
             } else {
                 LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
@@ -1308,19 +1305,18 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
     // AUXILIARY METHODS
     public String createConfirmationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
-        String info = "We are happy to inform you that your booking for the period of " + booking.getStartDate().toString() + "through " + booking.getEndDate().toString() + " has been confirmed by the property's manager.\n\n";
+        String info = "We are happy to inform you that your booking for the period of " + booking.getStartDate().toString() + " through " + booking.getEndDate().toString() + " has been confirmed by the property's manager at " + platformName + ".\n\n";
         String info2 = "Please make sure to remit the rental fee payment by " + tenantPaymentService.getPaymentByBooking(booking.getId()).getReceiptDue().toString() + ".";
         String communication = "Meanwhile, you can contact your manager directly at " + booking.getProperty().getManager().getEmail() + ".\n\n";
         String communication2 = "Should an urgent issue arise, you can also call your manager at " + booking.getProperty().getManager().getPhone() + ".\n\n";
-        String closing = "We wish you a great trip to " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + "!\n\nBest regards,\n[Your Company Name]";
-
+        String closing = "We wish you a great trip to " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + "!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + info2 + communication + communication2 + closing;
     }
 
     public String createRefusalLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
         String info = "We are sorry to inform you that your booking with ID " + booking.getId() + " could not be approved by the property's manager.\n\n";
-        String closing = "Please accept our sincere apologies. While our platform cannot affect this manager's decision, we would love to invite you to browse other properties in " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + " that our website has to offer. \n\nBest regards,\n[Your Company Name]";
+        String closing = "Please accept our sincere apologies. While our platform cannot affect this manager's decision, we would love to invite you to browse other properties in " + booking.getProperty().getSettlement() + ", " + booking.getProperty().getCountry() + " that our website has to offer. \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
@@ -1334,7 +1330,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             if (config.getName().equals("ClaimPeriodDays")) delaySetOrDefault = config.getValue().intValue();
         }
         String info2 = "Your payment has been adjusted accordingly, and a refund of " + refund.getCurrency().getDesignation() + " " + refund.getAmount() + " is estimated to be remitted to you by " + LocalDateTime.now().plusDays(delaySetOrDefault).plusDays(refundPeriodSetOrDefault) + ".";
-        String closing = "We are looking forward to seeing you again! \n\nBest regards,\n[Your Company Name]";
+        String closing = "We are looking forward to seeing you again! \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
@@ -1343,7 +1339,7 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         String info = "We are sorry to inform you that your early termination request for booking with ID " + request.getBookingId() + " has been declined by the property's manager.\n\n";
         String info2 = "Our current policy does entitle our managers to abstain from granting early termination requests if there is a valid reason for that. Here is the comment submitted by the manager: ";
         String managersComment = request.getManagersResponse() + "\n\n";
-        String closing = "Please accept our sincere apologies. If you think your request was denied wrongfully, please contact us to appeal against this manager's decision. \n\nBest regards,\n[Your Company Name]";
+        String closing = "Please accept our sincere apologies. If you think your request was denied wrongfully, please contact us to appeal against this manager's decision. \n\nBest regards,\n" + platformName + " team";
         return greeting + info + info2 + managersComment + closing;
     }
 
@@ -1352,8 +1348,8 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         String explanation = "We have received your request for a change of your email address. To confirm the change of your email, please click the following link:\n\n";
         String link = "http://localhost:8080/man/confirm-email-change?token=" + confirmationLink + "\n\n";
         String expiration = "The confirmation link is going to expire in five minutes; should this be the case, please initiate the change of your email address once more.";
-        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at [company email].\n\n";
-        String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
+        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at " + platformMail + ".\n\n";
+        String closing = "Thank you for choosing our service.\n\nBest regards,\n" + platformName + " team";
 
         return greeting + explanation + link + expiration + instructions + closing;
     }

@@ -1,6 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +54,11 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         this.numericDataMappingService = numericDataMappingService;
         this.configService = configService;
     }
+
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+    @Value("${PROPMAN_MAIL_USERNAME}")
+    private String platformMail;
 
     @Override
     @Transactional
@@ -118,7 +124,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         managerService.addManager(manager);
         LOGGER.info("New manager added: ID" + manager.getId() + ", Name: " + manager.getManagerName() + ", Description: " + manager.getDescription());
         try {
-            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for", createConfirmationEmailBody(registrationDTO.getManagerName(), confirmationToken));
+            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for " + platformName, createConfirmationEmailBody(registrationDTO.getManagerName(), confirmationToken));
         } catch (MessagingException e) {
             e.printStackTrace();
         }
@@ -132,7 +138,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
 
     // REDUNDANT - NOT USED IN THE FINAL SETUP
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #dto.userId == principal.id")
+    @PreAuthorize("hasAuthority('MANAGER')")
     @Transactional
     public void updateManagerPaymentCard(CardUpdateDTO dto) {
         if (dto.getUserType() != UserType.MANAGER) {
@@ -213,8 +219,8 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         String explanation = "Thank you for registering with our service. To complete your registration and activate your account, please click the following link:\n\n";
         String link = "http://localhost:8080/confirm-registration?token=" + confirmationLink + "\n\n";
         String expiration = "The confirmation link is going to expire in five minutes; should this be the case, please request a new one.";
-        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at support@example.com.\n\n";
-        String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
+        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at " + platformMail + ".\n\n";
+        String closing = "Thank you for choosing our service.\n\nBest regards,\n" + platformName + " team";
 
         return greeting + explanation + link + expiration + instructions + closing;
     }
@@ -222,20 +228,20 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
     // Encrypt CVV using AES encryption
     public String encryptCVV(Long userId, UserType userType, char[] cvv) throws Exception {
         try {
-            System.out.println("      ---   a) Initiated the encryptCVV method");
+//            System.out.println("      ---   a) Initiated the encryptCVV method");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            System.out.println("      ---   b) Created a Cipher: " + cipher);
+//            System.out.println("      ---   b) Created a Cipher: " + cipher);
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(128); // 128-bit key length
             SecretKey secretKey = keyGenerator.generateKey();
             byte[] aesKeyBytes = secretKey.getEncoded();
-            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+//            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            System.out.println("      ---   d) Cipher.init triggered successfully");
+//            System.out.println("      ---   d) Cipher.init triggered successfully");
             byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
-            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+//            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
             numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
-            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+//            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
             return Base64.getEncoder().encodeToString(encryptedCVVBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();

@@ -126,8 +126,6 @@ public class SecurityConfig {
                         .requestMatchers("/admin/view-claims").hasAuthority("ADMIN")
                         .requestMatchers("/admin/view-claims").hasAuthority("ADMIN")
                         .requestMatchers("/admin/change-rate/**").hasAuthority("ADMIN")
-
-
                         .requestMatchers("/managerial/getProfile/{managerId}").permitAll()
                         .requestMatchers("/managerial/updateProfile/{managerId}").hasAuthority("MANAGER")
                         .requestMatchers("/managerial/getPropertyPortfolio/{managerId}").permitAll()
@@ -189,11 +187,17 @@ public class SecurityConfig {
                         .requestMatchers("/reservation/book").hasAuthority("TENANT")
                         .requestMatchers("/reservation/cancel").hasAuthority("TENANT")
                         .requestMatchers("/search/properties").permitAll()
-
-
-
-
-
+                        .requestMatchers("/bills/**").denyAll()
+                        .requestMatchers("/booking/**").denyAll()
+                        .requestMatchers("/currency/**").denyAll()
+                        .requestMatchers("/leasinghistory/**").denyAll()
+                        .requestMatchers("/managers/**").denyAll()
+                        .requestMatchers("/messaging/**").denyAll()
+                        .requestMatchers("/numerical-configs/**").denyAll()
+                        .requestMatchers("/propertyamenity/**").denyAll()
+                        .requestMatchers("/property/**").denyAll()
+                        .requestMatchers("/tenants/**").denyAll()
+                        .requestMatchers("/payments/**").denyAll()
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -10,8 +10,17 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@RequestMapping(method = RequestMethod.POST)
 @Operation(
         summary = "Submit a Claim",
         description = "Allows a Tenant to submit a claim related to a specific booking. The Tenant can only submit claims for bookings they are associated with, and only within a set period after the booking has ended.",

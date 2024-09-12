@@ -275,6 +275,7 @@ public class AdvancedManagerController {
 
     @PostMapping("/submitClaim")
     @PreAuthorize("hasAuthority('MANAGER')")
+    @ManagerFunc_SubmitClaim
     public ResponseEntity<Void> submitClaim(
             @RequestParam Long bookingId,
             @RequestParam String description,

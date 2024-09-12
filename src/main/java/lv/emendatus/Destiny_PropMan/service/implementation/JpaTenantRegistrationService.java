@@ -11,6 +11,7 @@ import lv.emendatus.Destiny_PropMan.exceptions.*;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantRegistrationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -52,6 +53,10 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         this.configService = configService;
         this.passwordEncoder = passwordEncoder;
     }
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+    @Value("${PROPMAN_MAIL_USERNAME}")
+    private String platformMail;
     @Override
     @Transactional
     public void registerTenant(TenantRegistrationDTO registrationDTO) {
@@ -122,7 +127,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         tenantService.addTenant(tenant);
         LOGGER.info("New tenant added: ID" + tenant.getId() + ", First name / surname: " + tenant.getFirstName() + " " + tenant.getLastName());
         try {
-            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for [Platform Name]", createConfirmationEmailBody(registrationDTO.getFirstName(), registrationDTO.getLastName(), confirmationToken));
+            emailService.sendEmail(registrationDTO.getEmail(), "E-mail confirmation link for " + platformName, createConfirmationEmailBody(registrationDTO.getFirstName(), registrationDTO.getLastName(), confirmationToken));
         } catch (MessagingException e) {
             e.printStackTrace();
         }
@@ -135,7 +140,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
 
     // REDUNDANT - NOT USED IN THE FINAL SETUP
     @Override
-    @PreAuthorize("hasRole('ROLE_TENANT') and #dto.userId == principal.id")
+    @PreAuthorize("hasAuthority('TENANT')")
     @Transactional
     public void updateTenantPaymentCard(CardUpdateDTO dto) {
         if (dto.getUserType() != UserType.TENANT) {
@@ -213,8 +218,8 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         String explanation = "Thank you for registering with our service. To complete your registration and activate your account, please click the following link:\n\n";
         String link = "http://localhost:8080/confirm-registration?token=" + confirmationLink + "\n\n";
         String expiration = "The confirmation link is going to expire in five minutes; should this be the case, please request a new one.";
-        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at support@example.com.\n\n";
-        String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
+        String instructions = "If you have any trouble with the link, or if you did not request this registration, please contact our support team at " + platformMail + ".\n\n";
+        String closing = "Thank you for choosing our service.\n\nBest regards,\n" + platformName + " team";
 
         return greeting + explanation + link + expiration + instructions + closing;
     }
@@ -222,21 +227,21 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
     // Encrypt CVV using AES encryption
     public String encryptCVV(Long userId, UserType userType, char[] cvv) throws Exception {
         try {
-            System.out.println("      ---   a) Initiated the encryptCVV method");
+//            System.out.println("      ---   a) Initiated the encryptCVV method");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            System.out.println("      ---   b) Created a Cipher: " + cipher);
+//            System.out.println("      ---   b) Created a Cipher: " + cipher);
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(128); // 128-bit key length
             SecretKey secretKey = keyGenerator.generateKey();
             byte[] aesKeyBytes = secretKey.getEncoded();
-            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+//            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            System.out.println("      ---   d) Cipher.init triggered successfully");
+//            System.out.println("      ---   d) Cipher.init triggered successfully");
             byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
-            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+//            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
             // implement logics for saving the secret key alongside the encrypted value
             numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
-            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+//            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
             return Base64.getEncoder().encodeToString(encryptedCVVBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();

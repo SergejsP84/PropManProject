@@ -28,18 +28,6 @@ public class AdminAccountsController {
         return ResponseEntity.ok("Admin created successfully.");
     }
 
-    /*
-    POST request: http://localhost:8080/admins-control/create
-    BODY:
-    {
-    "name": "Froggy Frog",
-    "login": "FroggyFrog",
-    "password": "Ribbit24",
-    "email": "froggy@example.com"
-    }
-    Authentication: AS THE DefaultAdmin
-     */
-
     @DeleteMapping("/delete")
     @PreAuthorize("hasAuthority('ADMIN')")
     @AdminAccounts_Delete
@@ -48,8 +36,4 @@ public class AdminAccountsController {
         return ResponseEntity.ok("Admin with login '" + login + "' deleted successfully.");
     }
 
-    /*
-    DELETE request:
-    http://localhost:8080/admins-control/delete?login=AdminLoginToDelete
-    */
 }

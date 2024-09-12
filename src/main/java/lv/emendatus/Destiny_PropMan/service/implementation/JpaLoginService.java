@@ -12,6 +12,7 @@ import lv.emendatus.Destiny_PropMan.exceptions.EmailSendingException;
 import lv.emendatus.Destiny_PropMan.service.interfaces.LoginService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -47,6 +48,10 @@ public class JpaLoginService implements LoginService {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
 //    @Override
 //    public Tenant authenticateTenant(LoginDTO loginDTO, HttpServletRequest request) {
 //        System.out.println("JpaLoginService authenticateTenant method invoked");
@@ -177,7 +182,7 @@ public class JpaLoginService implements LoginService {
     public void sendOtpToUser(String otp, String userEmail) {
         // Can be replaced with SMS or app authentication mechanism in future versions
         try {
-            String subject = "Your One-Time Password (OTP)";
+            String subject = "Your One-Time Password (OTP) for " + platformName;
             String body = "Your OTP is: " + otp;
             emailService.sendEmail(userEmail, subject, body);
             System.out.println("OTP sent to " + userEmail + " via email.");

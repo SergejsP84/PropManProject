@@ -12,6 +12,7 @@ import lv.emendatus.Destiny_PropMan.exceptions.TokenExpiredOrNotFoundException;
 import lv.emendatus.Destiny_PropMan.service.interfaces.PasswordService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,10 @@ public class JpaPasswordService implements PasswordService {
         this.passwordResetTokenService = passwordResetTokenService;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
     @Override
     @Transactional
     public void changePassword(String login, UserType userType, String newPassword, String reEnterNewPassword, Principal principal) {
@@ -110,7 +115,7 @@ public class JpaPasswordService implements PasswordService {
         String resetLink = "http://localhost:8080/password/complete-reset?token=" + confirmationToken;
         String emailBody = "To reset your password, click the following link: " + resetLink;
         try {
-            emailService.sendEmail(email, "Password Reset Request", emailBody);
+            emailService.sendEmail(email, "Password Reset Request at " + platformName, emailBody);
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }

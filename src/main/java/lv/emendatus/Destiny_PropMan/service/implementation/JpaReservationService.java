@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,6 +57,10 @@ public class JpaReservationService implements ReservationService {
     private JpaRefundService refundService;
     @Autowired
     private JpaPayoutService payoutService;
+
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
     @Override
     @PreAuthorize("hasAuthority('TENANT')")
     @Transactional
@@ -166,14 +171,14 @@ public class JpaReservationService implements ReservationService {
                     property.get().setBookings(propertyBookings);
                     try {
                         emailService.sendEmail(tenantService.getTenantById(tenantId).get().getEmail(),
-                                "Booking made at [Platform Name]",
+                                "Booking made at " + platformName,
                                 createAcceptanceLetterToTenant(tenantService.getTenantById(tenantId).get().getFirstName(), tenantService.getTenantById(tenantId).get().getLastName(), newBooking));
                     } catch (MessagingException e) {
                         e.printStackTrace();
                     }
                     try {
                         emailService.sendEmail(newBooking.getProperty().getManager().getEmail(),
-                                "Booking made at [Platform Name]",
+                                "Booking made at " + platformName,
                                 createNotificationLetterToManager(newBooking.getProperty().getManager().getManagerName(), newBooking));
                     } catch (MessagingException e) {
                         e.printStackTrace();
@@ -331,17 +336,16 @@ public class JpaReservationService implements ReservationService {
         String info = "You have booked a property for the period of " + booking.getStartDate().toLocalDateTime().toLocalDate().toString() + " through " + booking.getEndDate().toLocalDateTime().toLocalDate().toString() + ".\n\n";
         String info2 = "Your property manager has been informed of your application, and will respond shortly. ";
         String communication = "Meanwhile, you can also contact your manager directly at " + booking.getProperty().getManager().getEmail() + ".\n\n";
-        String closing = "Thank you for choosing our service.\n\nBest regards,\n[Your Company Name]";
+        String closing = "Thank you for choosing our service.\n\nBest regards,\n" + platformName + " team";
 
         return greeting + info + info2 + communication + closing;
     }
 
     public String createNotificationLetterToManager(String managerName, Booking booking) {
         String greeting = "Dear " + managerName + ",\n\n";
-        String info = "[Platform name] is happy to inform you that a tenant has booked one of your properties for the period of " + booking.getStartDate().toLocalDateTime().toLocalDate().toString() + " through " + booking.getEndDate().toLocalDateTime().toLocalDate().toString() + ".\n\n";
+        String info = platformName + " is happy to inform you that a tenant has booked one of your properties for the period of " + booking.getStartDate().toLocalDateTime().toLocalDate().toString() + " through " + booking.getEndDate().toLocalDateTime().toLocalDate().toString() + ".\n\n";
         String instructions = "Please make sure to log in to your platform account as promptly as possible to confirm or reject this booking. ";
-        String closing = "We are happy to have you as our partner, and looking forward to more mutually lucrative business with you!";
-
+        String closing = "We are happy to have you as our partner, and looking forward to more mutually lucrative business with you!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + instructions + closing;
     }
 }

@@ -68,24 +68,6 @@ public class AuthenticationController {
         }
     }
 
-//    @PostMapping("/login")
-//    @Authentication_Login
-//    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
-//        Tenant tenant = tenantService.getTenantByLogin(loginDTO.getUsername());
-//        Manager manager = managerService.getManagerByLogin(loginDTO.getUsername());
-//        if (tenant != null) {
-//            UserDetails userDetails = loginService.authenticateTenant(loginDTO, request);
-//            System.out.println("Returning a Tenant's UserDetails from AuthenticationController");
-//            return ResponseEntity.ok(userDetails);
-//        }
-//        if (manager != null) {
-//           UserDetails userDetails = loginService.authenticateManager(loginDTO, request);
-//            System.out.println("Returning a Manager's UserDetails from AuthenticationController");
-//            return ResponseEntity.ok(userDetails);
-//        }
-//        System.out.println("Both Tenant and Manager returned as Null");
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid login credentials");
-//    }
 @PostMapping("/login")
 @Authentication_Login
 public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {

@@ -8,6 +8,7 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 import lv.emendatus.Destiny_PropMan.service.implementation.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,9 @@ public class ScheduledTasks {
         this.claimService = claimService;
     }
 
+    @Value("${PROPMAN_PLATFORM_NAME}")
+    private String platformName;
+
     @Scheduled(cron = "0 0 1 * * *")
     @Transactional
     public void changeBookingStatus() {
@@ -81,7 +85,7 @@ public class ScheduledTasks {
                     tenantService.addTenant(tenant);
                     try {
                         emailService.sendEmail(tenant.getEmail(),
-                                "Booking completed",
+                                "Booking at " + platformName + " completed",
                                 createGoodbyeLetterToTenant(tenant.getFirstName(), tenant.getLastName()));
                     } catch (MessagingException e) {
                         e.printStackTrace();
@@ -125,7 +129,7 @@ public class ScheduledTasks {
                 try {
                     if (tenantService.getTenantById(booking.getTenantId()).isPresent()) {
                         emailService.sendEmail(tenantService.getTenantById(booking.getTenantId()).get().getEmail(),
-                                "Booking at [Platform Name] cancelled",
+                                "Booking at " + platformName + " cancelled",
                                 createCancellationLetterToTenant(tenantService.getTenantById(booking.getTenantId()).get().getFirstName(), tenantService.getTenantById(booking.getTenantId()).get().getLastName(), booking));
                     }
                 } catch (MessagingException e) {
@@ -133,7 +137,7 @@ public class ScheduledTasks {
                 }
                 try {
                         emailService.sendEmail(booking.getProperty().getManager().getEmail(),
-                                "Booking at [Platform Name] cancelled",
+                                "Booking at " + platformName + " cancelled",
                                 createCancellationLetterToManager(booking.getProperty().getManager().getManagerName(), booking));
                 } catch (MessagingException e) {
                     e.printStackTrace();
@@ -217,7 +221,7 @@ public class ScheduledTasks {
                 .filter(discount -> {
                     Property property = propertyService.getPropertyById(discount.getProperty().getId()).orElse(null);
                     if (property == null) {
-                        return false; // Property no longer exists
+                        return false;
                     }
                     List<Booking> relevantBookings = bookingService.getBookingsByDateRangeWithOverlaps(discount.getPeriodStart(), discount.getPeriodEnd());
                     return relevantBookings.stream().anyMatch(booking -> !(booking.getStatus().equals(BookingStatus.OVER) || booking.getStatus().equals(BookingStatus.CANCELLED)));
@@ -241,7 +245,7 @@ public class ScheduledTasks {
         for (TenantPayment payment : paymentsDueTomorrow) {
             try {
                 emailService.sendEmail(payment.getTenant().getEmail(),
-                        "Payment due at [Platform Name]!",
+                        "Payment due to " + platformName + "!",
                         createPaymentReminderLetterToTenant(payment.getTenant().getFirstName(), payment.getTenant().getLastName(), payment));
             } catch (MessagingException e) {
                 e.printStackTrace();
@@ -257,7 +261,7 @@ public class ScheduledTasks {
             if (tenant.getCardValidityDate().isBefore(YearMonth.now()))
                 try {
                     emailService.sendEmail(tenant.getEmail(),
-                            "Your payment card has expired - [Platform Name]!",
+                            platformName + " - your payment card has expired!",
                             createCardExpiryLetterToUser(tenant.getFirstName(), tenant.getLastName(), tenant.getPaymentCardNo()));
                 } catch (MessagingException e) {
                     e.printStackTrace();
@@ -267,7 +271,7 @@ public class ScheduledTasks {
             if (manager.getCardValidityDate().isBefore(YearMonth.now()))
                 try {
                     emailService.sendEmail(manager.getEmail(),
-                            "Your payment card has expired - [Platform Name]!",
+                            platformName + " - your payment card has expired!",
                             createCardExpiryLetterToUser(manager.getManagerName(), "", manager.getPaymentCardNo()));
                 } catch (MessagingException e) {
                     e.printStackTrace();
@@ -283,7 +287,7 @@ public class ScheduledTasks {
             if (tenantService.getTenantById(booking.getTenantId()).isPresent()) {
                 try {
                     emailService.sendEmail(booking.getProperty().getManager().getEmail(),
-                            "Yor guest is arriving tomorrow!!",
+                            "Your guest is arriving tomorrow!!",
                             createArrivalReminderLetterToManager(
                                     booking.getProperty().getManager().getManagerName(),
                                     tenantService.getTenantById(booking.getTenantId()).get().getFirstName(),
@@ -336,22 +340,22 @@ public class ScheduledTasks {
     public String createCancellationLetterToTenant(String firstName, String lastName, Booking booking) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
         String info = "We are sorry to inform you that your booking with ID " + booking.getId() + " has been cancelled due to not having been paid by the specified deadline.\n\n";
-        String closing = "Still, in comprehension that there might have been circumstances that prevented you from making the payment, we will be glad to see you at our site again! \n\nBest regards,\n[Your Company Name]";
+        String closing = "Still, in comprehension that there might have been circumstances that prevented you from making the payment, we will be glad to see you at our site again! \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
     public String createCancellationLetterToManager(String managerName, Booking booking) {
         String greeting = "Dear " + managerName + ",\n\n";
         String info = "Unfortunately, we had to cancel the booking with ID " + booking.getId() + ", as the tenant failed to pay the rental fee by the specified deadline.\n\n";
-        String closing = "Such situations do happen, but are always here to support your efforts! \n\nBest regards,\n[Your Company Name]";
+        String closing = "Such situations do happen, but we are always here to support your efforts! \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
     public String createPaymentReminderLetterToTenant(String firstName, String lastName, TenantPayment payment) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
-        String info = "Please be reminded that you have an outstanding payment of " + payment.getCurrency().getDesignation() + " " + payment.getAmount() + " at [Platform Name], which is due tomorrow. \n\n";
+        String info = "Please be reminded that you have an outstanding payment of " + payment.getCurrency().getDesignation() + " " + payment.getAmount() + " at " + platformName + ", which is due tomorrow. \n\n";
         String instructions = "We kindly ask you to remit this payment by the specified deadline. Otherwise, we will, unfortunately, have to cancel your respective booking. \n\n";
-        String closing = "If you have already made the payment, please accept pour apologies and disregards this letter. Looking forward to welcoming you soon!\n\nBest regards,\n[Your Company Name]";
+        String closing = "If you have already made the payment, please accept pour apologies and disregards this letter. Looking forward to welcoming you soon!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + instructions + closing;
     }
 
@@ -359,21 +363,21 @@ public class ScheduledTasks {
         String greeting = "Dear " + managerName + ",\n\n";
         String info = "Your guest " + tenantName + " " + tenantSurname + ", is arriving tomorrow to " + property.getAddress() + ", " + property.getSettlement() + ", " + property.getCountry() + ".\n\n";
         String instructions = "We trust that you will do your best to make the guest feel at home! Please do not forget to arrive or arrange your representative's presence on site at the agreed time. \n\n";
-        String closing = "We are proud of having you as a partner!\n\nBest regards,\n[Your Company Name]";
+        String closing = "We are proud of having you as a partner!\n\nBest regards,\n" + platformName + " team";
         return greeting + info + instructions + closing;
     }
 
     public String createGoodbyeLetterToTenant(String firstName, String lastName) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
         String info = "We hope that your stay was most pleasant, and would really love to offer our services again whenever you may need them!.\n\n";
-        String closing = "If you wish, you can leave a review at our website. At any rate, we are eager to remain your loyal partner in many future journeys to come! \n\nBest regards,\n[Your Company Name]";
+        String closing = "If you wish, you can leave a review at our website. At any rate, we are eager to remain your loyal partner in many future journeys to come! \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 
     public String createCardExpiryLetterToUser(String firstName, String lastName, String cardNumber) {
         String greeting = "Dear " + firstName + " " + lastName + ",\n\n";
         String info = "Please be advised that your payment card No. " + cardNumber + " has expired. In order to maintain access to our platform's services and be able to receive any due refunds and payouts, please log in to your account and enter your new card details.\n\n";
-        String closing = "It is GREAT to have you with us! \n\nBest regards,\n[Your Company Name]";
+        String closing = "It is GREAT to have you with us! \n\nBest regards,\n" + platformName + " team";
         return greeting + info + closing;
     }
 }
