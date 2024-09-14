@@ -113,6 +113,10 @@ public class SampleBaseCreator implements ApplicationRunner {
             }
         }
 
+        // CRUTCH FOR DOCKERIZATION PURPOSES !!!
+        proposeDBCreation = false;
+
+
         if (proposeDBCreation) {
             if (!configExists) {
                 NumericalConfig newConfig = new NumericalConfig();
