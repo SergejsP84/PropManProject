@@ -114,7 +114,7 @@ public class SampleBaseCreator implements ApplicationRunner {
         }
 
         // CRUTCH FOR DOCKERIZATION PURPOSES !!!
-        proposeDBCreation = false;
+//        proposeDBCreation = false;
 
 
         if (proposeDBCreation) {
