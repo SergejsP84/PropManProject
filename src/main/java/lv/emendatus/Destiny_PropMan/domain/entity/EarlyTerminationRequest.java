@@ -1,16 +1,12 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.BookingStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ETRequestStatus;
-
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;

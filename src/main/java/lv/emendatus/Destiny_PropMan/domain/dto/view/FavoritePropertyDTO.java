@@ -10,6 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FavoritePropertyDTO {
-    private Long tenantId; // ID of the tenant saving the property
-    private Long propertyId; // ID of the property to be saved as a favorite
+    private Long tenantId;
+    private Long propertyId;
 }

@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ConfirmationDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ErrorDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationCancellationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationRequestDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.*;

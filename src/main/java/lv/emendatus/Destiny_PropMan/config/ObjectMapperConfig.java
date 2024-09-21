@@ -6,7 +6,6 @@ import lv.emendatus.Destiny_PropMan.util.SecretKeyDeserializer;
 import lv.emendatus.Destiny_PropMan.util.SecretKeySerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import javax.crypto.SecretKey;
 
 @Configuration

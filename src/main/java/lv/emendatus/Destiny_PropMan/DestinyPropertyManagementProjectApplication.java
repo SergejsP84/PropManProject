@@ -27,5 +27,3 @@ public class DestinyPropertyManagementProjectApplication {
 //		martini.setGarnish("Twist of Lemon Peel");
 //
 //	    Enjoy your virtual martini, sir. The pleasure is all mine!
-
-// In the labyrinth of code, sanity bends; where logic and chaos dance a timeless waltz, the mind's shadows write the true script.

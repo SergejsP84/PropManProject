@@ -9,7 +9,6 @@ import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.ManagerRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.TenantRegistrationDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
-import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
 

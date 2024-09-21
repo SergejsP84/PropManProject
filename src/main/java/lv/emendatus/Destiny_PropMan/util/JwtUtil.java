@@ -10,9 +10,7 @@ import java.util.stream.Collectors;
 
 public class JwtUtil {
 
-    private static final String secretKey = System.getenv("JWT_SECRET_KEY"); // Replace with your secret key
-
-
+    private static final String secretKey = System.getenv("JWT_SECRET_KEY");
 
     public static String generateToken(UserDetails userDetails) {
         return Jwts.builder()

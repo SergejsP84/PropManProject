@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

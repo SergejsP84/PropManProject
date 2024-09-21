@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
-import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
-
 import java.util.List;
 import java.util.Optional;
 

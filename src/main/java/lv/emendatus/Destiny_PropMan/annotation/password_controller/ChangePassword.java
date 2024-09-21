@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordChangeDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.CardUpdateDTO;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.RequestMapping;

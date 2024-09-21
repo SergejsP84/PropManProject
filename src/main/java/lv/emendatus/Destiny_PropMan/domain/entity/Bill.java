@@ -1,17 +1,11 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
-
-import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Objects;
 
 @AllArgsConstructor
 @NoArgsConstructor

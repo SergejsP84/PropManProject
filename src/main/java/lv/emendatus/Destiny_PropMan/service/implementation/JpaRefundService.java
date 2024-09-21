@@ -1,12 +1,9 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.EarlyTerminationRequest;
 import lv.emendatus.Destiny_PropMan.domain.entity.Refund;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.RefundRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.RefundService;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

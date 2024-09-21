@@ -9,7 +9,6 @@ import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 import lv.emendatus.Destiny_PropMan.util.SecretKeyMapConverter;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.Serializable;
 import java.util.Map;
 

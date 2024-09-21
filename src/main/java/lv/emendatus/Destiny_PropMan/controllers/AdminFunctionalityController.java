@@ -48,8 +48,6 @@ public class AdminFunctionalityController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // http://localhost:8080/admin/toggle_manager_status/1
-
     @PostMapping("/register_tenant")
     @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RegisterTenant(path = "/register_tenant")
@@ -64,31 +62,6 @@ public class AdminFunctionalityController {
         }
     }
 
-    /*
-    http://localhost:8080/admin/register_tenant
-
-    BODY:
-    {
-  "firstName": "John",
-  "lastName": "Doe",
-  "phone": "+1234567890",
-  "email": "john.doe@example.com",
-  "iban": "DE89370400440532013000",
-  "paymentCardNo": "4921817336104919",
-  "cardValidityDate": "2025-12",
-  "cvv": "123",
-  "login": "johndoe",
-  "password": "SecurePass123",
-  "reEnterPassword": "SecurePass123",
-  "preferredCurrency": {
-    "id": 1,
-    "designation": "EUR",
-    "isBaseCurrency": true,
-    "rateToBase": 1.0
-  }
- }
-     */
-
     @PostMapping("/register_manager")
     @PreAuthorize("hasAuthority('ADMIN')")
     @AdminFunc_RegisterManager(path = "/register_manager")
@@ -102,26 +75,6 @@ public class AdminFunctionalityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while registering the manager.");
         }
     }
-
-    /*
-    POST: http://localhost:8080/admin/register_manager
-
-    BODY:
-    {
-    "type": "PRIVATE",
-    "managerName": "John Doe",
-    "description": "Manages several properties in the downtown area",
-    "phone": "+1234567890",
-    "email": "johndoe@example.com",
-    "iban": "DE89370400440532013000",
-    "paymentCardNo": "4921817336104919",
-    "cardValidityDate": "2025-12",
-    "cvv": "123",
-    "login": "johndoe_manager",
-    "password": "Password123",
-    "reEnterPassword": "Password123"
-    }
-     */
 
     @PutMapping("/update_tenant/{tenantId}")
     @PreAuthorize("hasAuthority('ADMIN')")

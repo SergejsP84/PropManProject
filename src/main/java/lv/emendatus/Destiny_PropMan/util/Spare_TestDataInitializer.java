@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
+
+// NOT USED IN THE CURRENT SETUP, RETAINED FOR FUTURE ADDITION OF TESTS
+
 @Component
 public class Spare_TestDataInitializer {
     @Autowired

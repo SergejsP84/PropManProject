@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.annotation.bill_controller.*;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
-import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPropertyService;

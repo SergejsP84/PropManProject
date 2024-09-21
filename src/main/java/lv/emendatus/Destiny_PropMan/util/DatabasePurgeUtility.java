@@ -4,7 +4,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lv.emendatus.Destiny_PropMan.domain.entity.Admin;
 import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
-import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.NumConfigType;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.*;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdminAccountsService;
@@ -15,7 +14,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -33,7 +31,6 @@ public class DatabasePurgeUtility {
     private JpaNumericalConfigService configService;
     @PersistenceContext
     private EntityManager entityManager;
-
     @Autowired
     private TokenResetterRepository tokenResetterRepository;
     @Autowired
@@ -149,15 +146,10 @@ public class DatabasePurgeUtility {
                     addedAdmin.setName(adminName);
                     addedAdmin.setEmail(adminEmail);
                     addedAdmin.setKnownIps(adminIPs);
-//                    List<GrantedAuthority> adminAuthorities = new ArrayList<>();
-//                    adminAuthorities.add(new SimpleGrantedAuthority("ADMIN"));
-//                    addedAdmin.setAuthorities(adminAuthorities);
                     adminAccountsService.addAdmin(addedAdmin);
                 } else {
                     System.out.println("Could not obtain the Default Admin!");
                 }
-
-
 
                 System.out.println("Deleting NumericalConfigs except for the one responsible for proposing the creation of a sample database");
                 List<NumericalConfig> configs = configService.getAllNumericalConfigs();
@@ -280,7 +272,6 @@ public class DatabasePurgeUtility {
         } else {
             System.out.println("Could not retrieve the DefaultAdmin");
         }
-
         return purgeSucceeded;
     }
 }

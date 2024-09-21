@@ -1,10 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
-
 import java.util.List;
 import java.util.Optional;
 

@@ -5,9 +5,7 @@ import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_Dele
 import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_GetAll;
 import lv.emendatus.Destiny_PropMan.annotation.currency_controller.Currency_GetByID;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
-import lv.emendatus.Destiny_PropMan.domain.entity.NumericalConfig;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaCurrencyService;
-import org.apache.logging.log4j.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

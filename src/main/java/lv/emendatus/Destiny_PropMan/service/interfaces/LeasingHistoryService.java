@@ -1,12 +1,8 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
-
-import java.sql.Timestamp;
-import java.time.LocalDate;
+import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

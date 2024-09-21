@@ -1,41 +1,23 @@
 package lv.emendatus.Destiny_PropMan.config;
 
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserRole;
-import lv.emendatus.Destiny_PropMan.service.implementation.JpaLoginService;
 import lv.emendatus.Destiny_PropMan.service.implementation.UserDetailsInnerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.firewall.HttpFirewall;
-import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.security.core.Authentication;
-
 import javax.sql.DataSource;
 import java.io.Serializable;
 
@@ -80,20 +62,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        System.out.println("!!! - securityFilterChain method INVOKED!");
         http
                 // CSRF configuration
 //              HOW DO I GET THE THING IN WORKING ORDER AFTER I RE-ENABLE CSRF PROTECTION?
 //                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .csrf(AbstractHttpConfigurer::disable)
-                // Headers configuration
                 .headers(headers -> headers
                         .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                         .contentSecurityPolicy(cps -> cps.policyDirectives("default-src 'self'; script-src 'self' https://trusted-scripts.com;"))
                 )
-                // Authorization configuration
-                // Временные разрешения - по завершении работы те эндпойнты, которые
-                // не несут пользовательских функций, будут закрыты .denyAll()
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoints
                         .requestMatchers("/auth/login").permitAll()
@@ -202,28 +179,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
-                // Form login configuration
-//                .formLogin(formLogin ->
-//                        formLogin
-//                                .loginProcessingUrl("/auth/admin-login")
-//                                .permitAll()
-//                )
-//                .formLogin(formLogin ->
-//                        formLogin
-//                                .loginProcessingUrl("/auth/login")
-//                                .permitAll()
-//                )
                 .formLogin(AbstractHttpConfigurer::disable)
-                // Logout configuration
                 .logout(logout ->
                         logout
                                 .logoutUrl("/logout")
                                 .logoutSuccessUrl("/")
                                 .permitAll()
                 )
-
                 ;
-
         return http.build();
     }
 
@@ -240,17 +203,14 @@ public class SecurityConfig {
         @Override
         public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) {
             logger.info("hasPermission called with targetId: {}, targetType: {}, permission: {}", targetId, targetType, permission);
-
             if (authentication == null || permission == null) {
                 return false;
             }
-
             if (permission.equals("DefaultAdmin")) {
                 boolean isDefaultAdmin = authentication.getName().equals("DefaultAdmin");
                 logger.info("isDefaultAdmin: {}", isDefaultAdmin);
                 return isDefaultAdmin;
             }
-
             return false;
         }
     }

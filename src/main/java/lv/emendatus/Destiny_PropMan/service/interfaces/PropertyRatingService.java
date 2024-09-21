@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Payout;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyRating;
-
 import java.util.List;
 import java.util.Optional;
 

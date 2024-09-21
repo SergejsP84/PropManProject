@@ -3,7 +3,6 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Admin;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.AdminRepository;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 

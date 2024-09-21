@@ -15,6 +15,6 @@ public class JpaTokenService implements TokenService {
 
     @Override
     public void resetTokensOlderThan(Timestamp timestamp) {
-        // добавить или нет? Вроде уже реализовано
+        // NOT REQUIRED, IMPLEMENTED IN SCHEDULED TASKS
     }
 }

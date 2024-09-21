@@ -1,20 +1,13 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.LeasingHistoryDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.entity.LeasingHistory;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.mapper.LeasingHistoryMapper;
 import lv.emendatus.Destiny_PropMan.mapper.TenantMapper;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantService;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

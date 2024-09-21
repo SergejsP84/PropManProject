@@ -224,23 +224,6 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
             throw new TenantNotFoundException("No manager found with ID: " + managerId);
         }
     }
-        //        String authenticatedUsername = principal.getName();
-//        Optional<Manager> managerOptional = managerRepository.findById(managerId);
-//        if (managerOptional.isPresent()) {
-//            Manager existingManager = managerOptional.get();
-//            if (authenticatedUsername.equals(existingManager.getLogin())) {
-//                managerMapper.updateManagerFromDTO(existingManager, updatedProfile);
-//                managerRepository.save(existingManager);
-//            } else {
-//                throw new AccessDeniedException("You do not have permission to update this profile.");
-//            }
-//            managerMapper.updateManagerFromDTO(existingManager, updatedProfile);
-//            managerRepository.save(existingManager);
-//        } else {
-//            LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
-//            throw new ManagerNotFoundException("No manager found with ID: " + managerId);
-//        }
-//    }
 
     @Override
     public List<ManagerPropertyDTO> getManagerPropertyPortfolio(Long managerId) {
@@ -913,31 +896,6 @@ public class JpaAdvancedManagerService implements AdvancedManagerService {
         }
     }
 
-//    @Override
-//    @PreAuthorize("hasAuthority('MANAGER')")
-//    @Transactional
-//    public void removePhoto(Long propertyId, String photoUrl, Principal principal) throws EntityNotFoundException, FileStorageException {
-//        String authenticatedUsername = principal.getName();
-//        Property property = propertyService.getPropertyById(propertyId)
-//                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
-//        if (authenticatedUsername.equals(property.getManager().getLogin())) {
-//            List<String> photos = property.getPhotos();
-//            if (photos.contains(photoUrl)) {
-//                try {
-//                    Files.deleteIfExists(Paths.get(photoUrl));
-//                    photos.remove(photoUrl);
-//                    property.setPhotos(photos);
-//                    propertyService.addProperty(property);
-//                } catch (IOException e) {
-//                    throw new FileStorageException("Failed to delete photo: " + photoUrl, e);
-//                }
-//            } else {
-//                throw new EntityNotFoundException("Photo not found for property with id: " + propertyId);
-//            }
-//        } else {
-//            throw new AccessDeniedException("You do not have permission to upload photos for other Managers' Properties.");
-//        }
-//    }
 
     @Override
     @PreAuthorize("hasAuthority('MANAGER')")

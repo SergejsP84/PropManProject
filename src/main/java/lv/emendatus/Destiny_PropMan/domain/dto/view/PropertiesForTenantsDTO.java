@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
-
 import java.util.List;
 import java.util.Set;
 

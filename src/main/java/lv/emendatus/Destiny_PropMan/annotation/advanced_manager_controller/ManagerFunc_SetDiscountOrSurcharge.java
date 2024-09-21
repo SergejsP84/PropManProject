@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyDiscountDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 

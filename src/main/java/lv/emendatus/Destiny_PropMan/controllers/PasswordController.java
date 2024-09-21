@@ -4,7 +4,6 @@ import lv.emendatus.Destiny_PropMan.annotation.password_controller.ChangePasswor
 import lv.emendatus.Destiny_PropMan.annotation.password_controller.CompletePasswordReset;
 import lv.emendatus.Destiny_PropMan.annotation.password_controller.RequestPasswordReset;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordChangeDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordResetConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.authentication.PasswordResetDTO;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaPasswordService;
 import org.springframework.http.ResponseEntity;

@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerProfileDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

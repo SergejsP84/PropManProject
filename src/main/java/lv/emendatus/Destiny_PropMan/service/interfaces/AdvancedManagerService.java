@@ -1,13 +1,11 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
-import lv.emendatus.Destiny_PropMan.domain.dto.reference.PropertyDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;

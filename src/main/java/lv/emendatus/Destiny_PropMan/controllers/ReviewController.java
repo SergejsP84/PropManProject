@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.annotation.review_controller.GetReviewsByProperty;
 import lv.emendatus.Destiny_PropMan.annotation.review_controller.LeaveReview;
-import lv.emendatus.Destiny_PropMan.domain.dto.communication.CommunicationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.ReviewDTO;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaReviewService;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/review")

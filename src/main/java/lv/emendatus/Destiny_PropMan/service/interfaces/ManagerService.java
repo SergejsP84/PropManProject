@@ -2,8 +2,6 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
-import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

@@ -1,9 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.PropertyAmenity;
 import lv.emendatus.Destiny_PropMan.domain.tokens.PasswordResetToken;
-import lv.emendatus.Destiny_PropMan.repository.interfaces.PasswordResetTokenRepository;
-
 import java.util.List;
 import java.util.Optional;
 

@@ -18,7 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
@@ -101,7 +100,6 @@ public class SampleBaseCreator implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) throws Exception {
-//        System.out.println("!!! - Sample database creator INVOKED!");
         boolean proposeDBCreation = true;
         boolean configExists = false;
         boolean createDBNow = false;
@@ -1225,66 +1223,6 @@ public class SampleBaseCreator implements ApplicationRunner {
                     bill12.setDueDate(Timestamp.valueOf("2024-08-20 00:00:00"));
 //                    billService.addBill(bill12);
                     System.out.println("   * Created Bill12 - not added to the database yet at this stage");
-
-//                    billService.addBill(new Bill(1L, 200.00, currencies.get(0), property1, "Electricity",
-//                            Timestamp.valueOf("2024-07-01 00:00:00"), "Electric Company", "IBAN1234567890", false,
-//                            Timestamp.valueOf("2024-06-01 00:00:00"), Timestamp.valueOf("2024-06-01 00:00:00")));
-//                    billService.addBill(new Bill(2L, 150.00, currencies.get(1), property2, "Water",
-//                            Timestamp.valueOf("2024-07-05 00:00:00"), "Water Supplier", "IBAN2345678901", false,
-//                            Timestamp.valueOf("2024-06-05 00:00:00"), Timestamp.valueOf("2024-06-05 00:00:00")));
-//                    billService.addBill(new Bill(3L, 300.00, currencies.get(2), property3, "Internet",
-//                            Timestamp.valueOf("2024-07-10 00:00:00"), "Internet Provider", "IBAN3456789012", false,
-//                            Timestamp.valueOf("2024-06-10 00:00:00"), Timestamp.valueOf("2024-06-10 00:00:00")));
-//                    billService.addBill(new Bill(4L, 400.00, currencies.get(3), property4, "Maintenance",
-//                            Timestamp.valueOf("2024-07-15 00:00:00"), "Maintenance Company", "IBAN4567890123", false,
-//                            Timestamp.valueOf("2024-06-15 00:00:00"), Timestamp.valueOf("2024-06-15 00:00:00")));
-//                    billService.addBill(new Bill(5L, 250.00, currencies.get(0), property5, "Gas",
-//                            Timestamp.valueOf("2024-07-20 00:00:00"), "Gas Company", "IBAN5678901234", false,
-//                            Timestamp.valueOf("2024-06-20 00:00:00"), Timestamp.valueOf("2024-06-20 00:00:00")));
-//                    billService.addBill(new Bill(6L, 100.00, currencies.get(1), property6, "Garbage",
-//                            Timestamp.valueOf("2024-07-25 00:00:00"), "Garbage Collector", "IBAN6789012345", false,
-//                            Timestamp.valueOf("2024-06-25 00:00:00"), Timestamp.valueOf("2024-06-25 00:00:00")));
-//                    billService.addBill(new Bill(7L, 600.00, currencies.get(2), property7, "Rent",
-//                            Timestamp.valueOf("2024-07-30 00:00:00"), "Landlord", "IBAN7890123456", false,
-//                            Timestamp.valueOf("2024-06-30 00:00:00"), Timestamp.valueOf("2024-06-30 00:00:00")));
-//                    billService.addBill(new Bill(8L, 50.00, currencies.get(3), property8, "Parking",
-//                            Timestamp.valueOf("2024-08-01 00:00:00"), "Parking Service", "IBAN8901234567", false,
-//                            Timestamp.valueOf("2024-07-01 00:00:00"), Timestamp.valueOf("2024-07-01 00:00:00")));
-//                    billService.addBill(new Bill(9L, 80.00, currencies.get(0), property9, "Cleaning",
-//                            Timestamp.valueOf("2024-08-05 00:00:00"), "Cleaning Service", "IBAN9012345678", false,
-//                            Timestamp.valueOf("2024-07-05 00:00:00"), Timestamp.valueOf("2024-07-05 00:00:00")));
-//                    billService.addBill(new Bill(10L, 500.00, currencies.get(1), property10, "Insurance",
-//                            Timestamp.valueOf("2024-08-10 00:00:00"), "Insurance Company", "IBAN0123456789", false,
-//                            Timestamp.valueOf("2024-07-10 00:00:00"), Timestamp.valueOf("2024-07-10 00:00:00")));
-//                    billService.addBill(new Bill(11L, 120.00, currencies.get(2), property11, "Water",
-//                            Timestamp.valueOf("2024-08-15 00:00:00"), "Water Supplier", "IBAN1234567890", false,
-//                            Timestamp.valueOf("2024-07-15 00:00:00"), Timestamp.valueOf("2024-07-15 00:00:00")));
-//                    billService.addBill(new Bill(12L, 220.00, currencies.get(3), property12, "Electricity",
-//                            Timestamp.valueOf("2024-08-20 00:00:00"), "Electric Company", "IBAN2345678901", false,
-//                            Timestamp.valueOf("2024-07-20 00:00:00"), Timestamp.valueOf("2024-07-20 00:00:00")));
-
-//                    List<Property> premadeProperties = new ArrayList<>();
-//                    premadeProperties.add(property1);
-//                    premadeProperties.add(property2);
-//                    premadeProperties.add(property3);
-//                    premadeProperties.add(property4);
-//                    premadeProperties.add(property5);
-//                    premadeProperties.add(property6);
-//                    premadeProperties.add(property7);
-//                    premadeProperties.add(property8);
-//                    premadeProperties.add(property9);
-//                    premadeProperties.add(property10);
-//                    premadeProperties.add(property11);
-//                    premadeProperties.add(property12);
-//                    int propertyIndexForBills = 0;
-//                    for (Bill bill : sampleBills) {
-//                        Set<Bill> billset = new HashSet<>();
-//                        billset.add(bill);
-//                        premadeProperties.get(propertyIndexForBills).setBills(billset);
-//                        System.out.println("   * Bill created: ID" + bill.getId() + ", category: " + bill.getExpenseCategory() + ", for Property " + bill.getProperty().getId());
-//                        propertyIndexForBills++;
-//                    }
-
 
                     // Clearing the NumericDataMappings left from Managers
                     System.out.println("   * Removing NumericDataMappings...");
@@ -3426,12 +3364,7 @@ public class SampleBaseCreator implements ApplicationRunner {
             System.out.println(" *** System ready for operation");
             // TEST SPACE HERE
 //            System.out.println("Test space initialized");
-//            System.out.println("Decrypted card number for Tenant 7: " + thirdPartyPaymentProviderService.decryptCardNumber(7L, UserType.TENANT, tenantService.getTenantById(7L).get().getPaymentCardNo()));
-//            System.out.println("Decrypted CVV for Tenant 7: " + thirdPartyPaymentProviderService.decryptCVV(7L, UserType.TENANT, tenantService.getTenantById(7L).get().getCvv()));
-//            System.out.println("Decrypted card number for Tenant 3: " + thirdPartyPaymentProviderService.decryptCardNumber(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getPaymentCardNo()));
-//            System.out.println("Decrypted CVV for Tenant 3: " + thirdPartyPaymentProviderService.decryptCVV(3L, UserType.TENANT, tenantService.getTenantById(3L).get().getCvv()));
-//            System.out.println("Decrypted card number for Manager 1: " + thirdPartyPaymentProviderService.decryptCardNumber(1L, UserType.MANAGER, managerService.getManagerById(1L).get().getPaymentCardNo()));
-//            System.out.println("Decrypted CVV for Manager 1: " + thirdPartyPaymentProviderService.decryptCVV(1L, UserType.MANAGER, managerService.getManagerById(1L).get().getCvv()));
+
         }
     }
 

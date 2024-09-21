@@ -12,7 +12,6 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -209,7 +208,7 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+//    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     @Transactional
     public void addAmenityToProperty(Long propertyId, Long amenityId) {
         PropertyAmenity propertyAmenity = new PropertyAmenity();
@@ -226,7 +225,7 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
+//    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     @Transactional
     public void removeAmenityFromProperty(Long propertyId, Long amenityId) {
         List<PropertyAmenity> propertyAmenities = propertyAmenityRepository.findAll();
