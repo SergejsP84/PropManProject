@@ -83,8 +83,12 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         tenant.setEmail(registrationDTO.getEmail());
         tenant.setIban(registrationDTO.getIban());
         tenant.setLogin(registrationDTO.getLogin());
+        try {
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         tenant.setPassword(encodedPassword);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        };
         tenant.setRating(0F);
         tenant.setActive(false);
         tenant.setTenantPayments(new HashSet<>());

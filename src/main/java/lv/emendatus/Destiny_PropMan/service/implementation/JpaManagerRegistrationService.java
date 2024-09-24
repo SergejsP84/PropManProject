@@ -108,8 +108,12 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
-        manager.setPassword(encodedPassword);
+        try {
+            String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
+            manager.setPassword(encodedPassword);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        };
         manager.setActive(false);
         manager.setProperties(new HashSet<>());
         manager.setJoinDate(Timestamp.valueOf(LocalDateTime.now()));
