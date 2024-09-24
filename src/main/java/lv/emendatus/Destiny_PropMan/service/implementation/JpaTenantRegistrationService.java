@@ -87,7 +87,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         tenant.setPassword(encodedPassword);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new InvalidPasswordFormatException("Invalid password format!");
         };
         tenant.setRating(0F);
         tenant.setActive(false);

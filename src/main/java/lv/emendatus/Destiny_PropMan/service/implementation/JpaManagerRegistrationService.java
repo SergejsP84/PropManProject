@@ -112,7 +112,7 @@ public class JpaManagerRegistrationService implements ManagerRegistrationService
             String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
             manager.setPassword(encodedPassword);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new InvalidPasswordFormatException("Invalid password format!");
         };
         manager.setActive(false);
         manager.setProperties(new HashSet<>());
