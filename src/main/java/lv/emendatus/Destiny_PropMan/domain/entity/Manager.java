@@ -68,6 +68,7 @@ public class Manager {
 
     @NotBlank(message = "Manager's email is required")
     @Column(name = "email")
+    @Email
     private String email;
 
     @Column(name = "iban")

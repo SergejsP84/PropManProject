@@ -71,13 +71,6 @@ public class SecurityConfig {
 
     };
 
-//    @Bean
-//    public HttpFirewall allowSemicolonHttpFirewall() {
-//        StrictHttpFirewall firewall = new StrictHttpFirewall();
-//        firewall.setAllowSemicolon(true); // Allow semicolon in URL
-//        return firewall;
-//    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        System.out.println("!!! - securityFilterChain method INVOKED!");
@@ -86,14 +79,14 @@ public class SecurityConfig {
 //              HOW DO I GET THE THING IN WORKING ORDER AFTER I RE-ENABLE CSRF PROTECTION?
 //                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .csrf(AbstractHttpConfigurer::disable)
+                // Enable CORS
+                .cors(Customizer.withDefaults())
                 // Headers configuration
                 .headers(headers -> headers
                         .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                         .contentSecurityPolicy(cps -> cps.policyDirectives("default-src 'self'; script-src 'self' https://trusted-scripts.com;"))
                 )
                 // Authorization configuration
-                // Временные разрешения - по завершении работы те эндпойнты, которые
-                // не несут пользовательских функций, будут закрыты .denyAll()
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/auth/admin-login").permitAll() // Allow access to login endpoints
                         .requestMatchers("/auth/login").permitAll()
@@ -202,17 +195,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
-                // Form login configuration
-//                .formLogin(formLogin ->
-//                        formLogin
-//                                .loginProcessingUrl("/auth/admin-login")
-//                                .permitAll()
-//                )
-//                .formLogin(formLogin ->
-//                        formLogin
-//                                .loginProcessingUrl("/auth/login")
-//                                .permitAll()
-//                )
+
                 .formLogin(AbstractHttpConfigurer::disable)
                 // Logout configuration
                 .logout(logout ->

@@ -37,10 +37,10 @@ public class EarlyTerminationRequest {
     @Column(name = "termination_date")
     private LocalDateTime terminationDate;
 
-    @Column(name = "comment", length = 9000)
+    @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
-    @Column(name = "manager_response", length = 9000)
+    @Column(name = "manager_response", columnDefinition = "TEXT")
     private String managersResponse;
 
     @Column(name = "status")

@@ -53,6 +53,7 @@ public class Tenant {
 
     @NotBlank(message = "Email is required")
     @Column(name = "email")
+    @Email
     private String email;
 
     @Column(name = "iban")
