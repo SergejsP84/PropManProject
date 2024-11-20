@@ -1,9 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.view.ReviewDTO;
-import lv.emendatus.Destiny_PropMan.domain.entity.Message;
 import lv.emendatus.Destiny_PropMan.domain.entity.Review;
-
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;

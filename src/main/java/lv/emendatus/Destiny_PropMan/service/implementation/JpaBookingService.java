@@ -32,7 +32,6 @@ public class JpaBookingService implements BookingService {
     private final TenantRepository tenantRepository;
     private final JpaTenantService tenantService;
     private final JpaLeasingHistoryService leasingHistoryService;
-//    private final JpaClaimService claimService;
     private final JpaNumericalConfigService configService;
     private final JpaPropertyDiscountService propertyDiscountService;
 

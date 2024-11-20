@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.annotation.communication_controller.Communication_GetConversation;
-import lv.emendatus.Destiny_PropMan.annotation.communication_controller.Communication_GetMessagesByReceiver;
-import lv.emendatus.Destiny_PropMan.annotation.communication_controller.Communication_GetMessagesBySender;
 import lv.emendatus.Destiny_PropMan.annotation.communication_controller.Communication_SendMessage;
 import lv.emendatus.Destiny_PropMan.domain.dto.communication.CommunicationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.communication.SendMessageDTO;

@@ -3,16 +3,7 @@ package lv.emendatus.Destiny_PropMan.config;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.beans.factory.annotation.Value;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.Tag;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /*
@@ -56,7 +47,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
                         + "  2) PropertyAmenity - an auxiliary entity linking Properties and Amenities<br>"
                         + "  3) TokenResetter - an auxiliary entity employed in the process of resetting email confirmation and password reset tokens<br>"
                         + "  4) NumericDataMapping - a three-layered map used to store keys for decrypting users' sensitive financial data, specifically, payment card numbers and CVV codes<br>"
-                        + "  5) PropertyLock - an auxiliary entity required in order to allow a Manager to unlock any of his/her Properties that might have been locked for a specific period previously<br>"
+                        + "  5) KeyLink - an auxiliary entity specifying which file to browse for a specific user's encrypted records<br>"
+                        + "  6) PropertyLock - an auxiliary entity required in order to allow a Manager to unlock any of his/her Properties that might have been locked for a specific period previously<br>"
                         ,
                 version = "1.0.0",
                 contact = @Contact(

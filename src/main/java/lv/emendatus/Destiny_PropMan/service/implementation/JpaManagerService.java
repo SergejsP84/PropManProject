@@ -1,7 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.*;
-import lv.emendatus.Destiny_PropMan.exceptions.AuthenticationFailedException;
 import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ManagerRepository;
@@ -11,7 +10,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 
 @Service

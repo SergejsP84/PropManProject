@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.mapper;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.view.PropertiesForTenantsDTO;
-import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

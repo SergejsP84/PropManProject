@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyAmenity;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.PropertyStatus;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyAmenityRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyAmenityService;
 import org.springframework.stereotype.Service;

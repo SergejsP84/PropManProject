@@ -1,10 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
-
 import java.util.List;
 import java.util.Optional;
 

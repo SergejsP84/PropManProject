@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import jakarta.annotation.PostConstruct;
 import lv.emendatus.Destiny_PropMan.domain.dto.registration.AdminRegistrationDTO;
-import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

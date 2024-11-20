@@ -1,6 +1,5 @@
 package lv.emendatus.Destiny_PropMan.mapper;
 
-import lv.emendatus.Destiny_PropMan.domain.dto.managerial.ManagerPropertyDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.PropertyAdditionDTO;
 import lv.emendatus.Destiny_PropMan.domain.entity.Property;
 import org.mapstruct.Mapper;

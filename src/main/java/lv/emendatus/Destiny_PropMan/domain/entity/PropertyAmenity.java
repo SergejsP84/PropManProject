@@ -1,11 +1,8 @@
 package lv.emendatus.Destiny_PropMan.domain.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import java.util.Objects;
-import java.util.Set;
 
 @Entity
 @Table(name = "property_amenities")

@@ -1,7 +1,6 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.annotation.tenant_controller.*;
-import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantService;
 import org.springframework.http.HttpStatus;

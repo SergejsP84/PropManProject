@@ -5,7 +5,6 @@ import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_Delete
 import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_GetAll;
 import lv.emendatus.Destiny_PropMan.annotation.amenity_controller.Amenity_GetByID;
 import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
-import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAmenityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

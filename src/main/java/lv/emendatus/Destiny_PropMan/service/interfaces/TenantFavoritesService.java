@@ -1,11 +1,9 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.PropertyAmenity;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantFavorites;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+
 
 public interface TenantFavoritesService {
     List<TenantFavorites> getAllTenantFavorites();

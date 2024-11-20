@@ -1,8 +1,5 @@
 package lv.emendatus.Destiny_PropMan.domain.dto.managerial;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

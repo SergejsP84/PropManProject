@@ -6,9 +6,7 @@ import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ETRequestDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
-import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdvancedTenantService;
-import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController

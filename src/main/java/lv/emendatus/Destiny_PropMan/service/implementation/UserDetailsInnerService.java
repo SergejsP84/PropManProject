@@ -7,11 +7,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -45,14 +41,12 @@ public class UserDetailsInnerService implements UserDetailsService {
             return User.builder()
                     .username(username)
                     .password("{bcrypt}" + tenantService.getTenantByLogin(username).getPassword())
-//                    .password(tenantService.getTenantByLogin(username).getPassword())
                     .authorities(tenantService.getTenantByLogin(username).getAuthorities())
                     .build();
         } else if (managerLoginFound(managerService.getAllManagers(), username)) {
             return User.builder()
                     .username(username)
                     .password("{bcrypt}" + managerService.getManagerByLogin(username).getPassword())
-//                    .password(managerService.getManagerByLogin(username).getPassword())
                     .authorities(managerService.getManagerByLogin(username).getAuthorities())
                     .build();
         } else if (adminGrabberService.findByLogin(username).isPresent()) {
@@ -64,7 +58,6 @@ public class UserDetailsInnerService implements UserDetailsService {
             return User.builder()
                     .username(username)
                     .password("{bcrypt}" + adminGrabberService.findByLogin(username).get().getPassword())
-//                    .password(adminGrabberService.findByLogin(username).get().getPassword())
                     .authorities(adminGrabberService.findByLogin(username).get().getAuthorities())
                     .build();
         } else {

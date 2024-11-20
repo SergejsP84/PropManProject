@@ -1,8 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.PropertyAmenity;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

@@ -2,16 +2,9 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.BookingHistoryDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ConfirmationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ETRequestDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationCancellationDTO;
-import lv.emendatus.Destiny_PropMan.domain.dto.reservation.ReservationRequestDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.view.*;
-import lv.emendatus.Destiny_PropMan.domain.entity.EarlyTerminationRequest;
-import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
-
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AdvancedTenantService {

@@ -4,7 +4,6 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.Claim;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimStatus;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ClaimantType;
-import lv.emendatus.Destiny_PropMan.exceptions.BookingNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.ManagerNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.TenantNotFoundException;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.ClaimRepository;

@@ -13,7 +13,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class JpaCardDataSaverService implements CardDataSaverService {
@@ -29,9 +28,9 @@ public class JpaCardDataSaverService implements CardDataSaverService {
     @Override
     @Transactional
     public boolean writeNDMToFile(NumericDataMapping mapping) throws IOException {
-        System.out.println();
-        System.out.println("    !!!!!   writeNDMToFile method INVOKED !!!!! ");
-        System.out.println();
+//        System.out.println();
+//        System.out.println("    !!!!!   writeNDMToFile method INVOKED !!!!! ");
+//        System.out.println();
         Optional<NumericalConfig> optionalConfig = configService.getNumericalConfigByName("CardDataRecordCounter");
         int currentRecordNumber = 0;
         // Checking for / creating the required NumericalConfig
@@ -93,14 +92,14 @@ public class JpaCardDataSaverService implements CardDataSaverService {
             keyLinkService.addKeyLink(keyLink);
         } else {
             keyLink.setFileNumber(fileIndex + (currentRecordNumber / 100));
-            keyLinkService.addKeyLink(keyLink); // Assuming addKeyLink updates if it exists
+            keyLinkService.addKeyLink(keyLink);
         }
 
 
         // Convert SecretKeys to Base64 strings and store in an intermediate map
-        System.out.println();
-        System.out.println(" --==::|| Initial string representation of a NumericDataMapping: " + mapping.toString());
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| Initial string representation of a NumericDataMapping: " + mapping.toString());
+//        System.out.println();
 
         System.out.println("Started converting SecretKeys to Base64 strings and storing them in an intermediate map");
         Map<Long, Map<UserType, Map<Boolean, String>>> encodedMap = new HashMap<>();
@@ -116,9 +115,9 @@ public class JpaCardDataSaverService implements CardDataSaverService {
             encodedMap.put(userEntry.getKey(), userTypeMap);
         }
 
-        System.out.println();
-        System.out.println(" --==::|| String representation of an encoded NumericDataMapping (the encodedMap variable): " + encodedMap.toString());
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| String representation of an encoded NumericDataMapping (the encodedMap variable): " + encodedMap.toString());
+//        System.out.println();
 
         // Replace SecretKey placeholders in the string representation
         System.out.println("Replacing SecretKey placeholders in the String representation");
@@ -135,13 +134,13 @@ public class JpaCardDataSaverService implements CardDataSaverService {
             }
         }
 
-        System.out.println();
-        System.out.println(" --==::|| String representation of an encoded NumericDataMapping (the encodedMap variable) after the SecretKey placeholders have been replaced: " + encodedMap.toString());
-        System.out.println();
-
-        System.out.println();
-        System.out.println(" --==::|| String representation of the Unencrypted Mapping before encrypting the String and adding metadata (the unencryptedMapping variable): " + unencryptedMapping);
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| String representation of an encoded NumericDataMapping (the encodedMap variable) after the SecretKey placeholders have been replaced: " + encodedMap.toString());
+//        System.out.println();
+//
+//        System.out.println();
+//        System.out.println(" --==::|| String representation of the Unencrypted Mapping before encrypting the String and adding metadata (the unencryptedMapping variable): " + unencryptedMapping);
+//        System.out.println();
 
         // Encrypt the string and add metadata
         System.out.println("Encrypting the String and adding metadata");
@@ -169,9 +168,9 @@ public class JpaCardDataSaverService implements CardDataSaverService {
             sb.append((char) newCharIndex);
         }
 
-        System.out.println();
-        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, but before adding obfuscators and metadata: " + sb.toString());
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, but before adding obfuscators and metadata: " + sb.toString());
+//        System.out.println();
 
         // Adding extra numbers to the end, including the actual ASCIIShift, then adding the position of this key number within random numbers
         System.out.println("Adding extra numbers to the end, including the actual ASCIIShift, then adding the position of this key number within random numbers");
@@ -181,9 +180,9 @@ public class JpaCardDataSaverService implements CardDataSaverService {
             } else sb.append(r.nextInt(0, 10));
         }
 
-        System.out.println();
-        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, with added obfuscators: " + sb.toString());
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, with added obfuscators: " + sb.toString());
+//        System.out.println();
 
         // Adding another digit, which will specify the length of the extra digits added before
         System.out.println("Appending metadata");
@@ -196,9 +195,9 @@ public class JpaCardDataSaverService implements CardDataSaverService {
         sb.append(indexAtTheEnd);
         String encodedString = sb.toString();
 
-        System.out.println();
-        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, with added obfuscators and metadata: " + encodedString);
-        System.out.println();
+//        System.out.println();
+//        System.out.println(" --==::|| The Stringbuilder that is supposed to become the ecnrypted Mapping after encryption, with added obfuscators and metadata: " + encodedString);
+//        System.out.println();
 
         // Writing the encoded String to the file
         boolean successful = false;

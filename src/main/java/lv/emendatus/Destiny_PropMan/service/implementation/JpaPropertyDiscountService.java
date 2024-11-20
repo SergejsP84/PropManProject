@@ -5,14 +5,11 @@ import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyDiscountReposi
 import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyDiscountService;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class JpaPropertyDiscountService implements PropertyDiscountService{
@@ -74,28 +71,3 @@ public class JpaPropertyDiscountService implements PropertyDiscountService{
     }
 
 }
-
-// SPARE VERSION FOR getDiscountOrSurchargeForCalculations:
-/*
-    @Override
-    public int getDiscountOrSurchargeForCalculations(Long propertyId, LocalDate periodStart, LocalDate periodEnd, LocalDate specificDay) {
-        List<PropertyDiscount> applicableDiscounts = getDiscountsForPropertyWithinPeriod(propertyId, periodStart, periodEnd);
-        if (applicableDiscounts.isEmpty()) return 0;
-        if (applicableDiscounts.size() == 1) return applicableDiscounts.get(0).getPercentage().intValue();
-        List<PropertyDiscount> sievedList = new ArrayList<>();
-        for (PropertyDiscount discount : applicableDiscounts) {
-            if (isDateWithinPeriod(discount.getPeriodStart(), discount.getPeriodEnd(), specificDay)) sievedList.add(discount);
-        }
-        if (sievedList.isEmpty()) return 0;
-        if (sievedList.size() == 1) return sievedList.get(0).getPercentage().intValue();
-        int finalValue = 0;
-        Timestamp latestTimestamp = Timestamp.valueOf("2000-01-01 00:00:01.0");
-        for (PropertyDiscount discount : sievedList) {
-            if (discount.getCreatedAt().toLocalDateTime().isAfter(latestTimestamp.toLocalDateTime())) {
-                latestTimestamp = discount.getCreatedAt();
-                finalValue = discount.getPercentage().intValue();
-            }
-        }
-        return finalValue;
-    }
- */

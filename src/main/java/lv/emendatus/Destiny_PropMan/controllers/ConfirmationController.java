@@ -5,11 +5,8 @@ import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmEm
 import lv.emendatus.Destiny_PropMan.annotation.confirmation_controller.ConfirmRegistration;
 import lv.emendatus.Destiny_PropMan.domain.entity.Manager;
 import lv.emendatus.Destiny_PropMan.domain.entity.Tenant;
-import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerRegistrationService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaManagerService;
-import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantRegistrationService;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaTenantService;
-import org.springframework.beans.factory.support.ManagedArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

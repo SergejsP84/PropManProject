@@ -10,13 +10,11 @@ import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.List;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

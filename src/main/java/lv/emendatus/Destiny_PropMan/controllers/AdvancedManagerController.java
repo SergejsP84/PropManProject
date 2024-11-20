@@ -1,25 +1,17 @@
 package lv.emendatus.Destiny_PropMan.controllers;
 
 import lv.emendatus.Destiny_PropMan.annotation.advanced_manager_controller.*;
-import lv.emendatus.Destiny_PropMan.annotation.advanced_tenant_controller.TenantFunc_RateProperty;
 import lv.emendatus.Destiny_PropMan.domain.dto.managerial.*;
-import lv.emendatus.Destiny_PropMan.domain.dto.profile.TenantDTO_Profile;
-import lv.emendatus.Destiny_PropMan.domain.dto.reference.PropertyDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.reservation.BookingDTO_Reservation;
 import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.Booking;
 import lv.emendatus.Destiny_PropMan.domain.entity.PropertyDiscount;
 import lv.emendatus.Destiny_PropMan.exceptions.EntityNotFoundException;
 import lv.emendatus.Destiny_PropMan.exceptions.FileStorageException;
-import lv.emendatus.Destiny_PropMan.exceptions.PropertyNotFoundException;
 import lv.emendatus.Destiny_PropMan.service.implementation.JpaAdvancedManagerService;
-import lv.emendatus.Destiny_PropMan.service.implementation.JpaBillService;
-import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedManagerService;
-import lv.emendatus.Destiny_PropMan.service.interfaces.AdvancedTenantService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/managerial")

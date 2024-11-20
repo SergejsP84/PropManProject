@@ -1,6 +1,5 @@
 package lv.emendatus.Destiny_PropMan.repository.interfaces;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.TokenResetter;
 import lv.emendatus.Destiny_PropMan.domain.tokens.PasswordResetToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 

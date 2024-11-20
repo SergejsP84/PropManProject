@@ -7,7 +7,6 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.NumericDataMappingService
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,27 +78,27 @@ public class JpaNumericDataMappingService implements NumericDataMappingService {
     @Override
     @Transactional
     public void saveCardNumberSecretKey(Long id, UserType userType, SecretKey cardNumberSecretKey) {
-        System.out.println("    --------------     1) saveCardNumberSecretKey method invoked");
+//        System.out.println("    --------------     1) saveCardNumberSecretKey method invoked");
         List<NumericDataMapping> sameIDMaps = new ArrayList<>();
         Map<Long, Map<UserType, Map<Boolean, SecretKey>>> level1Map = new HashMap<>();
         Map<UserType, Map<Boolean, SecretKey>> level2Map = new HashMap<>();
         Map<Boolean, SecretKey> level3Map = new HashMap<>();
-        System.out.println("    --------------     2) Empty starting entities initialized");
-        System.out.println("    --------------     3) Step 3 excluded");
-            System.out.println("    --------------     4a) Triggered the case with no existing maps with this ID");
+//        System.out.println("    --------------     2) Empty starting entities initialized");
+//        System.out.println("    --------------     3) Step 3 excluded");
+//            System.out.println("    --------------     4a) Triggered the case with no existing maps with this ID");
             level3Map.put(true, cardNumberSecretKey);
-            System.out.println("    --------------     5a) Level 3 Map generated: key - " + level3Map.keySet().toString() + ", value - " + level3Map.values().toString());
+//            System.out.println("    --------------     5a) Level 3 Map generated: key - " + level3Map.keySet().toString() + ", value - " + level3Map.values().toString());
             level2Map.put(userType, level3Map);
-            System.out.println("    --------------     6a) Level 2 Map generated: key - " + level2Map.keySet().toString() + ", value - " + level2Map.values().toString());
+//            System.out.println("    --------------     6a) Level 2 Map generated: key - " + level2Map.keySet().toString() + ", value - " + level2Map.values().toString());
             level1Map.put(id, level2Map);
-            System.out.println("    --------------     7a) Level 1 Map generated: key - " + level1Map.keySet().toString() + ", value - " + level1Map.values().toString());
+//            System.out.println("    --------------     7a) Level 1 Map generated: key - " + level1Map.keySet().toString() + ", value - " + level1Map.values().toString());
             NumericDataMapping mapping = new NumericDataMapping();
             mapping.setMap(level1Map);
-            System.out.println("    --------------     8a) Created a new Mapping");
+//            System.out.println("    --------------     8a) Created a new Mapping");
             repository.save(mapping);
-            System.out.println("    --------------     9a) Saved the new Mapping to the repository");
+//            System.out.println("    --------------     9a) Saved the new Mapping to the repository");
             LOGGER.info("Secret key for the card number value set successfully for user with ID {}", id);
-            System.out.println("Secret key for the card number value set successfully for user with ID " + id);
+//            System.out.println("Secret key for the card number value set successfully for user with ID " + id);
     }
 
     @Override
@@ -109,46 +108,46 @@ public class JpaNumericDataMappingService implements NumericDataMappingService {
         Map<Long, Map<UserType, Map<Boolean, SecretKey>>> level1Map = new HashMap<>();
         Map<UserType, Map<Boolean, SecretKey>> level2Map = new HashMap<>();
         Map<Boolean, SecretKey> level3Map = new HashMap<>();
-        System.out.println("   ---   saveCVVSecretKey method: created a new 3-level Map   --- ");
+//        System.out.println("   ---   saveCVVSecretKey method: created a new 3-level Map   --- ");
         try {
             int count = getAllMappings().size();
-            System.out.println("   ---   At this point the repository contains " + count + " entry");
+//            System.out.println("   ---   At this point the repository contains " + count + " entry");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Error accessing repository: " + e.getMessage());
         }
-        System.out.println("   ---   Before calling repository.findAll() --- ");
+//        System.out.println("   ---   Before calling repository.findAll() --- ");
         List<NumericDataMapping> allMappings = repository.findAll();
-        System.out.println("   ---   After calling repository.findAll(), size: " + allMappings.size() + " --- ");
+//        System.out.println("   ---   After calling repository.findAll(), size: " + allMappings.size() + " --- ");
         for (NumericDataMapping map : allMappings) {
             if (map.getMap().containsKey(id)) sameIDMaps.add(map);
         }
-        System.out.println("   ---   saveCVVSecretKey method: browsed through the repository   --- ");
+//        System.out.println("   ---   saveCVVSecretKey method: browsed through the repository   --- ");
         if (sameIDMaps.isEmpty()) {
-            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps is empty   --- ");
+//            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps is empty   --- ");
             level3Map.put(false, cVVSecretKey);
             level2Map.put(userType, level3Map);
             level1Map.put(id, level2Map);
             NumericDataMapping mapping = new NumericDataMapping();
             mapping.setMap(level1Map);
             repository.save(mapping);
-            System.out.println("   ---   After repository.save(mapping) --- ");
+//            System.out.println("   ---   After repository.save(mapping) --- ");
             if (cardDataSaverService.writeNDMToFile(mapping)) {
-                System.out.println("   ---   Attempting to delete the NumericDataMapping after saving it to the file   --- ");
-                System.out.println("   ---   saveCVVSecretKey method: deleted the processed NumericDataMapping   --- ");
+//                System.out.println("   ---   Attempting to delete the NumericDataMapping after saving it to the file   --- ");
+//                System.out.println("   ---   saveCVVSecretKey method: deleted the processed NumericDataMapping   --- ");
                 LOGGER.info("Secret key for the CVV code set successfully for user with ID {}", id);
                 System.out.println("Secret key for the CVV code set successfully for user with ID " + id);
             }
         } else if (sameIDMaps.size() == 1) {
-            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps has 1 entity   --- ");
+//            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps has 1 entity   --- ");
             NumericDataMapping existingMapping = sameIDMaps.get(0);
-            System.out.println("   ---   saveCVVSecretKey method: Fetched the sole existing entity from sameIDMaps   --- ");
+//            System.out.println("   ---   saveCVVSecretKey method: Fetched the sole existing entity from sameIDMaps   --- ");
             Map<UserType, Map<Boolean, SecretKey>> secondMap = existingMapping.getMap().get(id);
             if (secondMap.containsKey(userType)) {
                 Map<Boolean, SecretKey> thirdMap = secondMap.get(userType);
                 if (thirdMap.containsKey(false)) {
                     LOGGER.info("A secret key for the CVV code already exists for user with ID {}, please use the updateCVVSecretKey method instead.", id);
-                    System.out.println("A secret key for the CVV code value already exists for user with ID " + id + ", please use the updateCVVSecretKey method instead.");
+//                    System.out.println("A secret key for the CVV code value already exists for user with ID " + id + ", please use the updateCVVSecretKey method instead.");
                 } else {
                     thirdMap.put(false, cVVSecretKey);
                     secondMap.put(userType, thirdMap);
@@ -156,7 +155,7 @@ public class JpaNumericDataMappingService implements NumericDataMappingService {
                     repository.save(existingMapping);
                     Long mappingId = existingMapping.getId();
                     if (cardDataSaverService.writeNDMToFile(existingMapping)) {
-                        System.out.println("   ---   Attempting to delete the NumericDataMapping after saving it to the file   --- ");
+//                        System.out.println("   ---   Attempting to delete the NumericDataMapping after saving it to the file   --- ");
                         LOGGER.info("Secret key for the CVV code set successfully for user with ID {}", id);
                         System.out.println("Secret key for the CVV code set successfully for user with ID " + id);
                     }
@@ -172,15 +171,15 @@ public class JpaNumericDataMappingService implements NumericDataMappingService {
                 System.out.println("Secret key for the CVV code set successfully for user with ID " + id);
             }
         } else if (sameIDMaps.size() == 2) {
-            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps has 2 entities   --- ");
+//            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: sameIDMaps has 2 entities   --- ");
             LOGGER.info("A secret key for the CVV code already exists for user with ID {}, please use the updateCVVSecretKey method instead.", id);
             System.out.println("A secret key for the CVV code value already exists for user with ID " + id + ", please use the updateCVVSecretKey method instead.");
         } else {
-            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: Error in the retrieval logic   --- ");
+//            System.out.println("   ---   saveCVVSecretKey method: OPTION TAKEN: Error in the retrieval logic   --- ");
             LOGGER.error("Error in the retrieval logic: cannot have more than two Maps for the same user ID");
             System.out.println("Error in the retrieval logic: cannot have more than two Maps for the same user ID");
         }
-        System.out.println("   ---   saveCVVSecretKey method has COMPLETED ITS OPERATION   --- ");
+//        System.out.println("   ---   saveCVVSecretKey method has COMPLETED ITS OPERATION   --- ");
     }
 
 

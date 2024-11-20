@@ -6,11 +6,8 @@ import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.UserType;
 import lv.emendatus.Destiny_PropMan.service.interfaces.ThirdPartyPaymentProviderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.*;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -96,9 +93,6 @@ public class JpaThirdPartyPaymentProviderService implements ThirdPartyPaymentPro
             }
             String decryptedCVV = sb.toString();
             return decryptedCVV;
-            // Convert decrypted bytes to String
-//            String decryptedCVV = new String(decryptedCVVBytes, StandardCharsets.UTF_8);
-//            System.out.println("Decrypted CVV: " + decryptedCVV);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
             e.printStackTrace();
             throw e; // Re-throw or handle appropriately

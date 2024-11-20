@@ -1,7 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantFavorites;
-import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyAmenityRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantFavoritesRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantFavoritesService;
 import org.apache.logging.log4j.LogManager;

@@ -2,7 +2,6 @@ package lv.emendatus.Destiny_PropMan.service.interfaces;
 
 import lv.emendatus.Destiny_PropMan.domain.dto.communication.CommunicationDTO;
 import lv.emendatus.Destiny_PropMan.domain.dto.communication.SendMessageDTO;
-
 import java.security.Principal;
 import java.util.List;
 

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.YearMonthDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.YearMonthSerializer;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.ManagerType;
 import lombok.AllArgsConstructor;

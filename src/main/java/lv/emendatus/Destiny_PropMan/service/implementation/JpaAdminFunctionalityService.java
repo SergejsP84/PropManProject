@@ -1,7 +1,6 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
 import lv.emendatus.Destiny_PropMan.domain.enums_for_entities.*;
-import org.apache.poi.sl.draw.geom.GuideIf;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.*;
-import javax.swing.text.html.Option;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,9 +37,6 @@ import java.util.*;
 
 @Service
 public class JpaAdminFunctionalityService implements AdminFunctionalityService {
-
-//    @PersistenceContext
-//    private EntityManager entityManager;
 
     public final JpaTenantService tenantService;
     public final JpaManagerService managerService;
@@ -117,8 +111,6 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         System.out.println("toggleManagerStatus method initiated");
         Optional<Manager> optionalManager = managerService.getManagerById(managerId);
         if (optionalManager.isPresent()) {
-//            System.out.println("Manager " + managerId + "has been found");
-//            System.out.println("The manager's Active status is " + manager.get().isActive());
             Manager manager = optionalManager.get();
             if (manager.isActive()) {
                 manager.setActive(false);
@@ -135,17 +127,6 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                 }
                 managerService.addManager(manager);
             }
-//            manager.get().setActive(!manager.get().isActive());
-//            System.out.println("The manager's Active status has been set to " + manager.get().isActive());
-//            managerService.addManager(manager.get());
-//            System.out.println("The updated manager has been saved to the database");
-//            Optional<Manager> manager2 = managerService.getManagerById(managerId);
-//            if (manager2.isPresent()) {
-//                System.out.println("Manager re-obtained from the database");
-//                System.out.println("The retrieved manager's Active status is " + manager2.get().isActive());
-//            } else {
-//                System.out.println("Something else is wrong");
-//            }
         } else {
             LOGGER.warn("No manager with the ID {} found in the database", managerId);
         }
@@ -171,34 +152,34 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             LOGGER.error("A tenant with this e-mail has already been registered");
             throw new EmailAlreadyExistsException("Tenant with this e-mail exists");
         }
-        System.out.println("   ---   1) Initiated the tenant creation process");
+//        System.out.println("   ---   1) Initiated the tenant creation process");
         Tenant tenant = new Tenant();
-        System.out.println("   ---   2) New tenant entity created");
+//        System.out.println("   ---   2) New tenant entity created");
         tenant.setFirstName(registrationDTO.getFirstName());
-        System.out.println("   ---   3) First name assigned: " + tenant.getFirstName());
+//        System.out.println("   ---   3) First name assigned: " + tenant.getFirstName());
         tenant.setLastName(registrationDTO.getLastName());
-        System.out.println("   ---   4) Last name assigned: " + tenant.getLastName());
+//        System.out.println("   ---   4) Last name assigned: " + tenant.getLastName());
         tenant.setPhone(registrationDTO.getPhone());
-        System.out.println("   ---   5) Phone number assigned: " + tenant.getPhone());
+//        System.out.println("   ---   5) Phone number assigned: " + tenant.getPhone());
         tenant.setEmail(registrationDTO.getEmail());
-        System.out.println("   ---   6) E-mail assigned: " + tenant.getEmail());
+//        System.out.println("   ---   6) E-mail assigned: " + tenant.getEmail());
         tenant.setIban(registrationDTO.getIban());
-        System.out.println("   ---   7) IBAN assigned: " + tenant.getIban());
+//        System.out.println("   ---   7) IBAN assigned: " + tenant.getIban());
         tenant.setLogin(registrationDTO.getLogin());
-        System.out.println("   ---   8) Login assigned: " + tenant.getLogin());
+//        System.out.println("   ---   8) Login assigned: " + tenant.getLogin());
         String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         tenant.setPassword(encodedPassword);
-        System.out.println("   ---   9) Password assigned: " + tenant.getPassword());
+//        System.out.println("   ---   9) Password assigned: " + tenant.getPassword());
         tenant.setRating(0F);
-        System.out.println("   ---   10) Rating assigned: " + tenant.getRating());
+//        System.out.println("   ---   10) Rating assigned: " + tenant.getRating());
         tenant.setActive(true);
-        System.out.println("   ---   11) Active status assigned: " + tenant.isActive());
+//        System.out.println("   ---   11) Active status assigned: " + tenant.isActive());
         tenant.setTenantPayments(new HashSet<>());
-        System.out.println("   ---   12) Assigned an empty HashSet of TenantPayments");
+//        System.out.println("   ---   12) Assigned an empty HashSet of TenantPayments");
         tenant.setCurrentProperty(null);
-        System.out.println("   ---   13) Set the Current Property for the Tenant to NULL");
+//        System.out.println("   ---   13) Set the Current Property for the Tenant to NULL");
         tenant.setLeasingHistories(new ArrayList<>());
-        System.out.println("   ---   14) Assigned an empty ArrayList of LeasingHistories");
+//        System.out.println("   ---   14) Assigned an empty ArrayList of LeasingHistories");
         Long newTenantID = numericalConfigService.getLastTenantId();
         tenant.setId(newTenantID + 1);
         try {
@@ -206,22 +187,22 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        System.out.println("   ---   15) Payment card number assigned: " + tenant.getPaymentCardNo());
+//        System.out.println("   ---   15) Payment card number assigned: " + tenant.getPaymentCardNo());
         tenant.setCardValidityDate(registrationDTO.getCardValidityDate());
-        System.out.println("   ---   16) Card validity date assigned: " + tenant.getCardValidityDate());
+//        System.out.println("   ---   16) Card validity date assigned: " + tenant.getCardValidityDate());
         try {
             tenant.setCvv(encryptCVV(tenant.getId(), UserType.TENANT, registrationDTO.getCvv()).toCharArray());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        System.out.println("   ---   17) CVV assigned and encrypted to: " + Arrays.toString(tenant.getCvv()));
+//        System.out.println("   ---   17) CVV assigned and encrypted to: " + Arrays.toString(tenant.getCvv()));
         tenant.setConfirmationToken("");
-        System.out.println("   ---   18) Confirmation token set to empty, because the Tenant is being created by an Admin");
+//        System.out.println("   ---   18) Confirmation token set to empty, because the Tenant is being created by an Admin");
         tenant.setPreferredCurrency(currencyService.returnBaseCurrency());
-        System.out.println("   ---   19) Preferred currency assigned to: " + tenant.getPreferredCurrency().getDesignation());
+//        System.out.println("   ---   19) Preferred currency assigned to: " + tenant.getPreferredCurrency().getDesignation());
         List<String> knownIPs = new ArrayList<>();
         tenant.setKnownIps(knownIPs);
-        System.out.println("   ---   20) Known IP list set to an empty ArrayList");
+//        System.out.println("   ---   20) Known IP list set to an empty ArrayList");
         List<GrantedAuthority> authoritiesT = new ArrayList<>();
         authoritiesT.add(new SimpleGrantedAuthority("TENANT"));
         tenant.setAuthorities(authoritiesT);
@@ -332,12 +313,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
             if (!updatedTenantInfo.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo()))
                     || !updatedTenantInfo.getCvv().equals(paymentProviderService.decryptCVV(tenantId, UserType.TENANT, existingTenant.getCvv()))
                     || !updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {
-                LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
-                System.out.println("Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
-                LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
-                System.out.println("CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
+                LOGGER.log(Level.INFO, "Payment card number changed and encrypted");
+//                System.out.println("Payment card number changed to: "  + updatedTenantInfo.getPaymentCardNo());
+                LOGGER.log(Level.INFO, "CVV changed and encrypted");
+//                System.out.println("CVV changed to: "  + Arrays.toString(updatedTenantInfo.getCvv()));
                 LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
-                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
+//                System.out.println("Card validity date changed to: "  + updatedTenantInfo.getCardValidityDate());
                 try {
                     cardDataSaverService.removeNDMRecordFromFile(UserType.TENANT, tenantId);
 //                    System.out.println("Removed an NDM record from file for Tenant 3");
@@ -380,33 +361,33 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         if (managerOptional.isPresent()) {
             Manager existingManager = managerOptional.get();
             LOGGER.log(Level.INFO, "An Admin has updated the profile for Manager {}. The following changes were applied:", managerId);
-            System.out.println("An Admin has updated the profile for Manager " + managerId + ". The following changes were applied:");
+//            System.out.println("An Admin has updated the profile for Manager " + managerId + ". The following changes were applied:");
             if (!updatedProfile.getManagerName().equals(existingManager.getManagerName())) {
                 LOGGER.log(Level.INFO, "Manager name changed to: "  + updatedProfile.getManagerName());
-                System.out.println("Manager name changed to: "  + updatedProfile.getManagerName());
+//                System.out.println("Manager name changed to: "  + updatedProfile.getManagerName());
             }
             if (!updatedProfile.getDescription().equals(existingManager.getDescription())) {
                 LOGGER.log(Level.INFO, "Description changed to: "  + updatedProfile.getDescription());
-                System.out.println("Description changed to: "  + updatedProfile.getDescription());
+//                System.out.println("Description changed to: "  + updatedProfile.getDescription());
             }
             if (!updatedProfile.getPhone().equals(existingManager.getPhone())) {
                 LOGGER.log(Level.INFO, "Phone number changed to: "  + updatedProfile.getPhone());
-                System.out.println("Phone number changed to: "  + updatedProfile.getPhone());
+//                System.out.println("Phone number changed to: "  + updatedProfile.getPhone());
             }
             if (!updatedProfile.getIban().equals(existingManager.getIban())) {
                 LOGGER.log(Level.INFO, "IBAN changed to: "  + updatedProfile.getIban());
-                System.out.println("IBAN changed to: "  + updatedProfile.getIban());
+//                System.out.println("IBAN changed to: "  + updatedProfile.getIban());
             }
 
             if (!updatedProfile.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(managerId, UserType.MANAGER, existingManager.getPaymentCardNo()))
                     || !updatedProfile.getCvv().equals(paymentProviderService.decryptCVV(managerId, UserType.MANAGER, existingManager.getCvv()))
                     || !updatedProfile.getCardValidityDate().equals(existingManager.getCardValidityDate())) {
-                LOGGER.log(Level.INFO, "Payment card number changed to: "  + updatedProfile.getPaymentCardNo());
-                System.out.println("Payment card number changed to: "  + updatedProfile.getPaymentCardNo());
-                LOGGER.log(Level.INFO, "CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
-                System.out.println("CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
+                LOGGER.log(Level.INFO, "Payment card number changed and encrypted");
+//                System.out.println("Payment card number changed to: "  + updatedProfile.getPaymentCardNo());
+                LOGGER.log(Level.INFO, "CVV changed and encrypted");
+//                System.out.println("CVV changed to: "  + Arrays.toString(updatedProfile.getCvv()));
                 LOGGER.log(Level.INFO, "Card validity date changed to: "  + updatedProfile.getCardValidityDate());
-                System.out.println("Card validity date changed to: "  + updatedProfile.getCardValidityDate());
+//                System.out.println("Card validity date changed to: "  + updatedProfile.getCardValidityDate());
                 try {
                     cardDataSaverService.removeNDMRecordFromFile(UserType.MANAGER, managerId);
                     numericDataMappingService.flushEmAll();
@@ -594,21 +575,12 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
                     }
                 }
             }
-//            Tenant stubTenant = new Tenant();
-//            stubTenant.setFirstName("Tenant with ID " + tenantId);
-//            stubTenant.setLastName(" - REMOVED");
-//            stubTenant.setLogin("StubTenant");
-//            stubTenant.setPassword("Babababa000");
-//            stubTenant.setCardValidityDate(YearMonth.now());
-//            stubTenant.setPaymentCardNo("4453112311231123");
-//            stubTenant.setCvv(new char[]{0, 0, 0});
-//            stubTenant.setEmail("bonk@bonk.bonk");
             for (TenantPayment payment : tenantPayments) {
                 if (payment.isReceivedFromTenant() && payment.isFeePaidToManager()) {
                     System.out.println("Removing TenantPayment with ID " + payment.getId());
                     paymentService.deleteTenantPayment(payment.getId());
                 } else if (!payment.isReceivedFromTenant() && !payment.isFeePaidToManager()) {
-                    System.out.println("Removing TenantPaymentwitd ID " + payment.getId());
+                    System.out.println("Removing TenantPayment with ID " + payment.getId());
                     paymentService.deleteTenantPayment(payment.getId());
                 } else {
                     obstaclesPresent = true;
@@ -619,8 +591,6 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
             System.out.println("Passed the TenantPayment stubbing stage");
 
-            // replacing the Tenant in LeasingHistories with a stub Tenant
-//            entityManager.persist(stubTenant);
             List<LeasingHistory> leasingHistories = leasingHistoryService.getLeasingHistoryByTenant(tenant);
             for (LeasingHistory history : leasingHistories) {
                 leasingHistoryService.deleteLeasingHistory(history.getId());
@@ -1058,21 +1028,6 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         }
     }
 
-//    @Override
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @Transactional
-//    public void setNewBaseCurrency(Long newBaseCurrencyId, List<Double> ratesForOtherCurrencies) {
-//        currencyService.setBaseCurrency(newBaseCurrencyId);
-//        int listIndex = 0;
-//
-//        for (Currency currency : currencyService.getAllCurrencies()) {
-//            if (!currency.getIsBaseCurrency()) {
-//                currency.setRateToBase(ratesForOtherCurrencies.get(listIndex));
-//                listIndex++;
-//            }
-//        }
-//    }
-
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
@@ -1082,24 +1037,24 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
         Optional<Currency> optional = currencyService.getCurrencyById(newBaseCurrencyId);
         if (optional.isPresent()) {
             Currency newBaseCurrency = optional.get();
-            // Ensure new base currency is not the same as the current one
+            // Ensuring new base currency is not the same as the current one
             if (newBaseCurrency.getId().equals(currentBaseCurrency.getId())) {
                 throw new IllegalArgumentException("New base currency must be different from the current base currency.");
             }
-            // Calculate the conversion rate between the current and new base currency
+            // Calculating the conversion rate between the current and new base currency
             double conversionRate = 1 / newBaseCurrency.getRateToBase();
             // Set the new base currency's rate to 1.0 and mark it as base
             newBaseCurrency.setRateToBase(1.0);
             newBaseCurrency.setIsBaseCurrency(true);
-            // Update other currencies
+            // Updating other currencies
             for (Currency currency : currencyService.getAllCurrencies()) {
                 if (!currency.getId().equals(newBaseCurrencyId)) {
-                    // Calculate new rate based on the conversion rate
+                    // Calculating new rate based on the conversion rate
                     double newRateToBase = currency.getRateToBase() * conversionRate;
                     currency.setRateToBase(newRateToBase);
                     currencyService.addCurrency(currency);
                 } else {
-                    // Set the current base currency's base flag to false
+                    // Setting the current base currency's base flag to false
                     currentBaseCurrency.setIsBaseCurrency(false);
                     currencyService.addCurrency(currentBaseCurrency);
                 }
@@ -1472,21 +1427,21 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
     // Encrypt CVV using AES encryption, will also be used for card number encryption
     public String encryptCVV(Long userId, UserType userType, char[] cvv) throws Exception {
         try {
-        System.out.println("      ---   a) Initiated the encryptCVV method");
+//        System.out.println("      ---   a) Initiated the encryptCVV method");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        System.out.println("      ---   b) Created a Cipher: " + cipher);
+//        System.out.println("      ---   b) Created a Cipher: " + cipher);
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(128); // 128-bit key length
         SecretKey secretKey = keyGenerator.generateKey();
         byte[] aesKeyBytes = secretKey.getEncoded();
-        System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+//        System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        System.out.println("      ---   d) Cipher.init triggered successfully");
+//        System.out.println("      ---   d) Cipher.init triggered successfully");
         byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
-        System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+//        System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
         // implement logics for saving the secret key alongside the encrypted value
         numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
-            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+//            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
         return Base64.getEncoder().encodeToString(encryptedCVVBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
@@ -1535,21 +1490,21 @@ public class JpaAdminFunctionalityService implements AdminFunctionalityService {
 
     public String encryptUpdatedCVV(Long userId, UserType userType, char[] cvv) throws Exception {
         try {
-            System.out.println("      ---   a) Initiated the encryptCVV method");
+//            System.out.println("      ---   a) Initiated the encryptCVV method");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            System.out.println("      ---   b) Created a Cipher: " + cipher);
+//            System.out.println("      ---   b) Created a Cipher: " + cipher);
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(128); // 128-bit key length
             SecretKey secretKey = keyGenerator.generateKey();
             byte[] aesKeyBytes = secretKey.getEncoded();
-            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
+//            System.out.println("      ---   c) Generated AES Key (Base64 Encoded): " + Base64.getEncoder().encodeToString(aesKeyBytes));
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            System.out.println("      ---   d) Cipher.init triggered successfully");
+//            System.out.println("      ---   d) Cipher.init triggered successfully");
             byte[] encryptedCVVBytes = cipher.doFinal(new String(cvv).getBytes());
-            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
+//            System.out.println("      ---   e) Byte array created: " + Arrays.toString(encryptedCVVBytes));
             // implement logics for saving the secret key alongside the encrypted value
             numericDataMappingService.saveCVVSecretKey(userId, userType, secretKey);
-            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
+//            System.out.println("      ---   f) Saved the secret key " + secretKey.toString() + " to the database");
             return Base64.getEncoder().encodeToString(encryptedCVVBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();

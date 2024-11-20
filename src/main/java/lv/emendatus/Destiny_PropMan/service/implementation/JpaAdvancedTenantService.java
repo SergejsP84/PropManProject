@@ -184,13 +184,6 @@ public class JpaAdvancedTenantService implements AdvancedTenantService {
                     } else {
                         tenantMapper.updateTenantFromDTO(existingTenant, updatedTenantInfo);
                         existingTenant.setTemporaryEmail(updatedTenantInfo.getEmail());
-//                        String decryptedCardNo = paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo());
-//                        char[] decryptedCvv = paymentProviderService.decryptCVV(tenantId, UserType.TENANT, existingTenant.getCvv()).toCharArray();
-//
-//                        System.out.println("PIGGY! - Decrypted Card No: " + decryptedCardNo);
-//                        System.out.println("PIGGY! - Decrypted CVV: " + Arrays.toString(decryptedCvv));
-//                        System.out.println("PIGGY! - Updated Card No: " + updatedTenantInfo.getPaymentCardNo());
-//                        System.out.println("PIGGY! - Updated CVV: " + Arrays.toString(updatedTenantInfo.getCvv()));
                         if (!updatedTenantInfo.getPaymentCardNo().equals(paymentProviderService.decryptCardNumber(tenantId, UserType.TENANT, existingTenant.getPaymentCardNo()))
                                 || !Arrays.equals(updatedTenantInfo.getCvv(), paymentProviderService.decryptCVV(tenantId, UserType.TENANT, existingTenant.getCvv()).toCharArray())
                                 || !updatedTenantInfo.getCardValidityDate().equals(existingTenant.getCardValidityDate())) {

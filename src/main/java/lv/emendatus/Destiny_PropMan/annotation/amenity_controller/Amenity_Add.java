@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lv.emendatus.Destiny_PropMan.domain.entity.Amenity;
-import lv.emendatus.Destiny_PropMan.domain.entity.Currency;
 import lv.emendatus.Destiny_PropMan.responses.ValidationErrorResponse;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.ErrorResponse;
@@ -49,7 +48,7 @@ import java.lang.annotation.Target;
                         description = "Amenity added successfully",
                         content = @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = Currency.class)
+                                schema = @Schema(implementation = Amenity.class)
                         )
                 ),
                 @ApiResponse(

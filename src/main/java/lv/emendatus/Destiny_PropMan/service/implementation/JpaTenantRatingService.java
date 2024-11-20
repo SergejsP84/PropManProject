@@ -1,10 +1,7 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.PropertyRating;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantRating;
-import lv.emendatus.Destiny_PropMan.repository.interfaces.PropertyRatingRepository;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantRatingRepository;
-import lv.emendatus.Destiny_PropMan.service.interfaces.PropertyRatingService;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantRatingService;
 import org.springframework.stereotype.Service;
 

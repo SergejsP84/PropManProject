@@ -1,10 +1,8 @@
 package lv.emendatus.Destiny_PropMan.service.implementation;
 
-import lv.emendatus.Destiny_PropMan.domain.entity.Bill;
 import lv.emendatus.Destiny_PropMan.domain.entity.TenantPayment;
 import lv.emendatus.Destiny_PropMan.repository.interfaces.TenantPaymentRepository;
 import lv.emendatus.Destiny_PropMan.service.interfaces.TenantPaymentService;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
