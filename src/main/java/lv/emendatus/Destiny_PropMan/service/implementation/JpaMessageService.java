@@ -12,34 +12,39 @@ import java.util.Optional;
 @Service
 public class JpaMessageService implements MessageService {
     private final MessageRepository messageRepository;
+
     @Autowired
     public JpaMessageService(MessageRepository messageRepository) {
         this.messageRepository = messageRepository;
     }
+
     @Override
     public List<Message> getAllMessages() {
         return messageRepository.findAll();
     }
+
     @Override
     public Optional<Message> getMessageById(Long id) {
         return messageRepository.findById(id);
     }
+
     @Override
     public void addMessage(Message message) {
         messageRepository.save(message);
     }
+
     @Override
     public void deleteMessage(Long id) {
         messageRepository.deleteById(id);
     }
+
     @Override
     public List<Message> findBySenderId(Long senderId) {
-        return getAllMessages().stream()
-                .filter(message -> message.getSenderId().equals(senderId)).toList();
+        return messageRepository.findBySenderId(senderId);
     }
+
     @Override
     public List<Message> findByReceiverId(Long receiverId) {
-        return getAllMessages().stream()
-                .filter(message -> message.getReceiverId().equals(receiverId)).toList();
+        return messageRepository.findByReceiverId(receiverId);
     }
 }

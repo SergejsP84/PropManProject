@@ -76,7 +76,7 @@ public class JpaTenantRegistrationService implements TenantRegistrationService {
             LOGGER.error("A tenant with this e-mail has already been registered");
             throw new EmailAlreadyExistsException("Tenant with this e-mail exists");
         }
-        Tenant tenant = new Tenant();
+        Tenant tenant = new Tenant() ;
         tenant.setFirstName(registrationDTO.getFirstName());
         tenant.setLastName(registrationDTO.getLastName());
         tenant.setPhone(registrationDTO.getPhone());

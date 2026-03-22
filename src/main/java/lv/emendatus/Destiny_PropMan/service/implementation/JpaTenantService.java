@@ -8,14 +8,14 @@ import lv.emendatus.Destiny_PropMan.service.interfaces.TenantService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class JpaTenantService implements TenantService {
     private final TenantRepository tenantRepository;
-    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+    private final Logger LOGGER = LogManager.getLogger(JpaTenantService.class);
     private final TenantMapper tenantMapper;
     private final LeasingHistoryMapper leasingHistoryMapper;
     private final JpaLeasingHistoryService leasingHistoryService;
@@ -26,58 +26,49 @@ public class JpaTenantService implements TenantService {
         this.leasingHistoryMapper = leasingHistoryMapper;
         this.leasingHistoryService = leasingHistoryService;
     }
+
     @Override
     public List<Tenant> getAllTenants() {
         return tenantRepository.findAll();
     }
+
     @Override
     public Optional<Tenant> getTenantById(Long id) {
         return tenantRepository.findById(id);
     }
+
     @Override
     public void addTenant(Tenant tenant) {
         tenantRepository.save(tenant);
     }
+
     @Override
     public void deleteTenant(Long id) {
         tenantRepository.deleteById(id);
     }
+
     @Override
     public List<Tenant> getTenantsByFirstNameOrLastName(String name) {
-        List<Tenant> allTenants = getAllTenants();
-        String lowercaseName = name.toLowerCase();
-        return allTenants.stream()
-                .filter(tenant -> tenant.getFirstName().toLowerCase().contains(lowercaseName) ||
-                        tenant.getLastName().toLowerCase().contains(lowercaseName))
-                .collect(Collectors.toList());
+        return tenantRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name);
     }
 
     @Override
     public Tenant getTenantByLogin(String login) {
-        for (Tenant tenant : getAllTenants()) {
-            if (tenant.getLogin().equals(login)) return tenant;
-        }
-        return null;
+        return tenantRepository.findByLogin(login).orElse(null);
     }
+
     @Override
     public Tenant getTenantByEmail(String email) {
-        for (Tenant tenant : getAllTenants()) {
-            if (email.equals(tenant.getEmail())) return tenant;
-        }
-        return null;
+        return tenantRepository.findByEmail(email).orElse(null);
     }
 
     @Override
     public Tenant getTenantByConfirmationToken(String confirmationToken) {
-        for (Tenant tenant : getAllTenants()) {
-            if (tenant.getConfirmationToken().equals(confirmationToken)) return tenant;
-        }
-        return null;
+        return tenantRepository.findByConfirmationToken(confirmationToken).orElse(null);
     }
 
     @Override
     public boolean isTokenValid(Tenant tenant, String token) {
         return tenant != null && token.equals(tenant.getConfirmationToken());
     }
-
 }

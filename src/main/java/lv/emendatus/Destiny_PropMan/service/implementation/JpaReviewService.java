@@ -28,6 +28,7 @@ public class JpaReviewService implements ReviewService {
     private final JpaTenantService tenantService;
     private final JpaBookingService bookingService;
     private final JpaLeasingHistoryService leasingHistoryService;
+
     public JpaReviewService(ReviewRepository repository, ReviewMapper mapper, JpaTenantService tenantService, JpaBookingService bookingService, JpaLeasingHistoryService leasingHistoryService) {
         this.repository = repository;
         this.mapper = mapper;
@@ -35,26 +36,32 @@ public class JpaReviewService implements ReviewService {
         this.bookingService = bookingService;
         this.leasingHistoryService = leasingHistoryService;
     }
+
     @Override
     public List<Review> getAllReviews() {
         return repository.findAll();
     }
+
     @Override
     public Optional<Review> getReviewById(Long id) {
         return repository.findById(id);
     }
+
     @Override
     public void addReview(Review review) {
         repository.save(review);
     }
+
     @Override
     public void deleteReview(Long id) {
         repository.deleteById(id);
     }
+
     @Override
     public List<Review> findByPropertyId(Long prop_id) {
-        return getAllReviews().stream().filter(review -> review.getPropertyId().equals(prop_id)).toList();
+        return repository.findByPropertyId(prop_id);
     }
+
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('TENANT')")
@@ -68,18 +75,15 @@ public class JpaReviewService implements ReviewService {
             for (Booking booking : bookingService.getBookingsByTenant(tenant)) {
                 if (booking.getProperty().getId().equals(propertyId) &&
                         (booking.getStatus().equals(BookingStatus.OVER) || booking.getStatus().equals(BookingStatus.CURRENT)))
-                                tenantEverStayedInProperty = true;
+                    tenantEverStayedInProperty = true;
             }
             for (LeasingHistory history : leasingHistoryService.getLeasingHistoryByTenant(tenant)) {
-                if (history.getPropertyId().equals(propertyId) && history.getTenant().getId().equals(tenant.getId())) tenantEverStayedInProperty = true;
+                if (history.getPropertyId().equals(propertyId) && history.getTenant().getId().equals(tenant.getId()))
+                    tenantEverStayedInProperty = true;
             }
-            boolean tenantAlreadyReviewedTheProperty = false;
             if (tenantEverStayedInProperty) {
-                for (ReviewDTO previousReview : getPropertyReviews(propertyId)) {
-                    if (previousReview.getTenantId().equals(tenant.getId())) {
-                        tenantAlreadyReviewedTheProperty = true;
-                    }
-                }
+                boolean tenantAlreadyReviewedTheProperty = getPropertyReviews(propertyId).stream()
+                        .anyMatch(previousReview -> previousReview.getTenantId().equals(tenant.getId()));
                 if (tenantAlreadyReviewedTheProperty) {
                     throw new AccessDeniedException("You have already rated this Property");
                 } else {
@@ -92,13 +96,14 @@ public class JpaReviewService implements ReviewService {
             throw new EntityNotFoundException("Tenant retrieval failed");
         }
     }
+
     @Override
     public List<ReviewDTO> getPropertyReviews(Long propertyId) {
-        List<Review> reviews = findByPropertyId(propertyId);
-        return reviews.stream()
+        return findByPropertyId(propertyId).stream()
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
     }
+
     public ReviewMapper getMapper() {
         return mapper;
     }

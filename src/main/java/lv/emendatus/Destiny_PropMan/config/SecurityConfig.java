@@ -26,6 +26,7 @@ import java.io.Serializable;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+
     @Autowired
     private UserDetailsInnerService userDetailsInnerService;
     @Autowired

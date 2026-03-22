@@ -16,69 +16,64 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Service
 public class JpaBillService implements BillService {
     private final BillRepository billRepository;
     private final PropertyRepository propertyRepository;
+    private final Logger LOGGER = LogManager.getLogger(JpaBillService.class);
 
-    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
     public JpaBillService(BillRepository billRepository, PropertyRepository propertyRepository) {
         this.billRepository = billRepository;
         this.propertyRepository = propertyRepository;
     }
+
     @Override
     public List<Bill> getAllBills() {
         return billRepository.findAll();
     }
+
     @Override
     public Optional<Bill> getBillById(Long id) {
         return billRepository.findById(id);
     }
+
     @Override
     public void addBill(Bill bill) {
         billRepository.save(bill);
     }
+
     @Override
     public void deleteBill(Long id) {
         billRepository.deleteById(id);
     }
+
     @Override
     public List<Bill> getBillsByProperty(Property property) {
-        return getAllBills().stream()
-                .filter(bill -> bill.getProperty().equals(property)).collect(Collectors.toList());
+        return billRepository.findByProperty(property);
     }
+
     @Override
     public List<Bill> getBillsByDueDateRange(LocalDate startDate, LocalDate endDate, Property property) {
-        List<Bill> forGivenProperty = getBillsByProperty(property);
         Timestamp startTimestamp = Timestamp.valueOf(startDate.atStartOfDay());
         Timestamp endTimestamp = Timestamp.valueOf(endDate.plusDays(1).atStartOfDay());
-        return forGivenProperty.stream()
-                .filter(bill -> {
-                    Timestamp billDueDate = bill.getDueDate();
-                    long billTime = billDueDate.getTime();
-                    long startTime = startTimestamp.getTime();
-                    long endTime = endTimestamp.getTime();
-                    return (billTime >= startTime && billTime < endTime);
-                })
-                .collect(Collectors.toList());
+        return billRepository.findByPropertyAndDueDateRange(property, startTimestamp, endTimestamp);
     }
+
     @Override
     public List<Bill> getUnpaidBills(Property property) {
-        List<Bill> forGivenProperty = getBillsByProperty(property);
-        return forGivenProperty.stream().filter(bill -> !bill.isPaid()).toList();
+        return billRepository.findByPropertyAndPaidStatus(property, false);
     }
+
     @Override
     public List<Bill> getPaidBills(Property property) {
-        List<Bill> forGivenProperty = getBillsByProperty(property);
-        return forGivenProperty.stream().filter(Bill::isPaid).toList();
+        return billRepository.findByPropertyAndPaidStatus(property, true);
     }
+
     @Override
     public List<Bill> getBillsByExpenseCategory(Property property, String expenseCategory) {
-        List<Bill> forGivenProperty = getBillsByProperty(property);
-        return forGivenProperty.stream().filter(bill -> bill.getExpenseCategory().equals(expenseCategory)).toList();
+        return billRepository.findByPropertyAndExpenseCategory(property, expenseCategory);
     }
 
     @Override
@@ -100,22 +95,14 @@ public class JpaBillService implements BillService {
         if (property.isPresent()) {
             List<Bill> propertyBills = getBillsByProperty(property.get());
             if (propertyBills.isEmpty()) {
-                return null; // shouldn't happen if things go normal
-            } else if (propertyBills.size() == 1) {
-                return propertyBills.get(0);
-            } else {
-                Bill returnedBill = propertyBills.get(0);
-                for (Bill bill : propertyBills) {
-                    if (bill.getAddedAt().after(returnedBill.getAddedAt())) {
-                        returnedBill = bill;
-                    }
-                }
-                return returnedBill;
+                return null;
             }
+            return propertyBills.stream()
+                    .max((a, b) -> a.getAddedAt().compareTo(b.getAddedAt()))
+                    .orElse(null);
         } else {
             LOGGER.log(Level.ERROR, "No property with the ID {} exists in the database.", propertyId);
             throw new PropertyNotFoundException("Property with the ID " + propertyId + " could not be found");
         }
     }
-
 }

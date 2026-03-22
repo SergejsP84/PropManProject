@@ -20,53 +20,46 @@ public class JpaLeasingHistoryService implements LeasingHistoryService {
     private final LeasingHistoryRepository leasingHistoryRepository;
     private final PropertyRepository propertyRepository;
     private final TenantRepository tenantRepository;
+
     @Autowired
     public JpaLeasingHistoryService(LeasingHistoryRepository leasingHistoryRepository, PropertyRepository propertyRepository, TenantRepository tenantRepository) {
         this.leasingHistoryRepository = leasingHistoryRepository;
         this.propertyRepository = propertyRepository;
         this.tenantRepository = tenantRepository;
     }
+
     @Override
     public List<LeasingHistory> getAllLeasingHistories() {
         return leasingHistoryRepository.findAll();
     }
+
     @Override
     public Optional<LeasingHistory> getLeasingHistoryById(Long id) {
         return leasingHistoryRepository.findById(id);
     }
+
     @Override
     public void addLeasingHistory(LeasingHistory leasingHistory) {
         leasingHistoryRepository.save(leasingHistory);
     }
+
     @Override
     public void deleteLeasingHistory(Long id) {
         leasingHistoryRepository.deleteById(id);
     }
+
     @Override
     public List<LeasingHistory> getLeasingHistoryByProperty(Property property) {
-        return getAllLeasingHistories().stream()
-                .filter(leasingHistory -> {
-                    Optional<Property> optionalProperty = propertyRepository.findById(leasingHistory.getPropertyId());
-                    return optionalProperty.isPresent() && optionalProperty.get().equals(property);
-                })
-                .toList();
+        return leasingHistoryRepository.findByPropertyId(property.getId());
     }
+
     @Override
     public List<LeasingHistory> getLeasingHistoryByTimePeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        return getAllLeasingHistories().stream()
-                .filter(leasingHistory ->
-                        (leasingHistory.getEndDate().before(Timestamp.valueOf(endDate)) || leasingHistory.getEndDate().equals(Timestamp.valueOf(endDate)))
-                                && (leasingHistory.getStartDate().after(Timestamp.valueOf(startDate)) || leasingHistory.getStartDate().equals(Timestamp.valueOf(startDate)))
-                )
-                .toList();
+        return leasingHistoryRepository.findByTimePeriod(Timestamp.valueOf(startDate), Timestamp.valueOf(endDate));
     }
+
     @Override
     public List<LeasingHistory> getLeasingHistoryByTenant(Tenant tenant) {
-        return getAllLeasingHistories().stream()
-                .filter(leasingHistory -> {
-                    Optional<Tenant> optionalTenant = tenantRepository.findById(leasingHistory.getTenant().getId());
-                    return optionalTenant.isPresent() && optionalTenant.get().equals(tenant);
-                })
-                .toList();
+        return leasingHistoryRepository.findByTenant(tenant);
     }
 }

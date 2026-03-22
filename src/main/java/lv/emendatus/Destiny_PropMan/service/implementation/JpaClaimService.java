@@ -27,7 +27,7 @@ public class JpaClaimService implements ClaimService {
     private final JpaBookingService bookingService;
     private final JpaTenantService tenantService;
     private final JpaManagerService managerService;
-    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+    private final Logger LOGGER = LogManager.getLogger(JpaClaimService.class);
 
     public JpaClaimService(ClaimRepository repository, JpaBookingService bookingService, JpaTenantService tenantService, JpaManagerService managerService) {
         this.repository = repository;
@@ -35,30 +35,37 @@ public class JpaClaimService implements ClaimService {
         this.tenantService = tenantService;
         this.managerService = managerService;
     }
+
     @Override
     public List<Claim> getAllClaims() {
         return repository.findAll();
     }
+
     @Override
     public Optional<Claim> getClaimById(Long id) {
-        return Optional.empty();
+        return repository.findById(id);
     }
+
     @Override
     public void addClaim(Claim claim) {
         repository.save(claim);
     }
+
     @Override
     public void deleteClaim(Long id) {
         repository.deleteById(id);
     }
+
     @Override
     public List<Claim> getClaimsByStatus(ClaimStatus status) {
-        return getAllClaims().stream().filter(claim -> claim.getClaimStatus().equals(status)).toList();
+        return repository.findByClaimStatus(status);
     }
+
     @Override
     public List<Claim> getClaimsByBooking(Long bookingId) {
-        return getAllClaims().stream().filter(claim -> claim.getBookingId().equals(bookingId)).toList();
+        return repository.findByBookingId(bookingId);
     }
+
     @Override
     public List<Claim> getClaimsFiledByTenant(Long tenantId) {
         if (tenantService.getTenantById(tenantId).isPresent()) {
@@ -74,6 +81,7 @@ public class JpaClaimService implements ClaimService {
             throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
+
     @Override
     public List<Claim> getClaimsFiledByManager(Long managerId) {
         if (managerService.getManagerById(managerId).isPresent()) {
@@ -89,6 +97,7 @@ public class JpaClaimService implements ClaimService {
             throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
+
     @Override
     public List<Claim> getClaimsAgainstTenant(Long tenantId) {
         if (tenantService.getTenantById(tenantId).isPresent()) {
@@ -104,6 +113,7 @@ public class JpaClaimService implements ClaimService {
             throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
         }
     }
+
     @Override
     public List<Claim> getClaimsAgainstManager(Long managerId) {
         if (managerService.getManagerById(managerId).isPresent()) {
@@ -119,6 +129,7 @@ public class JpaClaimService implements ClaimService {
             throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
     }
+
     @Override
     public void resolveClaim(Long id, String resolution) {
         repository.findById(id).ifPresent(claim -> {

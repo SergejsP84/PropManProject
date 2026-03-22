@@ -29,76 +29,47 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
         LocalDate endDate = criteria.getEndDate();
         List<Property> suitableProperties = new java.util.ArrayList<>(propertyService.getAvailableProperties(startDate, endDate)
                 .stream().filter(property -> !property.getStatus().equals(PropertyStatus.BLOCKED)).toList());
+
         if (criteria.getLocation() != null && !criteria.getLocation().isEmpty()) {
             List<Property> locatedProperties = propertyService.getPropertiesByLocation(criteria.getLocation());
             suitableProperties.removeIf(property -> !locatedProperties.contains(property));
         }
+
         if (criteria.getAmenityIds() != null && !criteria.getAmenityIds().isEmpty()) {
             Set<Property> propertiesWithAmenities = propertyService.getPropertiesWithAmenities(criteria.getAmenityIds());
             suitableProperties.removeIf(property -> !propertiesWithAmenities.contains(property));
         }
+
         if (criteria.getType() != null) {
             List<Property> typeProperties = propertyService.getPropertiesByType(criteria.getType());
             suitableProperties.removeIf(property -> !typeProperties.contains(property));
         }
+
         if (criteria.getRating() != null) {
             suitableProperties.removeIf(property -> property.getRating() < criteria.getRating());
         }
 
-        // Converting price ranges to base currency
-
-        if (criteria.getCurrency() != null) {
-            if (!criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
-                if (criteria.getMaxPrice() != null)
-                    criteria.setMaxPrice(criteria.getMaxPrice() * criteria.getCurrency().getRateToBase());
-                if (criteria.getMinPrice() != null)
-                    criteria.setMinPrice(criteria.getMinPrice() * criteria.getCurrency().getRateToBase());
-            }
+        if (criteria.getCurrency() != null && !criteria.getCurrency().equals(currencyService.returnBaseCurrency())) {
+            if (criteria.getMaxPrice() != null)
+                criteria.setMaxPrice(criteria.getMaxPrice() * criteria.getCurrency().getRateToBase());
+            if (criteria.getMinPrice() != null)
+                criteria.setMinPrice(criteria.getMinPrice() * criteria.getCurrency().getRateToBase());
         }
 
         if (criteria.getMaxPrice() != null || criteria.getMinPrice() != null) {
-            Double minPrice = Double.MIN_VALUE;
-            Double maxPrice = Double.MAX_VALUE;
-            if (criteria.getMinPrice() == null) {
-                maxPrice = criteria.getMaxPrice();
-            }
-            if (criteria.getMaxPrice() == null) {
-                minPrice = criteria.getMinPrice();
-                for (Property property : suitableProperties) {
-                    if (property.getPricePerDay() > maxPrice) maxPrice = property.getPricePerDay();
-                }
-            }
-            if (criteria.getMaxPrice() != null && criteria.getMinPrice() != null) {
-                minPrice = criteria.getMinPrice();
-                maxPrice = criteria.getMaxPrice();
-            }
-
+            Double minPrice = criteria.getMinPrice() != null ? criteria.getMinPrice() : Double.MIN_VALUE;
+            Double maxPrice = criteria.getMaxPrice() != null ? criteria.getMaxPrice() : Double.MAX_VALUE;
             List<Property> fittingProperties = propertyService.getPropertiesByDailyPriceRange(minPrice, maxPrice);
-
             suitableProperties.removeIf(property -> !fittingProperties.contains(property));
         }
 
         if (criteria.getMinSizeM2() != null || criteria.getMaxSizeM2() != null) {
-            Float minSize = Float.MIN_VALUE;
-            Float maxSize = Float.MAX_VALUE;
-            if (criteria.getMinSizeM2() == null) {
-                maxSize = criteria.getMaxSizeM2();
-            }
-            if (criteria.getMaxSizeM2() == null) {
-                minSize = criteria.getMinSizeM2();
-                for (Property property : suitableProperties) {
-                    if (property.getSizeM2() > maxSize) maxSize = property.getSizeM2();
-                }
-            }
-            if (criteria.getMinSizeM2() != null && criteria.getMaxSizeM2() != null) {
-                minSize = criteria.getMinSizeM2();
-                maxSize = criteria.getMaxSizeM2();
-            }
-            for (Property property : suitableProperties) {
-                if (property.getSizeM2() < minSize || property.getSizeM2() > maxSize) suitableProperties.remove(property);
-            }
+            Float minSize = criteria.getMinSizeM2() != null ? criteria.getMinSizeM2() : Float.MIN_VALUE;
+            Float maxSize = criteria.getMaxSizeM2() != null ? criteria.getMaxSizeM2() : Float.MAX_VALUE;
+            suitableProperties.removeIf(property -> property.getSizeM2() < minSize || property.getSizeM2() > maxSize);
         }
-        List<PropertySearchResultDTO> resultDTOList = suitableProperties.stream()
+
+        return suitableProperties.stream()
                 .map(property -> {
                     PropertySearchResultDTO resultDTO = new PropertySearchResultDTO();
                     resultDTO.setId(property.getId());
@@ -115,7 +86,5 @@ public class PropertySearchService implements lv.emendatus.Destiny_PropMan.servi
                     return resultDTO;
                 })
                 .toList();
-
-        return resultDTOList;
     }
 }

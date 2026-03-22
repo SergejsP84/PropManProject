@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class JpaPropertyService implements PropertyService {
     private final JpaBillService billService;
 
     private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
+
     public JpaPropertyService(PropertyRepository propertyRepository, AmenityRepository amenityRepository, PropertyAmenityRepository propertyAmenityRepository, BookingRepository bookingRepository, BillRepository billRepository, JpaBookingService bookingService, JpaManagerService managerService, JpaTenantService tenantService, JpaBillService billService) {
         this.propertyRepository = propertyRepository;
         this.amenityRepository = amenityRepository;
@@ -43,90 +45,72 @@ public class JpaPropertyService implements PropertyService {
         this.tenantService = tenantService;
         this.billService = billService;
     }
+
     @Override
     public List<Property> getAllProperties() {
         return propertyRepository.findAll();
     }
+
     @Override
     public Optional<Property> getPropertyById(Long id) {
         return propertyRepository.findById(id);
     }
+
     @Override
     public void addProperty(Property property) {
         propertyRepository.save(property);
     }
+
     @Override
     public void deleteProperty(Long id) {
         propertyRepository.deleteById(id);
     }
+
     @Override
     public List<Property> getPropertiesByLocation(String location) {
-        List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> property.getAddress().contains(location)
-                        || property.getCountry().contains(location)
-                        || property.getSettlement().contains(location))
-                .collect(Collectors.toList());
+        return propertyRepository.findByAddressContainingIgnoreCaseOrCountryContainingIgnoreCaseOrSettlementContainingIgnoreCase(
+                location, location, location);
     }
+
     @Override
     public List<Property> getPropertiesByType(PropertyType type) {
-        List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> property.getType().equals(type))
-                .collect(Collectors.toList());
+        return propertyRepository.findByType(type);
     }
 
     @Override
     public List<Property> getPropertiesByDailyPriceRange(double minPrice, double maxPrice) {
-        List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> (property.getPricePerDay() >= minPrice && property.getPricePerDay() <= maxPrice))
-                .collect(Collectors.toList());
+        return propertyRepository.findByPricePerDayBetween(minPrice, maxPrice);
     }
 
     @Override
     public List<Property> getPropertiesByWeeklyPriceRange(double minPrice, double maxPrice) {
-        List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> (property.getPricePerWeek() >= minPrice && property.getPricePerWeek() <= maxPrice))
-                .collect(Collectors.toList());
+        return propertyRepository.findByPricePerWeekBetween(minPrice, maxPrice);
     }
 
     @Override
     public List<Property> getPropertiesByMonthlyPriceRange(double minPrice, double maxPrice) {
-        List<Property> properties = getAllProperties();
-        return properties.stream()
-                .filter(property -> (property.getPricePerMonth() >= minPrice && property.getPricePerMonth() <= maxPrice))
-                .collect(Collectors.toList());
+        return propertyRepository.findByPricePerMonthBetween(minPrice, maxPrice);
     }
 
     @Override
     public List<Property> getAvailableProperties(LocalDate startDate, LocalDate endDate) {
-        List<Property> properties = getAllProperties();
-        List<Booking> bookingsWithinTime = bookingService.getBookingsByDateRangeWithOverlaps(startDate, endDate);
-        List<Property> occupiedProperties = new ArrayList<>();
-        for (Booking booking : bookingsWithinTime) {
-            LocalDate bookingStartDate = booking.getStartDate().toLocalDateTime().toLocalDate();
-            LocalDate bookingEndDate = booking.getEndDate().toLocalDateTime().toLocalDate();
-            if (!(endDate.isBefore(bookingStartDate) || startDate.isAfter(bookingEndDate))) {
-                occupiedProperties.add(booking.getProperty());
-            }
-        }
-        properties.removeAll(occupiedProperties);
-        return properties;
+        Timestamp startTs = Timestamp.valueOf(startDate.atStartOfDay());
+        Timestamp endTs = Timestamp.valueOf(endDate.atStartOfDay());
+        Set<Long> occupiedPropertyIds = bookingRepository.findOverlappingBookings(startTs, endTs).stream()
+                .map(booking -> booking.getProperty().getId())
+                .collect(Collectors.toSet());
+        return getAllProperties().stream()
+                .filter(property -> !occupiedPropertyIds.contains(property.getId()))
+                .collect(Collectors.toList());
     }
 
     @Override
     public Set<Property> getPropertiesWithAmenities(List<Long> amenityIds) {
-        List<PropertyAmenity> allAmenityRecords = propertyAmenityRepository.findAll();
-        Map<Long, List<Long>> propertyAmenitiesMap = allAmenityRecords.stream()
-                .collect(Collectors.groupingBy(PropertyAmenity::getProperty_id,
-                        Collectors.mapping(PropertyAmenity::getAmenity_id, Collectors.toList())));
-
-        return propertyAmenitiesMap.entrySet().stream()
-                .filter(entry -> entry.getValue().containsAll(amenityIds))
-                .map(entry -> propertyRepository.findById(entry.getKey()).orElse(null))
-                .filter(Objects::nonNull)
+        List<Long> propertyIds = propertyAmenityRepository.findPropertyIdsWithAllAmenities(amenityIds, amenityIds.size());
+        return propertyIds.stream()
+                .map(propertyRepository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toSet());
     }
 
@@ -208,13 +192,11 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-//    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     @Transactional
     public void addAmenityToProperty(Long propertyId, Long amenityId) {
-        PropertyAmenity propertyAmenity = new PropertyAmenity();
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
         if (optionalProperty.isPresent()) {
-            Long managerId = optionalProperty.get().getManager().getId();
+            PropertyAmenity propertyAmenity = new PropertyAmenity();
             propertyAmenity.setProperty_id(propertyId);
             propertyAmenity.setAmenity_id(amenityId);
             propertyAmenityRepository.save(propertyAmenity);
@@ -225,20 +207,11 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-//    @PreAuthorize("hasRole('ROLE_MANAGER') and #managerId == principal.id")
     @Transactional
     public void removeAmenityFromProperty(Long propertyId, Long amenityId) {
-        List<PropertyAmenity> propertyAmenities = propertyAmenityRepository.findAll();
         Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
         if (optionalProperty.isPresent()) {
-            Long managerId = optionalProperty.get().getManager().getId();
-            Property property = optionalProperty.get();
-            for (PropertyAmenity propertyAmenity : propertyAmenities) {
-            if (propertyAmenity.getProperty_id().equals(propertyId)
-                && propertyAmenity.getAmenity_id().equals(amenityId)) {
-                propertyAmenityRepository.deleteById(propertyAmenity.getId());
-                }
-            }
+            propertyAmenityRepository.deleteByPropertyIdAndAmenityId(propertyId, amenityId);
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             throw new PropertyNotFoundException("No property found with ID: " + propertyId);
@@ -326,19 +299,16 @@ public class JpaPropertyService implements PropertyService {
                 Property property = optionalProperty.get();
                 Tenant tenant = optionalTenant.get();
                 property.setTenant(tenant);
-                System.out.println("Tenant " + tenant.getFirstName() + " moved into Property " + property.getDescription());
-                System.out.println("The property is now occupied by " + property.getTenant().getFirstName() + " " + property.getTenant().getLastName());
                 tenant.setCurrentProperty(property);
                 tenantService.addTenant(tenant);
                 property.removeTenantReference();
                 property.setTenant(tenant);
                 addProperty(property);
-                tenant.removePropertyReference(); // to avoid circular reference
+                tenant.removePropertyReference();
             } else {
                 LOGGER.log(Level.ERROR, "No tenant with the {} ID exists in the database.", tenantId);
                 throw new TenantNotFoundException("No tenant found with ID: " + tenantId);
             }
-
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             throw new PropertyNotFoundException("No property found with ID: " + propertyId);
@@ -349,15 +319,7 @@ public class JpaPropertyService implements PropertyService {
     public Tenant getCurrentTenant(Long propertyId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
-            Tenant tenant = optionalProperty.get().getTenant();
-            if (!tenant.equals(null)) {
-                System.out.println("Current tenant: " + tenant.getFirstName() + " " + tenant.getLastName());
-                return tenant;
-            }
-            else {
-                System.out.println("These premises are unoccupied");
-                return null;
-            }
+            return optionalProperty.get().getTenant();
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             throw new PropertyNotFoundException("No property found with ID: " + propertyId);
@@ -369,7 +331,7 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
             Property property = optionalProperty.get();
-            if (!property.getTenant().equals(null)) {
+            if (property.getTenant() != null) {
                 Optional<Tenant> tenant = tenantService.getTenantById(property.getTenant().getId());
                 if (tenant.isPresent()) {
                     tenant.get().setCurrentProperty(null);
@@ -404,15 +366,12 @@ public class JpaPropertyService implements PropertyService {
             Booking booking = optionalBooking.get();
             booking.setProperty(property);
             bookingService.addBooking(booking);
-            Set<Booking> existingBookings = new HashSet<>();
-            if (!(property.getBookings().isEmpty() || property.getBookings().equals(null))) {
-                existingBookings = property.getBookings();
-            }
+            Set<Booking> existingBookings = property.getBookings() != null ? property.getBookings() : new HashSet<>();
             existingBookings.add(booking);
             property.setBookings(existingBookings);
             propertyRepository.save(property);
         } else {
-            LOGGER.log(Level.ERROR, "Missing property or bill");
+            LOGGER.log(Level.ERROR, "Missing property or booking");
             throw new EntityNotFoundException("Either the property or the booking could not be found");
         }
     }
@@ -423,18 +382,13 @@ public class JpaPropertyService implements PropertyService {
         Optional<Booking> optionalBooking = bookingService.getBookingById(bookingId);
         if (optionalProperty.isPresent() && optionalBooking.isPresent()) {
             Property property = optionalProperty.get();
-            Set<Booking> existingBookings = new HashSet<>();
-            if (!(property.getBookings().isEmpty() || property.getBookings().equals(null))) {
-                existingBookings = property.getBookings();
-            }
-            for (Booking booking : existingBookings) {
-                if (booking.equals(optionalBooking.get())) existingBookings.remove(booking);
-            }
+            Set<Booking> existingBookings = property.getBookings() != null ? property.getBookings() : new HashSet<>();
+            existingBookings.removeIf(booking -> booking.equals(optionalBooking.get()));
             property.setBookings(existingBookings);
             propertyRepository.save(property);
         } else {
-            LOGGER.log(Level.ERROR, "Missing property or bill");
-            throw new EntityNotFoundException("Either the property or the bill could not be found");
+            LOGGER.log(Level.ERROR, "Missing property or booking");
+            throw new EntityNotFoundException("Either the property or the booking could not be found");
         }
     }
 
@@ -442,11 +396,7 @@ public class JpaPropertyService implements PropertyService {
     public Set<Bill> getPropertyBills(Long propertyId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         if (optionalProperty.isPresent()) {
-            Set<Bill> crutch = new HashSet<>();
-            for (Bill bill : billService.getBillsByProperty(optionalProperty.get())) {
-                crutch.add(bill);
-            }
-            return crutch;
+            return new HashSet<>(billService.getBillsByProperty(optionalProperty.get()));
         } else {
             LOGGER.log(Level.ERROR, "No property with the {} ID exists in the database.", propertyId);
             throw new PropertyNotFoundException("No property found with ID: " + propertyId);
@@ -454,7 +404,7 @@ public class JpaPropertyService implements PropertyService {
     }
 
     @Override
-    public void addBillToProperty(Long propertyId, Long billId) { //F**KING CIRCULAR REFERENCE ERRORS!!!
+    public void addBillToProperty(Long propertyId, Long billId) {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         Optional<Bill> optionalBill = billService.getBillById(billId);
         if (optionalProperty.isPresent() && optionalBill.isPresent()) {
@@ -462,10 +412,7 @@ public class JpaPropertyService implements PropertyService {
             Bill bill = optionalBill.get();
             bill.setProperty(property);
             billService.addBill(bill);
-            Set<Bill> existingBills = new HashSet<>();
-            if (!(property.getBills().isEmpty() || property.getBills().equals(null))) {
-                existingBills = property.getBills();
-            }
+            Set<Bill> existingBills = property.getBills() != null ? property.getBills() : new HashSet<>();
             existingBills.add(bill);
             property.setBills(existingBills);
             propertyRepository.save(property);
@@ -480,11 +427,7 @@ public class JpaPropertyService implements PropertyService {
         Optional<Property> optionalProperty = getPropertyById(propertyId);
         Optional<Bill> optionalBill = billService.getBillById(billId);
         if (optionalProperty.isPresent() && optionalBill.isPresent()) {
-            List<Bill> existing = billService.getBillsByProperty(optionalProperty.get());
-            Set<Bill> updated = new HashSet<>();
-            for (Bill bill : existing) {
-                updated.add(bill);
-            }
+            Set<Bill> updated = new HashSet<>(billService.getBillsByProperty(optionalProperty.get()));
             optionalBill.get().setProperty(null);
             updated.remove(optionalBill.get());
             optionalProperty.get().setBills(updated);
@@ -499,8 +442,6 @@ public class JpaPropertyService implements PropertyService {
     // AUXILIARY METHOD
     @Override
     public List<Property> getPropertiesByManager(Long managerId) {
-        return getAllProperties().stream()
-                .filter(property -> property.getManager() != null && property.getManager().getId().equals(managerId))
-                .toList();
+        return propertyRepository.findByManager_Id(managerId);
     }
 }

@@ -68,5 +68,4 @@ public class SwaggerConfig {
     public static final String TENANT_FUNCTION = "Tenant functionality service";
     public static final String OTHER = "Miscellaneous";
 
-
 }

@@ -10,36 +10,40 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 
 @Service
 public class JpaManagerService implements ManagerService {
     private final ManagerRepository managerRepository;
     private final PropertyRepository propertyRepository;
-    private final Logger LOGGER = LogManager.getLogger(JpaPropertyService.class);
-
+    private final Logger LOGGER = LogManager.getLogger(JpaManagerService.class);
 
     public JpaManagerService(ManagerRepository managerRepository, PropertyRepository propertyRepository) {
         this.managerRepository = managerRepository;
         this.propertyRepository = propertyRepository;
     }
+
     @Override
     public List<Manager> getAllManagers() {
         return managerRepository.findAll();
     }
+
     @Override
     public Optional<Manager> getManagerById(Long id) {
         return managerRepository.findById(id);
     }
+
     @Override
-    public void addManager(Manager manager)
-    {
-        Manager savedManager = managerRepository.save(manager);
+    public void addManager(Manager manager) {
+        managerRepository.save(manager);
     }
+
     @Override
     public void deleteManager(Long id) {
         managerRepository.deleteById(id);
     }
+
     @Override
     public void updateManager(Long id, Manager updatedManager) {
         Optional<Manager> optionalManager = managerRepository.findById(id);
@@ -58,29 +62,21 @@ public class JpaManagerService implements ManagerService {
             throw new ManagerNotFoundException("No manager found with ID: " + id);
         }
     }
+
     @Override
     public Set<Property> getManagerProperties(Long managerId) {
-        Optional<Manager> optionalManager = getManagerById(managerId);
-        if (optionalManager.isPresent()) {
-            Set<Property> result = new HashSet<>();
-            List<Property> allProperties = propertyRepository.findAll();
-            for (Property property : allProperties) {
-                if (property.getManager().getId().equals(managerId)) result.add(property);
-            }
-            return result;
-        } else {
+        if (getManagerById(managerId).isEmpty()) {
             LOGGER.log(Level.ERROR, "No manager with the {} ID exists in the database.", managerId);
             throw new ManagerNotFoundException("No manager found with ID: " + managerId);
         }
+        return new HashSet<>(propertyRepository.findByManager_Id(managerId));
     }
+
     @Override
     public void addPropertyToManager(Long managerId, Property property) {
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
             Set<Property> existingProperties = getManagerProperties(managerId);
-            if (existingProperties == null) {
-                existingProperties = new HashSet<>();
-            }
             existingProperties.add(property);
             optionalManager.get().setProperties(existingProperties);
             managerRepository.save(optionalManager.get());
@@ -93,22 +89,14 @@ public class JpaManagerService implements ManagerService {
     }
 
     @Override
-    public void purgeProperties(Long managerId) {  // Internal-use method, better not use in logics
+    public void purgeProperties(Long managerId) {
         Optional<Manager> optionalManager = getManagerById(managerId);
         if (optionalManager.isPresent()) {
             Set<Property> existingProperties = optionalManager.get().getProperties();
             if (existingProperties == null) {
                 existingProperties = new HashSet<>();
             }
-//            System.out.println("Set of properties before purging:");
-//            for (Property property : existingProperties) {
-//                System.out.println(property.getId());
-//            }
             existingProperties.clear();
-            System.out.println("Properties purged!");
-//            for (Property property : existingProperties) {
-//                System.out.println(property.getId());
-//            }
             optionalManager.get().setProperties(existingProperties);
             managerRepository.save(optionalManager.get());
         } else {
@@ -119,26 +107,17 @@ public class JpaManagerService implements ManagerService {
 
     @Override
     public Manager getManagerByLogin(String login) {
-            for (Manager manager : getAllManagers()) {
-                if (manager.getLogin().equals(login)) return manager;
-            }
-            return null;
+        return managerRepository.findByLogin(login).orElse(null);
     }
 
     @Override
     public Manager getManagerByEmail(String email) {
-        for (Manager manager : getAllManagers()) {
-            if (manager.getEmail().equals(email)) return manager;
-        }
-        return null;
+        return managerRepository.findByEmail(email).orElse(null);
     }
 
     @Override
     public Manager getManagerByConfirmationToken(String confirmationToken) {
-        for (Manager manager : getAllManagers()) {
-            if (manager.getConfirmationToken().equals(confirmationToken)) return manager;
-        }
-        return null;
+        return managerRepository.findByConfirmationToken(confirmationToken).orElse(null);
     }
 
     @Override
